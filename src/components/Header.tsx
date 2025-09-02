@@ -368,6 +368,7 @@ const Header = ({ onNavigate, onOpenAuth }) => {
                     <span className="text-sm font-bold">Compte</span>
                   </button>
                 )}
+                <button
                   onClick={handleWishlistClick}
                   className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors"
                 >
