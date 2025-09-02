@@ -14,6 +14,7 @@ import AdminDashboard from './components/AdminDashboard';
 import SupportDashboard from './components/SupportDashboard';
 import Auth from './components/Auth';
 import OrderTracking from './components/OrderTracking';
+import Wishlist from './components/Wishlist';
 import DeferredOrder from './components/DeferredOrder';
 import VendorProductForm from './components/VendorProductForm';
 import Footer from './components/Footer';
@@ -61,6 +62,8 @@ function App() {
         return <SupportDashboard />;
       case 'order-tracking':
         return <OrderTracking onBack={() => setCurrentPage('home')} />;
+      case 'wishlist':
+        return <Wishlist onBack={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
       default:
         return (
           <>

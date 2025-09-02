@@ -6,8 +6,27 @@ const Header = ({ onNavigate, onOpenAuth }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const [cartCount] = useState(3);
   const [wishlistCount] = useState(5);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // Navigate to catalog with search term
+      onNavigate('catalog', { search: searchTerm });
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleWishlistClick = () => {
+    if (isAuthenticated) {
+      onNavigate('wishlist');
+    } else {
+      onOpenAuth('login');
+    }
+  };
 
   const handleNavigation = (page) => {
     onNavigate(page);
@@ -134,22 +153,30 @@ const Header = ({ onNavigate, onOpenAuth }) => {
           {/* Search & Actions */}
           <div className="flex items-center space-x-4">
             {/* Search Bar */}
-            <div className="hidden lg:flex items-center bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl px-4 py-3 border border-orange-100 focus-within:border-orange-300 transition-colors">
+            <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl px-4 py-3 border border-orange-100 focus-within:border-orange-300 transition-colors">
               <Search className="h-5 w-5 text-orange-500" />
               <input
                 type="text"
                 placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-transparent border-0 outline-none text-sm text-gray-700 placeholder-gray-500 w-64 ml-3 font-medium"
               />
-            </div>
+            </form>
 
             {/* Search Icon Mobile */}
-            <button className="lg:hidden p-3 rounded-2xl hover:bg-orange-50 transition-colors">
+            <button 
+              onClick={() => onNavigate('catalog')}
+              className="lg:hidden p-3 rounded-2xl hover:bg-orange-50 transition-colors"
+            >
               <Search className="h-6 w-6 text-gray-700" />
             </button>
 
             {/* Wishlist */}
-            <button className="hidden md:flex p-3 rounded-2xl hover:bg-red-50 transition-colors relative group">
+            <button 
+              onClick={handleWishlistClick}
+              className="hidden md:flex p-3 rounded-2xl hover:bg-red-50 transition-colors relative group"
+            >
               <Heart className="h-6 w-6 text-gray-700 group-hover:text-red-500 transition-colors" />
               {wishlistCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg animate-pulse">
@@ -342,6 +369,9 @@ const Header = ({ onNavigate, onOpenAuth }) => {
                   </button>
                 )}
                 <button className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors">
+                  onClick={handleWishlistClick}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors"
+                >
                   <Heart className="h-6 w-6" />
                   <span className="text-sm font-bold">Favoris ({wishlistCount})</span>
                 </button>
