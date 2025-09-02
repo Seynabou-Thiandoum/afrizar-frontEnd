@@ -48,7 +48,7 @@ function App() {
       case 'sur-mesure':
         return <SurMesure onBack={() => setCurrentPage('home')} />;
       case 'cart':
-        return <Cart onClose={() => setCurrentPage('home')} />;
+        return <Cart onClose={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
       case 'checkout':
         return <Checkout onBack={() => setCurrentPage('cart')} />;
       case 'payment':
