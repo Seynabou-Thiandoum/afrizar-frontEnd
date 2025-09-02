@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
 import Categories from './components/Categories';
 import Catalog from './components/Catalog';
+import CategoryPage from './components/CategoryPage';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import VendorDashboard from './components/VendorDashboard';
@@ -23,6 +24,7 @@ function App() {
   const [showDeferredOrder, setShowDeferredOrder] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showProductForm, setShowProductForm] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -36,6 +38,12 @@ function App() {
         );
       case 'catalog':
         return <Catalog />;
+      case 'tenues-femmes':
+        return <CategoryPage category="Tenues Femmes" onBack={() => setCurrentPage('home')} />;
+      case 'tenues-hommes':
+        return <CategoryPage category="Tenues Hommes" onBack={() => setCurrentPage('home')} />;
+      case 'accessoires':
+        return <CategoryPage category="Accessoires" onBack={() => setCurrentPage('home')} />;
       case 'cart':
         return <Cart onClose={() => setCurrentPage('home')} />;
       case 'checkout':

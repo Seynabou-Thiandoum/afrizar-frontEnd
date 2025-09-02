@@ -78,24 +78,33 @@ const Header = ({ onNavigate, onOpenAuth }) => {
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
-            <a href="#" className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group">
+            <button 
+              onClick={() => handleNavigation('tenues-femmes')}
+              className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
+            >
               <span className="relative z-10">
               Tenues Femmes
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
-            </a>
-            <a href="#" className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group">
+            </button>
+            <button 
+              onClick={() => handleNavigation('tenues-hommes')}
+              className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
+            >
               <span className="relative z-10">
               Tenues Hommes
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
-            </a>
-            <a href="#" className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group">
+            </button>
+            <button 
+              onClick={() => handleNavigation('accessoires')}
+              className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
+            >
               <span className="relative z-10">
               Accessoires
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
-            </a>
+            </button>
             <a href="#" className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group">
               <span className="relative z-10">
               Sur Mesure
@@ -268,12 +277,24 @@ const Header = ({ onNavigate, onOpenAuth }) => {
               <a href="#" className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold rounded-xl hover:bg-orange-50 transition-all duration-300">
                 Tenues Femmes
               </a>
-              <a href="#" className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold rounded-xl hover:bg-orange-50 transition-all duration-300">
+              <button 
+                onClick={() => handleNavigation('tenues-femmes')}
+                className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
+              >
+                Tenues Femmes
+              </button>
+              <button 
+                onClick={() => handleNavigation('tenues-hommes')}
+                className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
+              >
                 Tenues Hommes
-              </a>
-              <a href="#" className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold rounded-xl hover:bg-orange-50 transition-all duration-300">
+              </button>
+              <button 
+                onClick={() => handleNavigation('accessoires')}
+                className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
+              >
                 Accessoires
-              </a>
+              </button>
               <a href="#" className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold rounded-xl hover:bg-orange-50 transition-all duration-300">
                 Sur Mesure
               </a>
