@@ -12,7 +12,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 
-const Cart = ({ onClose }) => {
+const Cart = ({ onClose, onNavigate }) => {
   const [cartItems, setCartItems] = useState([
     {
       id: 1,
