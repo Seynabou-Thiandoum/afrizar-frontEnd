@@ -105,12 +105,15 @@ const Header = ({ onNavigate, onOpenAuth }) => {
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
-            <a href="#" className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group">
+            <button 
+              onClick={() => handleNavigation('sur-mesure')}
+              className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
+            >
               <span className="relative z-10">
               Sur Mesure
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
-            </a>
+            </button>
             <button 
               onClick={() => handleNavigation('order-tracking')}
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
@@ -274,9 +277,6 @@ const Header = ({ onNavigate, onOpenAuth }) => {
               >
                 Catalogue
               </button>
-              <a href="#" className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold rounded-xl hover:bg-orange-50 transition-all duration-300">
-                Tenues Femmes
-              </a>
               <button 
                 onClick={() => handleNavigation('tenues-femmes')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
@@ -295,9 +295,12 @@ const Header = ({ onNavigate, onOpenAuth }) => {
               >
                 Accessoires
               </button>
-              <a href="#" className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold rounded-xl hover:bg-orange-50 transition-all duration-300">
+              <button 
+                onClick={() => handleNavigation('sur-mesure')}
+                className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
+              >
                 Sur Mesure
-              </a>
+              </button>
               <button 
                 onClick={() => handleNavigation('order-tracking')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
