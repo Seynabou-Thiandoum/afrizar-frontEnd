@@ -8,6 +8,7 @@ import Catalog from './components/Catalog';
 import CategoryPage from './components/CategoryPage';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
+import SurMesure from './components/SurMesure';
 import VendorDashboard from './components/VendorDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import SupportDashboard from './components/SupportDashboard';
@@ -44,6 +45,8 @@ function App() {
         return <CategoryPage category="Tenues Hommes" onBack={() => setCurrentPage('home')} />;
       case 'accessoires':
         return <CategoryPage category="Accessoires" onBack={() => setCurrentPage('home')} />;
+      case 'sur-mesure':
+        return <SurMesure onBack={() => setCurrentPage('home')} />;
       case 'cart':
         return <Cart onClose={() => setCurrentPage('home')} />;
       case 'checkout':
