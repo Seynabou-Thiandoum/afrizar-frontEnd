@@ -1,0 +1,124 @@
+import React, { useState } from 'react';
+import { AuthProvider } from './contexts/AuthContext';
+import Header from './components/Header';
+import Hero from './components/Hero';
+import FeaturedProducts from './components/FeaturedProducts';
+import Categories from './components/Categories';
+import Catalog from './components/Catalog';
+import Cart from './components/Cart';
+import Checkout from './components/Checkout';
+import VendorDashboard from './components/VendorDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import SupportDashboard from './components/SupportDashboard';
+import Auth from './components/Auth';
+import OrderTracking from './components/OrderTracking';
+import DeferredOrder from './components/DeferredOrder';
+import VendorProductForm from './components/VendorProductForm';
+import Footer from './components/Footer';
+
+function App() {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
+  const [showDeferredOrder, setShowDeferredOrder] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showProductForm, setShowProductForm] = useState(false);
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return (
+          <>
+            <Hero onNavigate={setCurrentPage} />
+            <Categories onNavigate={setCurrentPage} />
+            <FeaturedProducts onNavigate={setCurrentPage} />
+          </>
+        );
+      case 'catalog':
+        return <Catalog />;
+      case 'cart':
+        return <Cart onClose={() => setCurrentPage('home')} />;
+      case 'checkout':
+        return <Checkout onBack={() => setCurrentPage('cart')} />;
+      case 'vendor-dashboard':
+        return <VendorDashboard />;
+      case 'admin-dashboard':
+        return <AdminDashboard />;
+      case 'support-dashboard':
+        return <SupportDashboard />;
+      case 'order-tracking':
+        return <OrderTracking onBack={() => setCurrentPage('home')} />;
+      default:
+        return (
+          <>
+            <Hero onNavigate={setCurrentPage} />
+            <Categories onNavigate={setCurrentPage} />
+            <FeaturedProducts onNavigate={setCurrentPage} />
+          </>
+        );
+    }
+  };
+
+  const openAuth = (mode = 'login') => {
+    setAuthMode(mode);
+    setShowAuth(true);
+  };
+
+  const openDeferredOrder = (product) => {
+    setSelectedProduct(product);
+    setShowDeferredOrder(true);
+  };
+
+  const handleAddToCart = (productData) => {
+    console.log('Ajout au panier:', productData);
+    // Logique d'ajout au panier
+  };
+  return (
+    <AuthProvider>
+      <div className="min-h-screen bg-gray-50">
+        {!['cart', 'checkout', 'vendor-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
+          <Header 
+            onNavigate={setCurrentPage}
+            onOpenAuth={openAuth}
+          />
+        )}
+        
+        <main>
+          {renderPage()}
+        </main>
+        
+        {currentPage === 'home' && <Footer />}
+
+        {/* Auth Modal */}
+        {showAuth && (
+          <Auth 
+            onClose={() => setShowAuth(false)}
+            initialMode={authMode}
+          />
+        )}
+
+        {/* Deferred Order Modal */}
+        {showDeferredOrder && (
+          <DeferredOrder
+            product={selectedProduct}
+            onClose={() => setShowDeferredOrder(false)}
+            onAddToCart={handleAddToCart}
+          />
+        )}
+
+        {/* Vendor Product Form */}
+        {showProductForm && (
+          <VendorProductForm
+            onClose={() => setShowProductForm(false)}
+            onSave={(productData) => {
+              console.log('Nouveau produit:', productData);
+              setShowProductForm(false);
+            }}
+          />
+        )}
+      </div>
+    </AuthProvider>
+  );
+}
+
+export default App;
