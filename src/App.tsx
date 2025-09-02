@@ -5,7 +5,6 @@ import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
 import Categories from './components/Categories';
 import Catalog from './components/Catalog';
-import Catalog from './components/Catalog';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import VendorDashboard from './components/VendorDashboard';
