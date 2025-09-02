@@ -268,7 +268,7 @@ const Checkout = ({ onBack }) => {
                       return (
                         <label
                           key={method.id}
-                          className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          className={`flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all ${
                             formData.paymentMethod === method.id
                               ? 'border-orange-600 bg-orange-50'
                               : 'border-gray-200 hover:border-orange-300'
@@ -282,16 +282,16 @@ const Checkout = ({ onBack }) => {
                             className="text-orange-600 focus:ring-orange-500"
                           />
                           <div className="ml-4 flex items-center space-x-3 flex-1">
-                            <div className={`p-2 bg-gradient-to-r ${method.color} rounded-lg text-white`}>
+                            <div className={`p-3 bg-gradient-to-r ${method.color} rounded-2xl text-white shadow-lg`}>
                               <IconComponent className="h-6 w-6" />
                             </div>
                             <div>
-                              <div className="font-semibold text-gray-900">{method.name}</div>
+                              <div className="font-bold text-gray-900 text-lg">{method.name}</div>
                               <div className="text-sm text-gray-600">{method.description}</div>
                             </div>
                           </div>
                           {method.available && (
-                            <div className="text-green-600 text-sm font-medium">Disponible</div>
+                            <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">✓ Disponible</div>
                           )}
                         </label>
                       );

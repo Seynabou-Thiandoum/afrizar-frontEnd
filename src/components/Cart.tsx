@@ -289,7 +289,10 @@ const Cart = ({ onClose }) => {
               </div>
 
               {/* Checkout Button */}
-              <button className="w-full bg-orange-600 text-white py-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2">
+              <button 
+                onClick={() => window.location.href = '#checkout'}
+                className="w-full bg-orange-600 text-white py-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+              >
                 <CreditCard className="h-5 w-5" />
                 <span>Procéder au paiement</span>
               </button>

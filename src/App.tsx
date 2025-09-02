@@ -51,6 +51,8 @@ function App() {
         return <Cart onClose={() => setCurrentPage('home')} />;
       case 'checkout':
         return <Checkout onBack={() => setCurrentPage('cart')} />;
+      case 'payment':
+        return <Checkout onBack={() => setCurrentPage('cart')} />;
       case 'vendor-dashboard':
         return <VendorDashboard />;
       case 'admin-dashboard':
