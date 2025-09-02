@@ -21,6 +21,7 @@ import Footer from './components/Footer';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [showDeferredOrder, setShowDeferredOrder] = useState(false);
@@ -39,7 +40,7 @@ function App() {
           </>
         );
       case 'catalog':
-        return <Catalog />;
+        return <Catalog searchTerm={globalSearchTerm} onSearchTermChange={setGlobalSearchTerm} />;
       case 'tenues-femmes':
         return <CategoryPage category="Tenues Femmes" onBack={() => setCurrentPage('home')} />;
       case 'tenues-hommes':
@@ -95,6 +96,7 @@ function App() {
         {!['cart', 'checkout', 'vendor-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
           <Header 
             onNavigate={setCurrentPage}
+            onSearch={setGlobalSearchTerm}
             onOpenAuth={openAuth}
           />
         )}

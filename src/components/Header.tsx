@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Heart, LogOut, Settings, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const Header = ({ onNavigate, onOpenAuth }) => {
+const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -14,9 +14,13 @@ const Header = ({ onNavigate, onOpenAuth }) => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      // Navigate to catalog with search term
-      onNavigate('catalog', { search: searchTerm });
+      // Set global search term and navigate to catalog
+      if (onSearch) {
+        onSearch(searchTerm);
+      }
+      onNavigate('catalog');
       setShowSearchResults(false);
+      setSearchTerm('');
     }
   };
 

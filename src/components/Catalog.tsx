@@ -16,17 +16,31 @@ import {
 } from 'lucide-react';
 import ProductModal from './ProductModal';
 
-const Catalog = () => {
+const Catalog = ({ searchTerm: initialSearchTerm = '', onSearchTermChange }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [wishlist, setWishlist] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedAvailability, setSelectedAvailability] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [selectedQuality, setSelectedQuality] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Update search term when prop changes
+  React.useEffect(() => {
+    if (initialSearchTerm !== searchTerm) {
+      setSearchTerm(initialSearchTerm);
+    }
+  }, [initialSearchTerm]);
+
+  // Notify parent of search term changes
+  React.useEffect(() => {
+    if (onSearchTermChange && searchTerm !== initialSearchTerm) {
+      onSearchTermChange(searchTerm);
+    }
+  }, []);
 
   const products = [
     {
