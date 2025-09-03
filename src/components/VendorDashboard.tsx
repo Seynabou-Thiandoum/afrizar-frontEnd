@@ -422,18 +422,6 @@ const VendorDashboard = () => {
           </div>
         )}
       </div>
-
-      {/* Product Detail Modal */}
-      {viewingProduct && (
-        <ProductDetailModal
-          product={viewingProduct}
-          onClose={() => setViewingProduct(null)}
-          onEdit={() => {
-            setEditingProduct(viewingProduct);
-            setViewingProduct(null);
-          }}
-        />
-      )}
     </div>
   );
 };
