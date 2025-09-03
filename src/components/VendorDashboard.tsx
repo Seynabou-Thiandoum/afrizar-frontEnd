@@ -21,6 +21,8 @@ const VendorDashboard = () => {
   const { user, hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [viewingProduct, setViewingProduct] = useState(null);
   const stats = [
     {
       title: 'Ventes ce mois',
