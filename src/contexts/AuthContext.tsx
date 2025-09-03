@@ -10,12 +10,15 @@ interface User {
   businessName?: string;
   permissions: string[];
   isActive: boolean;
+  isApproved?: boolean;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string }>;
+  register: (userData: any, userType: 'client' | 'vendor') => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
   hasPermission: (permission: string) => boolean;
