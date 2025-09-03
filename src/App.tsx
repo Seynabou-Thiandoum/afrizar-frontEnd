@@ -12,11 +12,11 @@ import SurMesure from './components/SurMesure';
 import VendorDashboard from './components/VendorDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import SupportDashboard from './components/SupportDashboard';
+import ClientDashboard from './components/ClientDashboard';
 import Auth from './components/Auth';
 import OrderTracking from './components/OrderTracking';
 import Wishlist from './components/Wishlist';
 import DeferredOrder from './components/DeferredOrder';
-import VendorProductForm from './components/VendorProductForm';
 import UserProfile from './components/UserProfile';
 import Footer from './components/Footer';
 
@@ -27,7 +27,6 @@ function App() {
   const [authMode, setAuthMode] = useState('login');
   const [showDeferredOrder, setShowDeferredOrder] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showProductForm, setShowProductForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Redirection automatique après connexion
@@ -73,7 +72,7 @@ function App() {
       case 'admin-dashboard':
         return <AdminDashboard />;
       case 'client-dashboard':
-        return <ClientDashboard />;
+        return <ClientDashboard onNavigate={setCurrentPage} />;
       case 'support-dashboard':
         return <SupportDashboard />;
       case 'order-tracking':
@@ -141,17 +140,6 @@ function App() {
           />
         )}
 
-        {/* Vendor Product Form */}
-        {showProductForm && (
-          <VendorProductForm
-            onClose={() => setShowProductForm(false)}
-            onSave={(productData) => {
-              console.log('Nouveau produit:', productData);
-              setShowProductForm(false);
-            }}
-          />
-        )}
-      </div>
     )
     </AuthProvider>
   );

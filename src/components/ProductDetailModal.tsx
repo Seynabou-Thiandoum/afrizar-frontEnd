@@ -268,7 +268,10 @@ const ProductDetailModal = ({ product, onClose, onEdit }) => {
                       <span>Dupliquer</span>
                     </button>
                     
-                    <button className="w-full border-2 border-red-300 text-red-600 py-3 rounded-2xl font-bold hover:bg-red-50 transition-colors flex items-center justify-center space-x-2">
+                    <button 
+                      onClick={() => console.log('Supprimer produit:', product.id)}
+                      className="w-full border-2 border-red-300 text-red-600 py-3 rounded-2xl font-bold hover:bg-red-50 transition-colors flex items-center justify-center space-x-2"
+                    >
                       <Trash2 className="h-5 w-5" />
                       <span>Supprimer</span>
                     </button>
