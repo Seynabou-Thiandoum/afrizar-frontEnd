@@ -832,3 +832,5 @@ const VendorDashboard = () => {
     </div>
   );
 };
+
+export default VendorDashboard;
