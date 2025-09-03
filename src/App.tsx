@@ -33,9 +33,12 @@ function App() {
   // Redirection automatique après connexion
   React.useEffect(() => {
     const hash = window.location.hash.substring(1);
-    if (hash && hash !== currentPage) {
+    if (hash && hash !== currentPage && hash !== 'home') {
       setCurrentPage(hash);
-      window.location.hash = '';
+      // Nettoyer le hash après redirection
+      setTimeout(() => {
+        window.history.replaceState(null, '', window.location.pathname);
+      }, 100);
     }
   }, []);
 

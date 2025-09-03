@@ -119,23 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userData);
       localStorage.setItem('afrizar_user', JSON.stringify(userData));
       
-      // Déterminer la redirection selon le rôle et le statut
-      let redirectTo = 'home';
-      if (userData.role === 'vendor' && userData.isApproved) {
-        redirectTo = 'vendor-dashboard';
-      } else if (userData.role === 'client') {
-        redirectTo = 'client-dashboard';
-      } else if (userData.role === 'admin') {
-        redirectTo = 'admin-dashboard';
-      } else if (userData.role === 'support') {
-        redirectTo = 'support-dashboard';
-      } else if (userData.role === 'developer') {
-        redirectTo = 'developer-dashboard';
-      } else if (userData.role === 'founder') {
-        redirectTo = 'founder-dashboard';
-      }
-      
-      return { success: true, redirectTo };
+      return { success: true, user: userData };
     }
     return { success: false };
   };
