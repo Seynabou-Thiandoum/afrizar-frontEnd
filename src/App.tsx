@@ -40,7 +40,7 @@ function App() {
           </>
         );
       case 'catalog':
-        return <Catalog searchTerm={globalSearchTerm} onSearchTermChange={setGlobalSearchTerm} />;
+        return <Catalog searchTerm={globalSearchTerm} onSearchTermChange={setGlobalSearchTerm} onNavigate={setCurrentPage} />;
       case 'tenues-femmes':
         return <CategoryPage category="Tenues Femmes" onBack={() => setCurrentPage('home')} />;
       case 'tenues-hommes':
