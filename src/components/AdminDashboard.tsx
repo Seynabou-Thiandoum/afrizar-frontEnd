@@ -158,7 +158,8 @@ const AdminDashboard = () => {
             {[
               { id: 'overview', label: 'Vue d\'ensemble', icon: BarChart3 },
               { id: 'users', label: 'Utilisateurs', icon: Users },
-              { id: 'vendors', label: 'Vendeurs', icon: Package },
+              { id: 'vendors', label: 'Gestion Vendeurs', icon: Package },
+              { id: 'approvals', label: 'Approbations', icon: Shield },
               { id: 'settings', label: 'Paramètres', icon: Settings }
             ].map((tab) => {
               const IconComponent = tab.icon;
