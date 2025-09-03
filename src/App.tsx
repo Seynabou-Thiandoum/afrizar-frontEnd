@@ -17,6 +17,7 @@ import OrderTracking from './components/OrderTracking';
 import Wishlist from './components/Wishlist';
 import DeferredOrder from './components/DeferredOrder';
 import VendorProductForm from './components/VendorProductForm';
+import UserProfile from './components/UserProfile';
 import Footer from './components/Footer';
 
 function App() {
@@ -65,6 +66,8 @@ function App() {
         return <OrderTracking onBack={() => setCurrentPage('home')} />;
       case 'wishlist':
         return <Wishlist onBack={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
+      case 'profile':
+        return <UserProfile onBack={() => setCurrentPage('home')} />;
       default:
         return (
           <>

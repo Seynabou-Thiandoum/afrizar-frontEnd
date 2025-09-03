@@ -241,7 +241,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                       <button
                         onClick={() => {
                           setShowUserMenu(false);
-                          // Navigate to profile
+                          onNavigate('profile');
                         }}
                         className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 rounded-xl transition-colors"
                       >
