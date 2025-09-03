@@ -187,12 +187,27 @@ const UserProfile = ({ onBack }) => {
                 <p className="text-gray-600 mt-1">Gérez vos informations personnelles</p>
               </div>
             </div>
-            <button
-              onClick={logout}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-            >
-              Déconnexion
-            </button>
+            <div className="flex items-center space-x-4">
+              {(user?.role === 'vendor' || user?.role === 'admin' || user?.role === 'support') && (
+                <button
+                  onClick={() => {
+                    if (user.role === 'vendor') onBack('vendor-dashboard');
+                    else if (user.role === 'admin') onBack('admin-dashboard');
+                    else if (user.role === 'support') onBack('support-dashboard');
+                  }}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span>Retour au Dashboard</span>
+                </button>
+              )}
+              <button
+                onClick={logout}
+                className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+              >
+                Déconnexion
+              </button>
+            </div>
           </div>
           
           {/* Navigation Tabs */}

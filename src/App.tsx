@@ -67,7 +67,7 @@ function App() {
       case 'wishlist':
         return <Wishlist onBack={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
       case 'profile':
-        return <UserProfile onBack={() => setCurrentPage('home')} />;
+        return <UserProfile onBack={(page) => setCurrentPage(page || 'home')} />;
       default:
         return (
           <>
