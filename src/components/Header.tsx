@@ -263,13 +263,6 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                       </button>
                     )}
 
-                    {(user.role === 'admin' || user.role === 'support') && (
-                      <button
-                        onClick={() => {
-                          const dashboardPage = user.role === 'admin' ? 'admin-dashboard' : 
-                                               user.role === 'support' ? 'support-dashboard' :
-                                               user.role === 'developer' ? 'developer-dashboard' :
-                                               user.role === 'founder' ? 'founder-dashboard' : 'admin-dashboard';
                     {(user.role === 'admin' || user.role === 'support' || user.role === 'developer' || user.role === 'founder') && (
                       <button
                         onClick={() => {
