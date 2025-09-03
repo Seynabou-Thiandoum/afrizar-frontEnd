@@ -191,14 +191,23 @@ const UserProfile = ({ onBack }) => {
               {(user?.role === 'vendor' || user?.role === 'admin' || user?.role === 'support') && (
                 <button
                   onClick={() => {
-                    if (user.role === 'vendor') onBack('vendor-dashboard');
-                    else if (user.role === 'admin') onBack('admin-dashboard');
-                    else if (user.role === 'support') onBack('support-dashboard');
+                    if (user.role === 'vendor') onBack && onBack('vendor-dashboard');
+                    else if (user.role === 'admin') onBack && onBack('admin-dashboard');
+                    else if (user.role === 'support') onBack && onBack('support-dashboard');
                   }}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center space-x-2"
                 >
                   <ArrowLeft className="h-5 w-5" />
                   <span>Retour au Dashboard</span>
+                </button>
+              )}
+              {user?.role === 'client' && (
+                <button
+                  onClick={() => onBack && onBack('client-dashboard')}
+                  className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span>Retour à Mon Espace</span>
                 </button>
               )}
               <button

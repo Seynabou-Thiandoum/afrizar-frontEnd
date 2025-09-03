@@ -249,6 +249,33 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                         <span>Mon Profil</span>
                       </button>
                       
+                    
+                    {user.role === 'client' && (
+                      <button
+                        onClick={() => {
+                          handleNavigation('client-dashboard');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 rounded-xl transition-colors"
+                      >
+                        <Settings className="h-5 w-5 text-gray-600" />
+                        <span>Mon Espace</span>
+                      </button>
+                    )}
+
+                    {(user.role === 'admin' || user.role === 'support') && (
+                      <button
+                        onClick={() => {
+                          const dashboardPage = user.role === 'admin' ? 'admin-dashboard' : 'support-dashboard';
+                          handleNavigation(dashboardPage);
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 rounded-xl transition-colors"
+                      >
+                        <Settings className="h-5 w-5 text-gray-600" />
+                        <span>Administration</span>
+                      </button>
+                    )}
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-50 rounded-xl transition-colors text-red-600"

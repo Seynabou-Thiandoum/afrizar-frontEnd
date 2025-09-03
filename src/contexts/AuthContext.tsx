@@ -112,15 +112,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; redirectTo?: string }> => {
     // Simulation de connexion
     const userData = demoUsers[email as keyof typeof demoUsers];
     if (userData && password === 'demo123') {
       setUser(userData);
       localStorage.setItem('afrizar_user', JSON.stringify(userData));
-      return true;
+      
+      // Déterminer la redirection selon le rôle et le statut
+      let redirectTo = 'home';
+      if (userData.role === 'vendor' && userData.isApproved) {
+        redirectTo = 'vendor-dashboard';
+      } else if (userData.role === 'client') {
+        redirectTo = 'client-dashboard';
+      } else if (userData.role === 'admin') {
+        redirectTo = 'admin-dashboard';
+      } else if (userData.role === 'support') {
+        redirectTo = 'support-dashboard';
+      } else if (userData.role === 'developer') {
+        redirectTo = 'developer-dashboard';
+      } else if (userData.role === 'founder') {
+        redirectTo = 'founder-dashboard';
+      }
+      
+      return { success: true, redirectTo };
     }
-    return false;
+    return { success: false };
+  };
+
+  const register = async (userData: any, userType: 'client' | 'vendor'): Promise<{ success: boolean; message?: string }> => {
+    // Simulation d'inscription
+    return { success: true, message: 'Inscription réussie' };
   };
 
   const logout = () => {
@@ -154,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user,
       login,
+      register,
       logout,
       isAuthenticated: !!user,
       hasPermission,
