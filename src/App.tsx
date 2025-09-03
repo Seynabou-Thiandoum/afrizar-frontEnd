@@ -139,7 +139,6 @@ function App() {
         )}
       </div>
     )
-    }
     </AuthProvider>
   );
 }
