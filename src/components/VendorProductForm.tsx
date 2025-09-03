@@ -117,8 +117,8 @@ const VendorProductForm = ({ onClose, onSave, editProduct = null }) => {
       estimatedShipping: shipping,
       id: editProduct?.id || Date.now()
     };
+    console.log('Données du produit à sauvegarder:', productData);
     onSave(productData);
-    onClose();
   };
 
   const formatPrice = (price) => {
