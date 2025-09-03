@@ -14,7 +14,13 @@ import {
   Edit,
   Trash2,
   UserPlus,
-  Download
+  Download,
+  XCircle,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -158,8 +164,7 @@ const AdminDashboard = () => {
             {[
               { id: 'overview', label: 'Vue d\'ensemble', icon: BarChart3 },
               { id: 'users', label: 'Utilisateurs', icon: Users },
-              { id: 'vendors', label: 'Gestion Vendeurs', icon: Package },
-              { id: 'approvals', label: 'Approbations', icon: Shield },
+              { id: 'vendors', label: 'Vendeurs', icon: Package },
               { id: 'settings', label: 'Paramètres', icon: Settings }
             ].map((tab) => {
               const IconComponent = tab.icon;

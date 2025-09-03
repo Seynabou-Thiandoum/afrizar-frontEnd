@@ -60,6 +60,8 @@ function App() {
         return <VendorDashboard />;
       case 'admin-dashboard':
         return <AdminDashboard />;
+      case 'client-dashboard':
+        return <ClientDashboard />;
       case 'support-dashboard':
         return <SupportDashboard />;
       case 'order-tracking':
