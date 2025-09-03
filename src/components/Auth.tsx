@@ -85,9 +85,14 @@ const Auth = ({ onClose, initialMode = 'login' }) => {
     
     try {
       if (mode === 'login') {
-        const success = await login(formData.email, formData.password);
-        if (success) {
+        const result = await login(formData.email, formData.password);
+        if (result.success) {
           onClose();
+          // Redirection automatique selon le rôle
+          if (result.redirectTo) {
+            window.location.hash = result.redirectTo;
+            window.location.reload();
+          }
         } else {
           setLoginError('Email ou mot de passe incorrect');
         }

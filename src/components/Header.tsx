@@ -266,7 +266,10 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                     {(user.role === 'admin' || user.role === 'support') && (
                       <button
                         onClick={() => {
-                          const dashboardPage = user.role === 'admin' ? 'admin-dashboard' : 'support-dashboard';
+                          const dashboardPage = user.role === 'admin' ? 'admin-dashboard' : 
+                                               user.role === 'support' ? 'support-dashboard' :
+                                               user.role === 'developer' ? 'developer-dashboard' :
+                                               user.role === 'founder' ? 'founder-dashboard' : 'admin-dashboard';
                           handleNavigation(dashboardPage);
                           setShowUserMenu(false);
                         }}

@@ -30,6 +30,15 @@ function App() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  // Redirection automatique après connexion
+  React.useEffect(() => {
+    const hash = window.location.hash.substring(1);
+    if (hash && hash !== currentPage) {
+      setCurrentPage(hash);
+      window.location.hash = '';
+    }
+  }, []);
+
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
