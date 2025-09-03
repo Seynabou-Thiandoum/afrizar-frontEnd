@@ -89,9 +89,35 @@ const Auth = ({ onClose, initialMode = 'login' }) => {
         if (result.success) {
           onClose();
           // Redirection automatique selon le rôle
-          if (result.redirectTo) {
-            window.location.hash = result.redirectTo;
-            window.location.reload();
+          if (result.user) {
+            // Redirection immédiate selon le rôle
+            let targetPage = 'home';
+            switch (result.user.role) {
+              case 'client':
+                targetPage = 'client-dashboard';
+                break;
+              case 'vendor':
+                targetPage = 'vendor-dashboard';
+                break;
+              case 'admin':
+                targetPage = 'admin-dashboard';
+                break;
+              case 'support':
+                targetPage = 'support-dashboard';
+                break;
+              case 'developer':
+                targetPage = 'developer-dashboard';
+                break;
+              case 'founder':
+                targetPage = 'founder-dashboard';
+                break;
+            }
+            
+            // Utiliser un callback pour rediriger
+            setTimeout(() => {
+              window.location.hash = targetPage;
+              window.location.reload();
+            }, 100);
           }
         } else {
           setLoginError('Email ou mot de passe incorrect');
