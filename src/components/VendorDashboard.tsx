@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import VendorProductForm from './VendorProductForm';
+import ProductDetailModal from './ProductDetailModal';
 import { 
   Plus, 
   Package, 
@@ -34,6 +36,8 @@ const VendorDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedProductDetail, setSelectedProductDetail] = useState(null);
   
   const stats = [
     {
@@ -207,11 +211,13 @@ const VendorDashboard = () => {
 
   const handleAddProduct = () => {
     setShowProductForm(true);
+    setEditingProduct(null);
   };
 
   const handleEditProduct = (product) => {
     console.log('Modifier produit:', product);
-    // Ouvrir formulaire d'édition
+    setEditingProduct(product);
+    setShowProductForm(true);
   };
 
   const handleDeleteProduct = (productId) => {
@@ -221,7 +227,7 @@ const VendorDashboard = () => {
 
   const handleViewProduct = (product) => {
     console.log('Voir produit:', product);
-    // Ouvrir modal de détails
+    setSelectedProductDetail(product);
   };
 
   const handleUpdateStock = (productId, newStock) => {
@@ -237,6 +243,13 @@ const VendorDashboard = () => {
   const handleContactCustomer = (customer) => {
     console.log('Contacter client:', customer);
     // Ouvrir chat/email
+  };
+
+  const handleSaveProduct = (productData) => {
+    console.log('Sauvegarder produit:', productData);
+    // Logique de sauvegarde
+    setShowProductForm(false);
+    setEditingProduct(null);
   };
 
   return (
@@ -829,6 +842,31 @@ const VendorDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Product Form Modal */}
+      {showProductForm && (
+        <VendorProductForm
+          onClose={() => {
+            setShowProductForm(false);
+            setEditingProduct(null);
+          }}
+          onSave={handleSaveProduct}
+          editProduct={editingProduct}
+        />
+      )}
+
+      {/* Product Detail Modal */}
+      {selectedProductDetail && (
+        <ProductDetailModal
+          product={selectedProductDetail}
+          onClose={() => setSelectedProductDetail(null)}
+          onEdit={() => {
+            setEditingProduct(selectedProductDetail);
+            setSelectedProductDetail(null);
+            setShowProductForm(true);
+          }}
+        />
+      )}
     </div>
   );
 };
