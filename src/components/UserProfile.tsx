@@ -22,7 +22,13 @@ import {
   EyeOff,
   ArrowLeft,
   Crown,
-  Award
+  Award,
+  Download,
+  RefreshCw,
+  MessageSquare,
+  Truck,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
