@@ -914,6 +914,55 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* User Management Modal */}
+      {showUserModal && (
+        <UserManagementModal
+          user={editingUser}
+          onClose={() => {
+            setShowUserModal(false);
+            setEditingUser(null);
+          }}
+          onSave={handleSaveUser}
+        />
+      )}
+
+      {/* Vendor Approval Modal */}
+      {showVendorModal && selectedVendorForApproval && (
+        <VendorApprovalModal
+          vendor={selectedVendorForApproval}
+          onClose={() => {
+            setShowVendorModal(false);
+            setSelectedVendorForApproval(null);
+          }}
+          onAction={handleVendorAction}
+        />
+      )}
+
+      {/* System Settings Modal */}
+      {showSettingsModal && (
+        <SystemSettingsModal
+          onClose={() => setShowSettingsModal(false)}
+          onSave={handleSaveSettings}
+        />
+      )}
+
+      {/* User Detail Modal */}
+      {showUserDetailModal && selectedUserDetail && (
+        <UserDetailModal
+          user={selectedUserDetail}
+          onClose={() => {
+            setShowUserDetailModal(false);
+            setSelectedUserDetail(null);
+          }}
+          onEdit={(user) => {
+            setSelectedUserDetail(null);
+            setShowUserDetailModal(false);
+            setEditingUser(user);
+            setShowUserModal(true);
+          }}
+        />
+      )}
     </div>
   );
 };
