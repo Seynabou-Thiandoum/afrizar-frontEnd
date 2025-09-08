@@ -179,10 +179,6 @@ const VendorDashboard = () => {
     }
   ];
 
-  const formatPrice = (price, currency = 'FCFA') => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' ' + currency;
-  };
-
   const getStatusColor = (status) => {
     const colors = {
       confirmed: 'bg-green-100 text-green-800',
