@@ -222,6 +222,10 @@ const translations: Translations = {
     'dashboard.phone': 'Téléphone',
     'dashboard.address': 'Adresse',
     'dashboard.save_changes': 'Sauvegarder les modifications',
+    
+    // Navigation
+    'nav.account': 'Compte',
+    'nav.favorites': 'Favoris',
   },
   en: {
     // Navigation
@@ -374,6 +378,10 @@ const translations: Translations = {
     'dashboard.phone': 'Phone',
     'dashboard.address': 'Address',
     'dashboard.save_changes': 'Save Changes',
+    
+    // Navigation
+    'nav.account': 'Account',
+    'nav.favorites': 'Favorites',
   }
 };
 

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Heart, LogOut, Settings, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/InternationalizationContext';
 import LanguageSelector from './LanguageSelector';
 
 const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,7 +91,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              Accueil
+              {t('nav.home')}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -98,7 +100,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              Catalogue
+              {t('nav.catalog')}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -107,7 +109,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              Tenues Femmes
+              {t('nav.women')}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -116,7 +118,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              Tenues Hommes
+              {t('nav.men')}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -125,7 +127,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              Accessoires
+              {t('nav.accessories')}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -134,7 +136,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              Sur Mesure
+              {t('nav.custom')}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -143,7 +145,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              Suivi Commande
+              {t('nav.tracking')}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -151,7 +153,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               onClick={() => onOpenAuth('vendor-register')}
               className="relative bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:from-blue-600 hover:to-indigo-600 shadow-lg hover:shadow-blue-500/25 transform hover:scale-105"
             >
-              Devenir Vendeur
+              {t('nav.become_vendor')}
             </button>
           </nav>
 
@@ -165,7 +167,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               <Search className="h-5 w-5 text-orange-500" />
               <input
                 type="text"
-                placeholder="Rechercher..."
+                placeholder={t('common.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-transparent border-0 outline-none text-sm text-gray-700 placeholder-gray-500 w-64 ml-3 font-medium"
@@ -334,49 +336,49 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                 onClick={() => handleNavigation('home')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                Accueil
+                {t('nav.home')}
               </button>
               <button 
                 onClick={() => handleNavigation('catalog')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                Catalogue
+                {t('nav.catalog')}
               </button>
               <button 
                 onClick={() => handleNavigation('tenues-femmes')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                Tenues Femmes
+                {t('nav.women')}
               </button>
               <button 
                 onClick={() => handleNavigation('tenues-hommes')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                Tenues Hommes
+                {t('nav.men')}
               </button>
               <button 
                 onClick={() => handleNavigation('accessoires')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                Accessoires
+                {t('nav.accessories')}
               </button>
               <button 
                 onClick={() => handleNavigation('sur-mesure')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                Sur Mesure
+                {t('nav.custom')}
               </button>
               <button 
                 onClick={() => handleNavigation('order-tracking')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                Suivi Commande
+                {t('nav.tracking')}
               </button>
               <button 
                 onClick={() => onOpenAuth('vendor-register')}
                 className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 text-sm font-bold text-left rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 mx-2"
               >
-                Devenir Vendeur
+                {t('nav.become_vendor')}
               </button>
               <div className="flex items-center space-x-6 px-4 py-4 mt-4 border-t border-orange-100">
                 {isAuthenticated ? (
@@ -403,7 +405,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                     className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
                   >
                     <User className="h-6 w-6" />
-                    <span className="text-sm font-bold">Compte</span>
+                    <span className="text-sm font-bold">{t('nav.account')}</span>
                   </button>
                 )}
                 <button
@@ -411,7 +413,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                   className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors"
                 >
                   <Heart className="h-6 w-6" />
-                  <span className="text-sm font-bold">Favoris ({wishlistCount})</span>
+                  <span className="text-sm font-bold">{t('nav.favorites')} ({wishlistCount})</span>
                 </button>
               </div>
             </div>
