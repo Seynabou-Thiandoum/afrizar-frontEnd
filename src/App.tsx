@@ -107,41 +107,43 @@ function App() {
     // Logique d'ajout au panier
   };
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
-        {!['cart', 'checkout', 'vendor-dashboard', 'client-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
-          <Header 
-            onNavigate={setCurrentPage}
-            onSearch={setGlobalSearchTerm}
-            onOpenAuth={openAuth}
-          />
-        )}
-        
-        <main>
-          {renderPage()}
-        </main>
-        
-        {currentPage === 'home' && <Footer />}
+    <I18nProvider>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-50">
+          {!['cart', 'checkout', 'vendor-dashboard', 'client-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
+            <Header 
+              onNavigate={setCurrentPage}
+              onSearch={setGlobalSearchTerm}
+              onOpenAuth={openAuth}
+            />
+          )}
+          
+          <main>
+            {renderPage()}
+          </main>
+          
+          {currentPage === 'home' && <Footer />}
 
-        {/* Auth Modal */}
-        {showAuth && (
-          <Auth 
-            onClose={() => setShowAuth(false)}
-            initialMode={authMode}
-          />
-        )}
+          {/* Auth Modal */}
+          {showAuth && (
+            <Auth 
+              onClose={() => setShowAuth(false)}
+              initialMode={authMode}
+            />
+          )}
 
-        {/* Deferred Order Modal */}
-        {showDeferredOrder && (
-          <DeferredOrder
-            product={selectedProduct}
-            onClose={() => setShowDeferredOrder(false)}
-            onAddToCart={handleAddToCart}
-          />
-        )}
+          {/* Deferred Order Modal */}
+          {showDeferredOrder && (
+            <DeferredOrder
+              product={selectedProduct}
+              onClose={() => setShowDeferredOrder(false)}
+              onAddToCart={handleAddToCart}
+            />
+          )}
 
-      </div>
-    </AuthProvider>
+        </div>
+      </AuthProvider>
+    </I18nProvider>
   );
 }
 

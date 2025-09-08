@@ -11,9 +11,15 @@ import {
   Globe,
   Shield
 } from 'lucide-react';
+import InternationalPayment from './InternationalPayment';
+import InternationalShipping from './InternationalShipping';
+import { useI18n } from '../contexts/InternationalizationContext';
 
 const Checkout = ({ onBack }) => {
+  const { formatPrice, country, getShippingZone } = useI18n();
   const [step, setStep] = useState(1);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState(null);
   const [formData, setFormData] = useState({
     // Billing Info
     firstName: '',

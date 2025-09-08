@@ -13,8 +13,10 @@ import {
   CreditCard,
   Globe
 } from 'lucide-react';
+import { useI18n } from '../contexts/InternationalizationContext';
 
 const Footer = () => {
+  const { t, formatPrice } = useI18n();
   const currentYear = new Date().getFullYear();
 
   return (

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Heart, LogOut, Settings, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import LanguageSelector from './LanguageSelector';
 
 const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -156,6 +157,9 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
 
           {/* Search & Actions */}
           <div className="flex items-center space-x-4">
+            {/* Language Selector */}
+            <LanguageSelector className="hidden lg:block" />
+
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl px-4 py-3 border border-orange-100 focus-within:border-orange-300 transition-colors">
               <Search className="h-5 w-5 text-orange-500" />
