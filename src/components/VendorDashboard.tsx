@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import VendorProductForm from './VendorProductForm';
 import ProductDetailModal from './ProductDetailModal';
+import PromotionModal from './PromotionModal';
+import ReviewResponseModal from './ReviewResponseModal';
+import StockUpdateModal from './StockUpdateModal';
+import CustomerContactModal from './CustomerContactModal';
 import { 
   Plus, 
   Package, 
@@ -38,6 +42,13 @@ const VendorDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedProductDetail, setSelectedProductDetail] = useState(null);
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [selectedProductForStock, setSelectedProductForStock] = useState(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   
   const stats = [
     {
@@ -231,18 +242,18 @@ const VendorDashboard = () => {
   };
 
   const handleUpdateStock = (productId, newStock) => {
-    console.log('Mettre à jour stock:', productId, newStock);
-    // Mettre à jour le stock
+    const product = products.find(p => p.id === productId);
+    setSelectedProductForStock(product);
+    setShowStockModal(true);
   };
 
   const handleCreatePromotion = () => {
-    console.log('Créer promotion');
-    // Ouvrir formulaire de promotion
+    setShowPromotionModal(true);
   };
 
   const handleContactCustomer = (customer) => {
-    console.log('Contacter client:', customer);
-    // Ouvrir chat/email
+    setSelectedCustomer(customer);
+    setShowContactModal(true);
   };
 
   const handleSaveProduct = (productData) => {
@@ -252,6 +263,33 @@ const VendorDashboard = () => {
     setEditingProduct(null);
   };
 
+  const handleLeaveReview = (review) => {
+    setSelectedReview(review);
+    setShowReviewModal(true);
+  };
+
+  const handleSavePromotion = (promotionData) => {
+    console.log('Sauvegarder promotion:', promotionData);
+    setShowPromotionModal(false);
+  };
+
+  const handleSaveReviewResponse = (responseData) => {
+    console.log('Sauvegarder réponse avis:', responseData);
+    setShowReviewModal(false);
+    setSelectedReview(null);
+  };
+
+  const handleSaveStock = (stockData) => {
+    console.log('Mettre à jour stock:', stockData);
+    setShowStockModal(false);
+    setSelectedProductForStock(null);
+  };
+
+  const handleSendMessage = (messageData) => {
+    console.log('Envoyer message client:', messageData);
+    setShowContactModal(false);
+    setSelectedCustomer(null);
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header avec menu utilisateur */}
@@ -557,7 +595,7 @@ const VendorDashboard = () => {
                     
                     {product.stock === 0 && (
                       <button
-                        onClick={() => handleUpdateStock(product.id, 10)}
+                        onClick={() => handleUpdateStock(product.id)}
                         className="w-full mt-2 bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
                       >
                         Réapprovisionner
@@ -710,7 +748,8 @@ const VendorDashboard = () => {
                     </div>
                     <button
                       onClick={() => console.log('Répondre à l\'avis:', review.id)}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      onClick={() => handleLeaveReview(review)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                     >
                       Répondre
                     </button>
@@ -865,6 +904,51 @@ const VendorDashboard = () => {
             setSelectedProductDetail(null);
             setShowProductForm(true);
           }}
+        />
+      )}
+
+      {/* Promotion Modal */}
+      {showPromotionModal && (
+        <PromotionModal
+          onClose={() => setShowPromotionModal(false)}
+          onSave={handleSavePromotion}
+          products={products}
+        />
+      )}
+
+      {/* Review Response Modal */}
+      {showReviewModal && selectedReview && (
+        <ReviewResponseModal
+          review={selectedReview}
+          onClose={() => {
+            setShowReviewModal(false);
+            setSelectedReview(null);
+          }}
+          onSave={handleSaveReviewResponse}
+        />
+      )}
+
+      {/* Stock Update Modal */}
+      {showStockModal && selectedProductForStock && (
+        <StockUpdateModal
+          product={selectedProductForStock}
+          onClose={() => {
+            setShowStockModal(false);
+            setSelectedProductForStock(null);
+          }}
+          onSave={handleSaveStock}
+        />
+      )}
+
+      {/* Customer Contact Modal */}
+      {showContactModal && selectedCustomer && (
+        <CustomerContactModal
+          customer={selectedCustomer}
+          onClose={() => {
+            setShowContactModal(false);
+            setSelectedCustomer(null);
+          }}
+          onSend={handleSendMessage}
         />
       )}
     </div>
