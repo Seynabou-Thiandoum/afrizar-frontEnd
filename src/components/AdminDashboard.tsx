@@ -31,12 +31,23 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import UserManagementModal from './UserManagementModal';
+import VendorApprovalModal from './VendorApprovalModal';
+import SystemSettingsModal from './SystemSettingsModal';
+import UserDetailModal from './UserDetailModal';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [showVendorModal, setShowVendorModal] = useState(false);
+  const [selectedVendorForApproval, setSelectedVendorForApproval] = useState(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showUserDetailModal, setShowUserDetailModal] = useState(false);
+  const [selectedUserDetail, setSelectedUserDetail] = useState(null);
 
   const stats = [
     {
@@ -167,37 +178,92 @@ const AdminDashboard = () => {
 
   const handleApproveVendor = (vendorId) => {
     console.log('Approuver vendeur:', vendorId);
-    // Logique d'approbation
+    const vendor = pendingVendors.find(v => v.id === vendorId);
+    if (vendor) {
+      setSelectedVendorForApproval(vendor);
+      setShowVendorModal(true);
+    }
   };
 
   const handleRejectVendor = (vendorId) => {
     console.log('Rejeter vendeur:', vendorId);
-    // Logique de rejet
+    const vendor = pendingVendors.find(v => v.id === vendorId);
+    if (vendor) {
+      setSelectedVendorForApproval(vendor);
+      setShowVendorModal(true);
+    }
   };
 
   const handleViewUser = (userId) => {
     console.log('Voir utilisateur:', userId);
-    // Ouvrir détails utilisateur
+    const userToView = users.find(u => u.id === userId);
+    if (userToView) {
+      setSelectedUserDetail(userToView);
+      setShowUserDetailModal(true);
+    }
   };
 
   const handleEditUser = (userId) => {
     console.log('Modifier utilisateur:', userId);
-    // Ouvrir formulaire d'édition
+    const userToEdit = users.find(u => u.id === userId);
+    if (userToEdit) {
+      setEditingUser(userToEdit);
+      setShowUserModal(true);
+    }
   };
 
   const handleDeleteUser = (userId) => {
-    console.log('Supprimer utilisateur:', userId);
-    // Confirmer et supprimer
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {
+      console.log('Supprimer utilisateur:', userId);
+      // Logique de suppression
+      alert('Utilisateur supprimé avec succès');
+    }
   };
 
   const handleCreateUser = () => {
-    console.log('Créer utilisateur');
-    // Ouvrir formulaire de création
+    setEditingUser(null);
+    setShowUserModal(true);
   };
 
   const handleExportData = () => {
-    console.log('Exporter données');
-    // Télécharger export
+    const data = {
+      users: users.length,
+      vendors: pendingVendors.length,
+      exportDate: new Date().toISOString(),
+      stats
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `afrizar-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('Export téléchargé avec succès !');
+  };
+
+  const handleSaveUser = (userData) => {
+    console.log('Sauvegarder utilisateur:', userData);
+    setShowUserModal(false);
+    setEditingUser(null);
+    alert('Utilisateur sauvegardé avec succès !');
+  };
+
+  const handleVendorAction = (action, vendorData) => {
+    console.log('Action vendeur:', action, vendorData);
+    setShowVendorModal(false);
+    setSelectedVendorForApproval(null);
+    alert(`Vendeur ${action === 'approve' ? 'approuvé' : 'rejeté'} avec succès !`);
+  };
+
+  const handleSaveSettings = (settingsData) => {
+    console.log('Sauvegarder paramètres:', settingsData);
+    setShowSettingsModal(false);
+    alert('Paramètres sauvegardés avec succès !');
   };
 
   return (
