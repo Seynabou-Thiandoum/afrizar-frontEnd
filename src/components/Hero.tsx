@@ -1,7 +1,10 @@
 import React from 'react';
 import { ArrowRight, Sparkles, ShoppingBag, Star, Award } from 'lucide-react';
+import { useI18n } from '../contexts/InternationalizationContext';
 
 const Hero = ({ onNavigate }) => {
+  const { t } = useI18n();
+
   return (
     <section className="relative bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 overflow-hidden min-h-screen flex items-center">
       {/* Animated Background Elements */}
@@ -36,21 +39,21 @@ const Hero = ({ onNavigate }) => {
                 <div className="absolute inset-0 bg-orange-600/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
               </div>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600 font-bold text-sm uppercase tracking-widest">
-                Couture Authentique
+                {t('hero.authentic_couture')}
               </span>
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 leading-tight mb-8">
-              L'élégance
+              {t('hero.elegance')}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-red-600 to-orange-700 block animate-gradient-x">
-                sénégalaise
+                {t('hero.senegalese')}
               </span>
-              <span className="text-gray-700">à portée de main</span>
+              <span className="text-gray-700">{t('hero.at_your_fingertips')}</span>
             </h1>
             
             <p className="text-xl sm:text-2xl text-gray-600 mb-10 leading-relaxed font-light">
-              Découvrez une collection exceptionnelle de tenues traditionnelles et d'accessoires artisanaux, 
-              <span className="text-orange-600 font-medium">créés par des artisans passionnés</span> du Sénégal.
+              {t('hero.subtitle')}
+              <span className="text-orange-600 font-medium">{t('hero.passionate_artisans')}</span> {t('hero.from_senegal')}.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mb-12">
@@ -59,11 +62,11 @@ const Hero = ({ onNavigate }) => {
                 className="relative bg-gradient-to-r from-orange-600 to-red-600 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 flex items-center justify-center group shadow-2xl hover:shadow-orange-500/25 transform hover:scale-105"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                <span className="relative">Explorer le Catalogue</span>
+                <span className="relative">{t('hero.cta_catalog')}</span>
                 <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform relative" />
               </button>
               <button className="relative border-3 border-orange-600 text-orange-600 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-orange-600 hover:text-white transition-all duration-300 backdrop-blur-sm bg-white/80 shadow-xl hover:shadow-orange-500/25 transform hover:scale-105">
-                <span className="relative">Commande Sur Mesure</span>
+                <span className="relative">{t('hero.cta_custom')}</span>
               </button>
             </div>
             

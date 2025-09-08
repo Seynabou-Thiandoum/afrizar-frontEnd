@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/InternationalizationContext';
 import VendorProductForm from './VendorProductForm';
 import ProductDetailModal from './ProductDetailModal';
 import PromotionModal from './PromotionModal';
@@ -37,6 +38,7 @@ import {
 
 const VendorDashboard = () => {
   const { user, logout } = useAuth();
+  const { t, formatPrice } = useI18n();
   const [activeTab, setActiveTab] = useState('overview');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
@@ -52,28 +54,28 @@ const VendorDashboard = () => {
   
   const stats = [
     {
-      title: 'Ventes ce mois',
+      title: t('dashboard.monthly_sales'),
       value: '1,245,000 FCFA',
       change: '+12%',
       icon: DollarSign,
       color: 'bg-green-500'
     },
     {
-      title: 'Produits actifs',
+      title: t('dashboard.active_products'),
       value: '24',
       change: '+3',
       icon: Package,
       color: 'bg-blue-500'
     },
     {
-      title: 'Commandes',
+      title: t('dashboard.orders'),
       value: '48',
       change: '+8',
       icon: ShoppingCart,
       color: 'bg-purple-500'
     },
     {
-      title: 'Note moyenne',
+      title: t('dashboard.average_rating'),
       value: '4.8',
       change: '+0.2',
       icon: Star,

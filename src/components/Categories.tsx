@@ -1,52 +1,55 @@
 import React from 'react';
 import { Shirt, Watch, Gem, Sparkles, Crown, Star, ArrowRight } from 'lucide-react';
+import { useI18n } from '../contexts/InternationalizationContext';
 
 const Categories = ({ onNavigate }) => {
+  const { t } = useI18n();
+
   const categories = [
     {
       id: 1,
-      name: 'Tenues Femmes',
-      description: 'Boubous, robes, ensembles élégants',
+      name: t('categories.women_wear'),
+      description: t('categories.women_description'),
       icon: Crown,
       image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-pink-500 to-rose-600'
     },
     {
       id: 2,
-      name: 'Tenues Hommes',
-      description: 'Grands boubous, costumes traditionnels',
+      name: t('categories.men_wear'),
+      description: t('categories.men_description'),
       icon: Shirt,
       image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-blue-500 to-indigo-600'
     },
     {
       id: 3,
-      name: 'Accessoires',
-      description: 'Bijoux, sacs, chaussures artisanales',
+      name: t('categories.accessories'),
+      description: t('categories.accessories_description'),
       icon: Gem,
       image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-purple-500 to-violet-600'
     },
     {
       id: 4,
-      name: 'Montres & Bijoux',
-      description: 'Montres, bracelets, colliers uniques',
+      name: t('categories.watches_jewelry'),
+      description: t('categories.watches_description'),
       icon: Watch,
       image: 'https://images.pexels.com/photos/1927248/pexels-photo-1927248.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-amber-500 to-orange-600'
     },
     {
       id: 5,
-      name: 'Collection Premium',
-      description: 'Pièces exclusives et limitées',
+      name: t('categories.premium_collection'),
+      description: t('categories.premium_description'),
       icon: Star,
       image: 'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-emerald-500 to-teal-600'
     },
     {
       id: 6,
-      name: 'Sur Mesure',
-      description: 'Créations personnalisées à vos mesures',
+      name: t('categories.custom_made'),
+      description: t('categories.custom_description'),
       icon: Sparkles,
       image: 'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-red-500 to-pink-600'
@@ -68,11 +71,11 @@ const Categories = ({ onNavigate }) => {
           <div className="w-12 h-1 bg-gradient-to-l from-transparent to-orange-600 rounded-full"></div>
         </div>
         <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-6">
-          Explorez nos Collections
+          {t('categories.title')}
         </h2>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Découvrez l'art de la couture sénégalaise à travers nos différentes catégories, 
-          <span className="text-orange-600 font-semibold">chacune reflétant la richesse culturelle</span> du Sénégal.
+          {t('categories.subtitle')}
+          <span className="text-orange-600 font-semibold">{t('categories.cultural_richness')}</span> {t('categories.of_senegal')}.
         </p>
       </div>
 
@@ -117,7 +120,7 @@ const Categories = ({ onNavigate }) => {
                 
                 <div className="flex items-center justify-between group-hover:transform group-hover:translate-x-2 transition-transform duration-300">
                   <span className="text-orange-600 font-bold">
-                    Voir la collection
+                    {t('categories.view_collection')}
                   </span>
                   <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-orange-500/25 transition-all duration-300 transform group-hover:scale-110">
                     <ArrowRight className="h-5 w-5 text-white group-hover:translate-x-1 transition-transform" />
@@ -140,7 +143,7 @@ const Categories = ({ onNavigate }) => {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
           <span className="relative flex items-center">
-            Découvrir Toutes les Collections
+            {t('categories.discover_all')}
             <Sparkles className="ml-3 h-6 w-6 group-hover:rotate-180 transition-transform duration-500" />
           </span>
         </button>
