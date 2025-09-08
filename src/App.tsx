@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
+import { I18nProvider } from './contexts/InternationalizationContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
