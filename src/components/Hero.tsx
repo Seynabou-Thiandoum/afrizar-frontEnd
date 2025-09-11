@@ -1,12 +1,51 @@
-import React from 'react';
-import { ArrowRight, Sparkles, ShoppingBag, Star, Award } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Sparkles, ShoppingBag, Star, Award, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
 
 const Hero = ({ onNavigate }) => {
   const { t } = useI18n();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    {
+      image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      title: 'Élégance Féminine Traditionnelle',
+      description: 'Découvrez nos magnifiques boubous brodés'
+    },
+    {
+      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      title: 'Distinction Masculine',
+      description: 'Grands boubous et costumes traditionnels'
+    },
+    {
+      image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      title: 'Accessoires Authentiques',
+      description: 'Bijoux et accessoires artisanaux'
+    },
+    {
+      image: 'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      title: 'Créations Sur Mesure',
+      description: 'Personnalisez vos tenues selon vos goûts'
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
 
   return (
-    <section className="relative bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 overflow-hidden min-h-screen flex items-center">
+    <section className="relative bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 overflow-hidden min-h-screen">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-200/30 to-red-200/30 rounded-full blur-3xl animate-pulse"></div>
@@ -32,6 +71,7 @@ const Hero = ({ onNavigate }) => {
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Présentation Afrizar */}
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start mb-8 group">
               <div className="relative">
@@ -39,34 +79,43 @@ const Hero = ({ onNavigate }) => {
                 <div className="absolute inset-0 bg-orange-600/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
               </div>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600 font-bold text-sm uppercase tracking-widest">
-                {t('hero.authentic_couture')}
+                Made in Senegal
               </span>
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 leading-tight mb-8">
-              {t('hero.elegance')}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-red-600 to-orange-700 block animate-gradient-x">
-                {t('hero.senegalese')}
+                Afrizar.sn
               </span>
-              <span className="text-gray-700">{t('hero.at_your_fingertips')}</span>
+              <span className="text-gray-700 text-4xl sm:text-5xl lg:text-6xl">Vitrine Digitale</span>
             </h1>
             
-            <p className="text-xl sm:text-2xl text-gray-600 mb-10 leading-relaxed font-light">
-              {t('hero.subtitle')}
-              <span className="text-orange-600 font-medium">{t('hero.passionate_artisans')}</span> {t('hero.from_senegal')}.
-            </p>
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 mb-10 shadow-2xl border border-orange-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Notre Mission</h2>
+              <p className="text-lg text-gray-700 leading-relaxed mb-4">
+                <span className="text-orange-600 font-semibold">Afrizar.sn</span> est une vitrine digitale dédiée à la 
+                <span className="text-red-600 font-semibold"> valorisation des produits Made in Senegal</span>.
+              </p>
+              <p className="text-gray-600 leading-relaxed">
+                Nous connectons les <span className="font-semibold text-orange-600">artisans passionnés</span> du Sénégal 
+                avec une clientèle internationale, en mettant en valeur l'authenticité et la qualité de l'artisanat sénégalais.
+              </p>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mb-12">
               <button 
-                onClick={() => onNavigate('catalog')}
+                onClick={() => onNavigate('categories')}
                 className="relative bg-gradient-to-r from-orange-600 to-red-600 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 flex items-center justify-center group shadow-2xl hover:shadow-orange-500/25 transform hover:scale-105"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                <span className="relative">{t('hero.cta_catalog')}</span>
+                <span className="relative">Explorer les Catégories</span>
                 <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform relative" />
               </button>
-              <button className="relative border-3 border-orange-600 text-orange-600 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-orange-600 hover:text-white transition-all duration-300 backdrop-blur-sm bg-white/80 shadow-xl hover:shadow-orange-500/25 transform hover:scale-105">
-                <span className="relative">{t('hero.cta_custom')}</span>
+              <button 
+                onClick={() => onNavigate('vendors')}
+                className="relative border-3 border-orange-600 text-orange-600 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-orange-600 hover:text-white transition-all duration-300 backdrop-blur-sm bg-white/80 shadow-xl hover:shadow-orange-500/25 transform hover:scale-105"
+              >
+                <span className="relative">Découvrir nos Artisans</span>
               </button>
             </div>
             
@@ -95,16 +144,62 @@ const Hero = ({ onNavigate }) => {
             </div>
           </div>
           
+          {/* Slider d'images */}
           <div className="relative">
-            {/* Main Image Container */}
             <div className="relative z-10 group">
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700">
-                <img
-                  src="https://images.pexels.com/photos/1121796/pexels-photo-1121796.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Couture sénégalaise"
-                  className="w-full object-cover h-96 lg:h-[600px] group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+              <div className="relative overflow-hidden rounded-3xl shadow-2xl">
+                <div className="relative h-96 lg:h-[600px]">
+                  {slides.map((slide, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-all duration-1000 ${
+                        index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                      }`}
+                    >
+                      <img
+                        src={slide.image}
+                        alt={slide.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                      
+                      {/* Slide Content */}
+                      <div className="absolute bottom-8 left-8 right-8 text-white">
+                        <h3 className="text-2xl font-bold mb-2">{slide.title}</h3>
+                        <p className="text-orange-200">{slide.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Navigation Arrows */}
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+                
+                {/* Slide Indicators */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                  {slides.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                        index === currentSlide 
+                          ? 'bg-white scale-125' 
+                          : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
               
               {/* Floating Badge - Quality */}
@@ -114,7 +209,7 @@ const Hero = ({ onNavigate }) => {
                     <Award className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-gray-900">Qualité Premium</div>
+                    <div className="text-sm font-bold text-gray-900">Made in Senegal</div>
                     <div className="text-xs text-gray-600">Artisanat authentique</div>
                   </div>
                 </div>
