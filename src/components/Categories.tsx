@@ -8,51 +8,30 @@ const Categories = ({ onNavigate }) => {
   const categories = [
     {
       id: 1,
-      name: t('categories.women_wear'),
-      description: t('categories.women_description'),
+      name: 'Tenues Femmes',
+      description: 'Boubous, Robes, Ensembles élégants',
       icon: Crown,
       image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-pink-500 to-rose-600'
+      color: 'from-pink-500 to-rose-600',
+      route: 'tenues-femmes'
     },
     {
       id: 2,
-      name: t('categories.men_wear'),
-      description: t('categories.men_description'),
+      name: 'Tenues Hommes',
+      description: 'Grands boubous, Costumes traditionnels',
       icon: Shirt,
       image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-blue-500 to-indigo-600'
+      color: 'from-blue-500 to-indigo-600',
+      route: 'tenues-hommes'
     },
     {
       id: 3,
-      name: t('categories.accessories'),
-      description: t('categories.accessories_description'),
+      name: 'Accessoires',
+      description: 'Bonnets/Chapeaux, Chaussures, Sacs, Bijoux',
       icon: Gem,
       image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-purple-500 to-violet-600'
-    },
-    {
-      id: 4,
-      name: t('categories.watches_jewelry'),
-      description: t('categories.watches_description'),
-      icon: Watch,
-      image: 'https://images.pexels.com/photos/1927248/pexels-photo-1927248.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-amber-500 to-orange-600'
-    },
-    {
-      id: 5,
-      name: t('categories.premium_collection'),
-      description: t('categories.premium_description'),
-      icon: Star,
-      image: 'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-emerald-500 to-teal-600'
-    },
-    {
-      id: 6,
-      name: t('categories.custom_made'),
-      description: t('categories.custom_description'),
-      icon: Sparkles,
-      image: 'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-red-500 to-pink-600'
+      color: 'from-purple-500 to-violet-600',
+      route: 'accessoires'
     }
   ];
 
@@ -85,7 +64,7 @@ const Categories = ({ onNavigate }) => {
           return (
             <div
               key={category.id}
-              onClick={() => onNavigate('catalog')}
+              onClick={() => onNavigate(category.route)}
               className="group relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer transform hover:-translate-y-4 hover:rotate-1 border border-white/50"
             >
               {/* Gradient Overlay */}

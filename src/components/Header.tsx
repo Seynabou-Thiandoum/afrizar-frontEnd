@@ -96,11 +96,20 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
             <button 
-              onClick={() => handleNavigation('catalog')}
+              onClick={() => handleNavigation('categories')}
               className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
             >
               <span className="relative z-10">
-              {t('nav.catalog')}
+              Catégories
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
+            </button>
+            <button 
+              onClick={() => handleNavigation('vendors')}
+              className="relative text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl hover:bg-orange-50 group"
+            >
+              <span className="relative z-10">
+              Vendeurs
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
             </button>
@@ -339,10 +348,16 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                 {t('nav.home')}
               </button>
               <button 
-                onClick={() => handleNavigation('catalog')}
+                onClick={() => handleNavigation('categories')}
                 className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
               >
-                {t('nav.catalog')}
+                Catégories
+              </button>
+              <button 
+                onClick={() => handleNavigation('vendors')}
+                className="text-gray-700 hover:text-orange-600 px-4 py-3 text-sm font-bold text-left rounded-xl hover:bg-orange-50 transition-all duration-300"
+              >
+                Vendeurs
               </button>
               <button 
                 onClick={() => handleNavigation('tenues-femmes')}
