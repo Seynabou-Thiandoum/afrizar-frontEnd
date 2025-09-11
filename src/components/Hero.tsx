@@ -98,7 +98,7 @@ const Hero = ({ onNavigate }) => {
               </p>
               <p className="text-gray-600 leading-relaxed">
                 Nous connectons les <span className="font-semibold text-orange-600">artisans passionnés</span> du Sénégal 
-                avec une clientèle internationale, en mettant en valeur l'authenticité et la qualité de l'artisanat sénégalais.
+                avec une clientèle internationale, en mettant en valeur l'authenticité et la qualité de l\'artisanat sénégalais.
               </p>
             </div>
             
