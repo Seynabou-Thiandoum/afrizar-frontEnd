@@ -20,6 +20,8 @@ import Wishlist from './components/Wishlist';
 import DeferredOrder from './components/DeferredOrder';
 import UserProfile from './components/UserProfile';
 import Footer from './components/Footer';
+import CategoriesPage from './components/CategoriesPage';
+import VendorsPage from './components/VendorsPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -54,6 +56,10 @@ function App() {
         );
       case 'catalog':
         return <Catalog searchTerm={globalSearchTerm} onSearchTermChange={setGlobalSearchTerm} onNavigate={setCurrentPage} />;
+      case 'categories':
+        return <CategoriesPage onBack={() => setCurrentPage('home')} />;
+      case 'vendors':
+        return <VendorsPage onBack={() => setCurrentPage('home')} />;
       case 'tenues-femmes':
         return <CategoryPage category="Tenues Femmes" onBack={() => setCurrentPage('home')} />;
       case 'tenues-hommes':

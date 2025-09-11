@@ -14,6 +14,7 @@ const Categories = ({ onNavigate }) => {
       image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-pink-500 to-rose-600',
       route: 'tenues-femmes'
+      route: 'tenues-femmes'
     },
     {
       id: 2,
@@ -22,6 +23,7 @@ const Categories = ({ onNavigate }) => {
       icon: Shirt,
       image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-blue-500 to-indigo-600',
+      route: 'tenues-hommes'
       route: 'tenues-hommes'
     },
     {
@@ -32,29 +34,6 @@ const Categories = ({ onNavigate }) => {
       image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-purple-500 to-violet-600',
       route: 'accessoires'
-    }
-  ];
-
-  return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-orange-200/20 to-red-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-yellow-200/15 to-orange-200/15 rounded-full blur-3xl"></div>
-      </div>
-      
-      <div className="text-center mb-16 relative z-10">
-        <div className="inline-flex items-center justify-center mb-6">
-          <div className="w-12 h-1 bg-gradient-to-r from-transparent to-orange-600 rounded-full"></div>
-          <Sparkles className="h-6 w-6 text-orange-600 mx-4 animate-pulse" />
-          <div className="w-12 h-1 bg-gradient-to-l from-transparent to-orange-600 rounded-full"></div>
-        </div>
-        <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-6">
-          {t('categories.title')}
-        </h2>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          {t('categories.subtitle')}
-          <span className="text-orange-600 font-semibold">{t('categories.cultural_richness')}</span> {t('categories.of_senegal')}.
         </p>
       </div>
 
