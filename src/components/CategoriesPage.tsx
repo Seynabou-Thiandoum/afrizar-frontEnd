@@ -13,7 +13,9 @@ import {
   Filter,
   Search,
   Grid3X3,
-  List
+  List,
+  Users,
+  Baby
 } from 'lucide-react';
 import ProductModal from './ProductModal';
 
@@ -26,24 +28,39 @@ const CategoriesPage = ({ onBack }) => {
 
   const categories = [
     {
-      id: 'tenues-femmes',
-      name: 'Tenues Femmes',
-      description: 'Boubous, Robes, Ensembles élégants',
-      icon: Crown,
-      image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
-      color: 'from-pink-500 to-rose-600',
-      productCount: 45,
-      subcategories: ['Boubous', 'Robes modernes', 'Ensembles bazin', 'Caftans']
-    },
-    {
-      id: 'tenues-hommes',
-      name: 'Tenues Hommes',
-      description: 'Grands boubous, Costumes traditionnels',
+      id: 'vetements',
+      name: 'Vêtements',
+      description: 'Hommes, Femmes, Enfants',
       icon: Shirt,
-      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=500',
+      image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
       color: 'from-blue-500 to-indigo-600',
-      productCount: 32,
-      subcategories: ['Grands boubous', 'Costumes', 'Kaftans', 'Chemises wax']
+      productCount: 120,
+      subcategories: [
+        {
+          id: 'hommes',
+          name: 'Hommes',
+          description: 'Grands boubous, costumes traditionnels, kaftans',
+          icon: Users,
+          image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
+          productCount: 45
+        },
+        {
+          id: 'femmes',
+          name: 'Femmes',
+          description: 'Boubous, robes, ensembles bazin, caftans',
+          icon: Crown,
+          image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
+          productCount: 65
+        },
+        {
+          id: 'enfants',
+          name: 'Enfants',
+          description: 'Tenues traditionnelles pour enfants',
+          icon: Baby,
+          image: 'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=400',
+          productCount: 10
+        }
+      ]
     },
     {
       id: 'accessoires',
@@ -52,8 +69,41 @@ const CategoriesPage = ({ onBack }) => {
       icon: Gem,
       image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
       color: 'from-purple-500 to-violet-600',
-      productCount: 78,
-      subcategories: ['Bonnets/Chapeaux', 'Chaussures', 'Sacs', 'Bijoux']
+      productCount: 85,
+      subcategories: [
+        {
+          id: 'bonnets-chapeaux',
+          name: 'Bonnets/Chapeaux',
+          description: 'Couvre-chefs traditionnels et modernes',
+          icon: Crown,
+          image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=400',
+          productCount: 15
+        },
+        {
+          id: 'chaussures',
+          name: 'Chaussures',
+          description: 'Babouches, sandales, chaussures artisanales',
+          icon: Shirt,
+          image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=400',
+          productCount: 25
+        },
+        {
+          id: 'sacs',
+          name: 'Sacs',
+          description: 'Sacs à main, besaces, maroquinerie',
+          icon: Gem,
+          image: 'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=400',
+          productCount: 20
+        },
+        {
+          id: 'bijoux',
+          name: 'Bijoux',
+          description: 'Colliers, bracelets, boucles d\'oreilles',
+          icon: Star,
+          image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
+          productCount: 25
+        }
+      ]
     }
   ];
 
@@ -73,8 +123,8 @@ const CategoriesPage = ({ onBack }) => {
       rating: 4.8,
       reviews: 24,
       status: 'En stock',
-      category: 'Tenues Femmes',
-      subcategory: 'Boubous',
+      category: 'Vêtements',
+      subcategory: 'Femmes',
       quality: 'Optimal',
       colors: ['#FF6B35', '#004E89', '#F7C52D'],
       sizes: ['S', 'M', 'L', 'XL'],
@@ -91,64 +141,122 @@ const CategoriesPage = ({ onBack }) => {
     },
     {
       id: 2,
-      name: 'Ensemble Bazin Riche',
-      description: 'Ensemble deux pièces en bazin riche avec motifs géométriques traditionnels. Finitions soignées et coupe moderne adaptée au style contemporain.',
-      price: 35000,
+      name: 'Kaftan Homme Traditionnel',
+      description: 'Kaftan élégant pour homme avec broderies sophistiquées et finitions premium. Coupe traditionnelle adaptée aux morphologies modernes.',
+      price: 38000,
+      currency: 'FCFA',
+      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=500',
+      images: [
+        'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      rating: 4.6,
+      reviews: 15,
+      status: 'En stock',
+      category: 'Vêtements',
+      subcategory: 'Hommes',
+      quality: 'Normale',
+      colors: ['#8B4513', '#000080', '#228B22'],
+      sizes: ['M', 'L', 'XL', 'XXL'],
+      weight: '0.7 kg',
+      dimensions: 'L: 140cm, l: 110cm',
+      vendor: 'Maître Ibrahima',
+      delivery: {
+        express: '3-5 jours',
+        normal: '7-15 jours'
+      },
+      location: 'Kaolack, Sénégal',
+      customizable: true,
+      history: 'Le kaftan masculin est une tenue d\'apparat portée lors des cérémonies importantes. Sa coupe ample offre confort et élégance.'
+    },
+    {
+      id: 3,
+      name: 'Ensemble Enfant Coloré',
+      description: 'Adorable ensemble traditionnel pour enfant en tissu wax coloré. Parfait pour les fêtes et cérémonies familiales.',
+      price: 18000,
       currency: 'FCFA',
       image: 'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=500',
       images: [
         'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=800'
       ],
       rating: 4.9,
-      reviews: 18,
-      status: 'Sur commande',
-      category: 'Tenues Femmes',
-      subcategory: 'Ensembles bazin',
-      quality: 'Normale',
-      colors: ['#8B5A2B', '#2E8B57', '#B22222'],
-      sizes: ['S', 'M', 'L'],
-      weight: '0.6 kg',
-      dimensions: 'Haut: L: 70cm, Jupe: L: 90cm',
-      vendor: 'Couture Aminata',
-      delivery: {
-        express: '3-7 jours',
-        normal: '7-15 jours'
-      },
-      location: 'Thiès, Sénégal',
-      customizable: false,
-      history: 'Le bazin riche est un tissu noble très apprécié en Afrique de l\'Ouest, symbole d\'élégance et de raffinement.'
-    },
-    {
-      id: 3,
-      name: 'Collier Perles Traditionnelles',
-      description: 'Collier artisanal en perles de verre colorées selon la tradition sénégalaise. Chaque perle est sélectionnée et assemblée à la main par nos artisans bijoutiers.',
-      price: 12000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
-      images: [
-        'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      rating: 4.7,
-      reviews: 32,
+      reviews: 12,
       status: 'En stock',
-      category: 'Accessoires',
-      subcategory: 'Bijoux',
+      category: 'Vêtements',
+      subcategory: 'Enfants',
       quality: 'Normale',
-      colors: ['#FF4500', '#32CD32', '#4169E1'],
-      sizes: ['Unique'],
-      weight: '0.1 kg',
-      dimensions: 'Longueur: 45cm',
-      vendor: 'Bijoux Khadija',
+      colors: ['#FF6B35', '#32CD32', '#4169E1'],
+      sizes: ['2-4 ans', '4-6 ans', '6-8 ans', '8-10 ans'],
+      weight: '0.3 kg',
+      dimensions: 'Selon âge',
+      vendor: 'Couture Enfantine',
       delivery: {
-        express: '1-3 jours',
-        normal: '2-10 jours'
+        express: '2-4 jours',
+        normal: '5-12 jours'
       },
-      location: 'Saint-Louis, Sénégal',
-      customizable: true,
-      history: 'Les perles de verre sont un art ancestral au Sénégal, utilisées dans les parures traditionnelles depuis des siècles.'
+      location: 'Dakar, Sénégal',
+      customizable: false,
+      history: 'Les tenues traditionnelles pour enfants initient les plus jeunes à la richesse culturelle sénégalaise dès le plus jeune âge.'
     },
     {
       id: 4,
+      name: 'Bonnet Traditionnel Brodé',
+      description: 'Bonnet traditionnel sénégalais avec broderies dorées. Accessoire indispensable pour compléter une tenue traditionnelle masculine.',
+      price: 8000,
+      currency: 'FCFA',
+      image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=500',
+      images: [
+        'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      rating: 4.5,
+      reviews: 28,
+      status: 'En stock',
+      category: 'Accessoires',
+      subcategory: 'Bonnets/Chapeaux',
+      quality: 'Normale',
+      colors: ['#000000', '#8B4513', '#FF6B35'],
+      sizes: ['S', 'M', 'L'],
+      weight: '0.1 kg',
+      dimensions: 'Tour de tête: 54-60cm',
+      vendor: 'Accessoires Traditionnels',
+      delivery: {
+        express: '1-3 jours',
+        normal: '3-10 jours'
+      },
+      location: 'Saint-Louis, Sénégal',
+      customizable: true,
+      history: 'Le bonnet traditionnel, appelé "calotte", est un symbole de respect et de tradition dans la culture sénégalaise.'
+    },
+    {
+      id: 5,
+      name: 'Babouches Cuir Artisanales',
+      description: 'Babouches traditionnelles en cuir véritable, confectionnées selon les méthodes ancestrales. Confort et élégance pour tous les jours.',
+      price: 15000,
+      currency: 'FCFA',
+      image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=500',
+      images: [
+        'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      rating: 4.3,
+      reviews: 19,
+      status: 'En stock',
+      category: 'Accessoires',
+      subcategory: 'Chaussures',
+      quality: 'Normale',
+      colors: ['#8B4513', '#000000', '#FF6B35'],
+      sizes: ['36', '37', '38', '39', '40', '41', '42', '43'],
+      weight: '0.6 kg',
+      dimensions: 'Pointures européennes',
+      vendor: 'Cordonnerie Traditionnelle',
+      delivery: {
+        express: '2-4 jours',
+        normal: '5-15 jours'
+      },
+      location: 'Touba, Sénégal',
+      customizable: false,
+      history: 'Les babouches sont des chaussures traditionnelles d\'Afrique du Nord adoptées et adaptées par l\'artisanat sénégalais.'
+    },
+    {
+      id: 6,
       name: 'Sac à Main Cuir Artisanal',
       description: 'Sac à main en cuir véritable avec motifs traditionnels gravés à la main. Maroquinerie de qualité supérieure alliant tradition et modernité.',
       price: 25000,
@@ -175,6 +283,35 @@ const CategoriesPage = ({ onBack }) => {
       location: 'Mbour, Sénégal',
       customizable: false,
       history: 'La maroquinerie sénégalaise puise ses techniques dans l\'artisanat traditionnel du travail du cuir, perfectionnées au fil des générations.'
+    },
+    {
+      id: 7,
+      name: 'Collier Perles Traditionnelles',
+      description: 'Collier artisanal en perles de verre colorées selon la tradition sénégalaise. Chaque perle est sélectionnée et assemblée à la main par nos artisans bijoutiers.',
+      price: 12000,
+      currency: 'FCFA',
+      image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
+      images: [
+        'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=800'
+      ],
+      rating: 4.7,
+      reviews: 32,
+      status: 'En stock',
+      category: 'Accessoires',
+      subcategory: 'Bijoux',
+      quality: 'Normale',
+      colors: ['#FF4500', '#32CD32', '#4169E1'],
+      sizes: ['Unique'],
+      weight: '0.1 kg',
+      dimensions: 'Longueur: 45cm',
+      vendor: 'Bijoux Khadija',
+      delivery: {
+        express: '1-3 jours',
+        normal: '2-10 jours'
+      },
+      location: 'Saint-Louis, Sénégal',
+      customizable: true,
+      history: 'Les perles de verre sont un art ancestral au Sénégal, utilisées dans les parures traditionnelles depuis des siècles.'
     }
   ];
 
@@ -200,6 +337,11 @@ const CategoriesPage = ({ onBack }) => {
     const message = `Bonjour, je suis intéressé(e) par le produit: ${product.name} - Prix: ${formatPrice(product.price, product.currency)}`;
     const whatsappUrl = `https://wa.me/221771234567?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleOrderForm = (product) => {
+    console.log('Commande via formulaire:', product);
+    // Redirection vers formulaire de commande
   };
 
   if (selectedCategory) {
@@ -263,15 +405,27 @@ const CategoriesPage = ({ onBack }) => {
           {/* Subcategories */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Sous-catégories</h3>
-            <div className="flex flex-wrap gap-3">
-              {selectedCategory.subcategories.map((sub, index) => (
-                <button
-                  key={index}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
-                >
-                  {sub}
-                </button>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {selectedCategory.subcategories.map((sub, index) => {
+                const IconComponent = sub.icon;
+                return (
+                  <div
+                    key={index}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow p-6 cursor-pointer group"
+                  >
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <IconComponent className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{sub.name}</h4>
+                        <p className="text-xs text-gray-500">{sub.productCount} produits</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600">{sub.description}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -300,7 +454,7 @@ const CategoriesPage = ({ onBack }) => {
                   {/* Quality Badge */}
                   <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium ${
                     product.quality === 'Optimal' 
-                      ? 'bg-gold-100 text-gold-800 border border-gold-300' 
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' 
                       : 'bg-blue-100 text-blue-800'
                   }`}>
                     {product.quality}
@@ -310,6 +464,13 @@ const CategoriesPage = ({ onBack }) => {
                   {product.originalPrice && (
                     <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
                       -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+                    </div>
+                  )}
+
+                  {/* Customizable Badge */}
+                  {product.customizable && (
+                    <div className="absolute bottom-3 left-3 bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      Personnalisable
                     </div>
                   )}
 
@@ -361,13 +522,23 @@ const CategoriesPage = ({ onBack }) => {
                     <span className="text-sm text-gray-600">{product.vendor}</span>
                   </div>
 
-                  <div className="text-sm text-gray-600 mb-3">
-                    <div>Poids: {product.weight}</div>
-                    <div>Dimensions: {product.dimensions}</div>
+                  {/* Spécifications */}
+                  <div className="text-sm text-gray-600 mb-3 space-y-1">
+                    <div><strong>Poids:</strong> {product.weight}</div>
+                    <div><strong>Dimensions:</strong> {product.dimensions}</div>
+                    {product.customizable && (
+                      <div className="text-purple-600 font-medium">✨ Personnalisation disponible</div>
+                    )}
                   </div>
 
                   {viewMode === 'list' && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                    <div className="mb-4">
+                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <h5 className="font-semibold text-blue-900 text-sm mb-1">Histoire & Tradition</h5>
+                        <p className="text-blue-800 text-xs line-clamp-2">{product.history}</p>
+                      </div>
+                    </div>
                   )}
                   
                   <div className="flex items-center justify-between mb-4">
@@ -386,11 +557,11 @@ const CategoriesPage = ({ onBack }) => {
                   {/* Delivery Options */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Express:</span>
+                      <span className="text-gray-600">📦 Express:</span>
                       <span className="font-medium text-red-600">{product.delivery.express}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Normal:</span>
+                      <span className="text-gray-600">🚚 Normal:</span>
                       <span className="font-medium text-blue-600">{product.delivery.normal}</span>
                     </div>
                   </div>
@@ -400,9 +571,13 @@ const CategoriesPage = ({ onBack }) => {
                       onClick={() => handleOrderWhatsApp(product)}
                       className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center space-x-1"
                     >
+                      <MessageSquare className="h-4 w-4" />
                       <span>WhatsApp</span>
                     </button>
-                    <button className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium">
+                    <button 
+                      onClick={() => handleOrderForm(product)}
+                      className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                    >
                       Formulaire
                     </button>
                   </div>
@@ -445,7 +620,7 @@ const CategoriesPage = ({ onBack }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
           {categories.map((category) => {
             const IconComponent = category.icon;
             return (
@@ -457,7 +632,7 @@ const CategoriesPage = ({ onBack }) => {
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
-                <div className="relative h-56 overflow-hidden rounded-t-3xl">
+                <div className="relative h-64 overflow-hidden rounded-t-3xl">
                   <img
                     src={category.image}
                     alt={category.name}
@@ -483,10 +658,10 @@ const CategoriesPage = ({ onBack }) => {
                 </div>
                 
                 <div className="p-8 relative">
-                  <h3 className="text-2xl font-black text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-600 group-hover:to-red-600 transition-all duration-300">
+                  <h3 className="text-3xl font-black text-gray-900 mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-600 group-hover:to-red-600 transition-all duration-300">
                     {category.name}
                   </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
+                  <p className="text-gray-600 mb-6 leading-relaxed text-lg">
                     {category.description}
                   </p>
                   
@@ -495,24 +670,24 @@ const CategoriesPage = ({ onBack }) => {
                     {category.subcategories.slice(0, 3).map((sub, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+                        className="px-3 py-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 rounded-full text-sm font-medium border border-orange-200"
                       >
-                        {sub}
+                        {sub.name}
                       </span>
                     ))}
                     {category.subcategories.length > 3 && (
-                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
                         +{category.subcategories.length - 3}
                       </span>
                     )}
                   </div>
                   
                   <div className="flex items-center justify-between group-hover:transform group-hover:translate-x-2 transition-transform duration-300">
-                    <span className="text-orange-600 font-bold">
+                    <span className="text-orange-600 font-bold text-lg">
                       Voir la collection
                     </span>
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-orange-500/25 transition-all duration-300 transform group-hover:scale-110">
-                      <Star className="h-5 w-5 text-white group-hover:rotate-180 transition-transform duration-500" />
+                    <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-orange-500/25 transition-all duration-300 transform group-hover:scale-110">
+                      <ArrowRight className="h-6 w-6 text-white group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                   

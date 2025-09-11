@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shirt, Watch, Gem, Sparkles, Crown, Star, ArrowRight } from 'lucide-react';
+import { Shirt, Users, Baby, Crown, Gem, ArrowRight, Star, Sparkles } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
 
 const Categories = ({ onNavigate }) => {
@@ -8,30 +8,23 @@ const Categories = ({ onNavigate }) => {
   const categories = [
     {
       id: 1,
-      name: 'Tenues Femmes',
-      description: 'Boubous, Robes, Ensembles élégants',
-      icon: Crown,
+      name: 'Vêtements',
+      description: 'Hommes, Femmes, Enfants',
+      icon: Shirt,
       image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-pink-500 to-rose-600',
-      route: 'tenues-femmes'
+      color: 'from-blue-500 to-indigo-600',
+      subcategories: ['Hommes', 'Femmes', 'Enfants'],
+      route: 'categories'
     },
     {
       id: 2,
-      name: 'Tenues Hommes',
-      description: 'Grands boubous, Costumes traditionnels',
-      icon: Shirt,
-      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
-      color: 'from-blue-500 to-indigo-600',
-      route: 'tenues-hommes'
-    },
-    {
-      id: 3,
       name: 'Accessoires',
       description: 'Bonnets/Chapeaux, Chaussures, Sacs, Bijoux',
       icon: Gem,
       image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
       color: 'from-purple-500 to-violet-600',
-      route: 'accessoires'
+      subcategories: ['Bonnets/Chapeaux', 'Chaussures', 'Sacs', 'Bijoux'],
+      route: 'categories'
     }
   ];
 
@@ -47,21 +40,22 @@ const Categories = ({ onNavigate }) => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center bg-gradient-to-r from-orange-100 to-red-100 rounded-full px-6 py-3 mb-6">
             <Star className="h-5 w-5 text-orange-600 mr-2" />
-            <span className="text-orange-800 font-semibold">{t('categories.featured_collections')}</span>
+            <span className="text-orange-800 font-semibold">Grandes Catégories</span>
           </div>
           
           <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 leading-tight">
             <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-              {t('categories.title')}
+              Explorez nos Collections
             </span>
           </h2>
           
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            {t('categories.subtitle')}
+            Découvrez l'art de la couture sénégalaise à travers nos différentes catégories, 
+            <span className="text-orange-600 font-semibold"> chacune reflétant la richesse culturelle</span> du Sénégal.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto relative z-10">
           {categories.map((category) => {
             const IconComponent = category.icon;
             return (
@@ -73,7 +67,7 @@ const Categories = ({ onNavigate }) => {
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
-                <div className="relative h-56 overflow-hidden rounded-t-3xl">
+                <div className="relative h-64 overflow-hidden rounded-t-3xl">
                   <img
                     src={category.image}
                     alt={category.name}
@@ -93,19 +87,31 @@ const Categories = ({ onNavigate }) => {
                 </div>
                 
                 <div className="p-8 relative">
-                  <h3 className="text-2xl font-black text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-600 group-hover:to-red-600 transition-all duration-300">
+                  <h3 className="text-3xl font-black text-gray-900 mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-600 group-hover:to-red-600 transition-all duration-300">
                     {category.name}
                   </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
+                  <p className="text-gray-600 mb-6 leading-relaxed text-lg">
                     {category.description}
                   </p>
                   
+                  {/* Subcategories */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {category.subcategories.map((sub, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 rounded-full text-sm font-medium border border-orange-200"
+                      >
+                        {sub}
+                      </span>
+                    ))}
+                  </div>
+                  
                   <div className="flex items-center justify-between group-hover:transform group-hover:translate-x-2 transition-transform duration-300">
-                    <span className="text-orange-600 font-bold">
-                      {t('categories.view_collection')}
+                    <span className="text-orange-600 font-bold text-lg">
+                      Voir la collection
                     </span>
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-orange-500/25 transition-all duration-300 transform group-hover:scale-110">
-                      <ArrowRight className="h-5 w-5 text-white group-hover:translate-x-1 transition-transform" />
+                    <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-orange-500/25 transition-all duration-300 transform group-hover:scale-110">
+                      <ArrowRight className="h-6 w-6 text-white group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                   
@@ -125,7 +131,7 @@ const Categories = ({ onNavigate }) => {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
             <span className="relative flex items-center">
-              {t('categories.discover_all')}
+              Découvrir Toutes les Collections
               <Sparkles className="ml-3 h-6 w-6 group-hover:rotate-180 transition-transform duration-500" />
             </span>
           </button>
