@@ -524,8 +524,8 @@ const CategoriesPage = ({ onBack }) => {
           })}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 };
 
 export default CategoriesPage;
