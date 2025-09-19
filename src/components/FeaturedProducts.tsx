@@ -182,8 +182,7 @@ const FeaturedProducts = ({ onNavigate }) => {
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 right-10 w-72 h-72 bg-gradient-to-r from-purple-200/20 to-pink-200/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-gradient-to-r from-blue-200/15 to-indigo-200/15 rounded-full blur-3xl"></div>
       </div>
@@ -202,9 +201,7 @@ const FeaturedProducts = ({ onNavigate }) => {
         </p>
       </div>
 
-      {/* Carrousel */}
       <div className="relative">
-        {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
           className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:bg-white transition-colors"
@@ -218,7 +215,6 @@ const FeaturedProducts = ({ onNavigate }) => {
           <ChevronRight className="h-6 w-6 text-gray-700" />
         </button>
 
-        {/* Products Carousel */}
         <div className="overflow-hidden mx-12">
           <div 
             className="flex transition-transform duration-500 ease-in-out"
@@ -232,7 +228,6 @@ const FeaturedProducts = ({ onNavigate }) => {
                       key={product.id}
                       className="group bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:-translate-y-6 hover:rotate-1 border border-white/50"
                     >
-                      {/* Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
                       
                       <div className="relative overflow-hidden rounded-t-3xl">
@@ -242,7 +237,6 @@ const FeaturedProducts = ({ onNavigate }) => {
                           className="w-full h-72 object-cover group-hover:scale-125 transition-transform duration-700"
                         />
                         
-                        {/* Quality Badge */}
                         <div className={`absolute top-4 left-4 px-4 py-2 rounded-2xl text-xs font-bold backdrop-blur-md ${
                           product.quality === 'Optimal' 
                             ? 'bg-gradient-to-r from-yellow-400/90 to-orange-500/90 text-white shadow-lg shadow-yellow-500/25' 
@@ -251,24 +245,20 @@ const FeaturedProducts = ({ onNavigate }) => {
                           {product.quality}
                         </div>
 
-                        {/* Discount Badge */}
                         {product.originalPrice && (
                           <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-2 rounded-2xl text-xs font-bold shadow-lg shadow-red-500/25 transform group-hover:scale-110 transition-transform duration-300">
                             -{Math.round((1 - product.price / product.originalPrice) * 100)}%
                           </div>
                         )}
 
-                        {/* Customizable Badge */}
                         {product.customizable && (
                           <div className="absolute bottom-4 left-4 bg-purple-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md">
                             Personnalisable
                           </div>
                         )}
                         
-                        {/* Shine Effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
 
-                        {/* Quick Actions */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center space-x-4">
                           <button
                             onClick={() => toggleWishlist(product.id)}
@@ -351,7 +341,6 @@ const FeaturedProducts = ({ onNavigate }) => {
                           </button>
                         </div>
                         
-                        {/* Bottom Accent */}
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                       </div>
                     </div>
@@ -362,7 +351,6 @@ const FeaturedProducts = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Slide Indicators */}
         <div className="flex justify-center mt-8 space-x-2">
           {Array.from({ length: totalSlides }).map((_, index) => (
             <button
@@ -378,7 +366,6 @@ const FeaturedProducts = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Call to Action */}
       <div className="text-center mt-16 relative z-10">
         <button 
           onClick={() => onNavigate('catalog')}
@@ -392,14 +379,13 @@ const FeaturedProducts = ({ onNavigate }) => {
         </button>
       </div>
 
-      {/* Product Modal */}
       {selectedProduct && (
         <ProductModal
           product={selectedProduct}
           isOpen={!!selectedProduct}
           onClose={() => setSelectedProduct(null)}
         />
-      )}
+      )} */}
     </section>
   );
 };

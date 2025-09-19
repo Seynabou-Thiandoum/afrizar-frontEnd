@@ -49,25 +49,61 @@ const countries: Country[] = [
   { code: 'ML', name: 'Mali', flag: '🇲🇱', currency: 'XOF', languages: ['fr'], shippingZone: 'africa' },
   { code: 'BF', name: 'Burkina Faso', flag: '🇧🇫', currency: 'XOF', languages: ['fr'], shippingZone: 'africa' },
   { code: 'NE', name: 'Niger', flag: '🇳🇪', currency: 'XOF', languages: ['fr'], shippingZone: 'africa' },
-  { code: 'GN', name: 'Guinée', flag: '🇬🇳', currency: 'XOF', languages: ['fr'], shippingZone: 'africa' },
-  { code: 'GA', name: 'Gabon', flag: '🇬🇦', currency: 'XOF', languages: ['fr'], shippingZone: 'africa' },
-  { code: 'CM', name: 'Cameroun', flag: '🇨🇲', currency: 'XOF', languages: ['fr', 'en'], shippingZone: 'africa' },
-  { code: 'TD', name: 'Tchad', flag: '🇹🇩', currency: 'XOF', languages: ['fr'], shippingZone: 'africa' },
-  { code: 'CF', name: 'République Centrafricaine', flag: '🇨🇫', currency: 'XOF', languages: ['fr'], shippingZone: 'africa' },
+  { code: 'GN', name: 'Guinée', flag: '🇬🇳', currency: 'GNF', languages: ['fr'], shippingZone: 'africa' },
+  { code: 'GM', name: 'Gambie', flag: '🇬🇲', currency: 'GMD', languages: ['en'], shippingZone: 'africa' },
+  { code: 'GW', name: 'Guinée-Bissau', flag: '🇬🇼', currency: 'XOF', languages: ['pt'], shippingZone: 'africa' },
+  { code: 'CV', name: 'Cap-Vert', flag: '🇨🇻', currency: 'CVE', languages: ['pt'], shippingZone: 'africa' },
+  
+  // Afrique centrale et orientale
+  { code: 'CM', name: 'Cameroun', flag: '🇨🇲', currency: 'XAF', languages: ['fr', 'en'], shippingZone: 'africa' },
+  { code: 'CD', name: 'RDC', flag: '🇨🇩', currency: 'CDF', languages: ['fr'], shippingZone: 'africa' },
+  { code: 'CG', name: 'Congo', flag: '🇨🇬', currency: 'XAF', languages: ['fr'], shippingZone: 'africa' },
+  { code: 'CF', name: 'RCA', flag: '🇨🇫', currency: 'XAF', languages: ['fr'], shippingZone: 'africa' },
+  { code: 'TD', name: 'Tchad', flag: '🇹🇩', currency: 'XAF', languages: ['fr', 'ar'], shippingZone: 'africa' },
+  { code: 'GQ', name: 'Guinée équatoriale', flag: '🇬🇶', currency: 'XAF', languages: ['es', 'fr'], shippingZone: 'africa' },
+  
+  // Afrique du Nord
+  { code: 'MA', name: 'Maroc', flag: '🇲🇦', currency: 'MAD', languages: ['ar', 'fr'], shippingZone: 'africa' },
+  { code: 'DZ', name: 'Algérie', flag: '🇩🇿', currency: 'DZD', languages: ['ar', 'fr'], shippingZone: 'africa' },
+  { code: 'TN', name: 'Tunisie', flag: '🇹🇳', currency: 'TND', languages: ['ar', 'fr'], shippingZone: 'africa' },
+  { code: 'LY', name: 'Libye', flag: '🇱🇾', currency: 'LYD', languages: ['ar'], shippingZone: 'africa' },
+  { code: 'EG', name: 'Égypte', flag: '🇪🇬', currency: 'EGP', languages: ['ar'], shippingZone: 'africa' },
+  
+  // Afrique de l'Est
+  { code: 'ET', name: 'Éthiopie', flag: '🇪🇹', currency: 'ETB', languages: ['am'], shippingZone: 'africa' },
+  { code: 'KE', name: 'Kenya', flag: '🇰🇪', currency: 'KES', languages: ['sw', 'en'], shippingZone: 'africa' },
+  { code: 'TZ', name: 'Tanzanie', flag: '🇹🇿', currency: 'TZS', languages: ['sw', 'en'], shippingZone: 'africa' },
+  { code: 'UG', name: 'Ouganda', flag: '🇺🇬', currency: 'UGX', languages: ['en'], shippingZone: 'africa' },
+  { code: 'RW', name: 'Rwanda', flag: '🇷🇼', currency: 'RWF', languages: ['rw', 'fr', 'en'], shippingZone: 'africa' },
+  { code: 'BI', name: 'Burundi', flag: '🇧🇮', currency: 'BIF', languages: ['rn', 'fr'], shippingZone: 'africa' },
+  
+  // Afrique du Sud
+  { code: 'ZA', name: 'Afrique du Sud', flag: '🇿🇦', currency: 'ZAR', languages: ['en', 'zu', 'af'], shippingZone: 'africa' },
+  { code: 'BW', name: 'Botswana', flag: '🇧🇼', currency: 'BWP', languages: ['en'], shippingZone: 'africa' },
+  { code: 'NA', name: 'Namibie', flag: '🇳🇦', currency: 'NAD', languages: ['en'], shippingZone: 'africa' },
+  { code: 'ZW', name: 'Zimbabwe', flag: '🇿🇼', currency: 'ZWL', languages: ['en'], shippingZone: 'africa' },
+  { code: 'ZM', name: 'Zambie', flag: '🇿🇲', currency: 'ZMW', languages: ['en'], shippingZone: 'africa' },
+  { code: 'MW', name: 'Malawi', flag: '🇲🇼', currency: 'MWK', languages: ['en'], shippingZone: 'africa' },
+  { code: 'MZ', name: 'Mozambique', flag: '🇲🇿', currency: 'MZN', languages: ['pt'], shippingZone: 'africa' },
+  { code: 'MG', name: 'Madagascar', flag: '🇲🇬', currency: 'MGA', languages: ['mg', 'fr'], shippingZone: 'africa' },
+  { code: 'MU', name: 'Maurice', flag: '🇲🇺', currency: 'MUR', languages: ['en', 'fr'], shippingZone: 'africa' },
+  { code: 'SC', name: 'Seychelles', flag: '🇸🇨', currency: 'SCR', languages: ['en', 'fr'], shippingZone: 'africa' },
   
   // Amérique du Nord
-  { code: 'US', name: 'États-Unis', flag: '🇺🇸', currency: 'USD', languages: ['en'], shippingZone: 'international' },
   { code: 'CA', name: 'Canada', flag: '🇨🇦', currency: 'CAD', languages: ['en', 'fr'], shippingZone: 'international' },
+  { code: 'US', name: 'États-Unis', flag: '🇺🇸', currency: 'USD', languages: ['en'], shippingZone: 'international' },
   
   // Europe
   { code: 'FR', name: 'France', flag: '🇫🇷', currency: 'EUR', languages: ['fr'], shippingZone: 'international' },
-  { code: 'BE', name: 'Belgique', flag: '🇧🇪', currency: 'EUR', languages: ['fr', 'en'], shippingZone: 'international' },
-  { code: 'CH', name: 'Suisse', flag: '🇨🇭', currency: 'EUR', languages: ['fr', 'en'], shippingZone: 'international' },
-  
-  // Autres pays d'Afrique
-  { code: 'MA', name: 'Maroc', flag: '🇲🇦', currency: 'EUR', languages: ['fr'], shippingZone: 'africa' },
-  { code: 'DZ', name: 'Algérie', flag: '🇩🇿', currency: 'EUR', languages: ['fr'], shippingZone: 'africa' },
-  { code: 'TN', name: 'Tunisie', flag: '🇹🇳', currency: 'EUR', languages: ['fr'], shippingZone: 'africa' },
+  { code: 'BE', name: 'Belgique', flag: '🇧🇪', currency: 'EUR', languages: ['fr', 'nl'], shippingZone: 'international' },
+  { code: 'CH', name: 'Suisse', flag: '🇨🇭', currency: 'CHF', languages: ['fr', 'de', 'it'], shippingZone: 'international' },
+  { code: 'DE', name: 'Allemagne', flag: '🇩🇪', currency: 'EUR', languages: ['de'], shippingZone: 'international' },
+  { code: 'IT', name: 'Italie', flag: '🇮🇹', currency: 'EUR', languages: ['it'], shippingZone: 'international' },
+  { code: 'ES', name: 'Espagne', flag: '🇪🇸', currency: 'EUR', languages: ['es'], shippingZone: 'international' },
+  { code: 'PT', name: 'Portugal', flag: '🇵🇹', currency: 'EUR', languages: ['pt'], shippingZone: 'international' },
+  { code: 'NL', name: 'Pays-Bas', flag: '🇳🇱', currency: 'EUR', languages: ['nl'], shippingZone: 'international' },
+  { code: 'GB', name: 'Royaume-Uni', flag: '🇬🇧', currency: 'GBP', languages: ['en'], shippingZone: 'international' },
+  { code: 'IE', name: 'Irlande', flag: '🇮🇪', currency: 'EUR', languages: ['en'], shippingZone: 'international' },
 ];
 
 const translations: Translations = {
@@ -75,87 +111,23 @@ const translations: Translations = {
     // Navigation
     'nav.home': 'Accueil',
     'nav.catalog': 'Catalogue',
-    'nav.women': 'Tenues Femmes',
-    'nav.men': 'Tenues Hommes',
-    'nav.accessories': 'Accessoires',
     'nav.custom': 'Sur Mesure',
-    'nav.tracking': 'Suivi Commande',
-    'nav.become_vendor': 'Devenir Vendeur',
-    
-    // Hero Section
-    'hero.title': 'L\'élégance sénégalaise à portée de main',
-    'hero.subtitle': 'Découvrez une collection exceptionnelle de tenues traditionnelles et d\'accessoires artisanaux, créés par des artisans passionnés du Sénégal.',
-    'hero.cta_catalog': 'Explorer le Catalogue',
-    'hero.cta_custom': 'Commande Sur Mesure',
-    
-    // Common
-    'common.price': 'Prix',
-    'common.add_to_cart': 'Ajouter au Panier',
-    'common.buy_now': 'Acheter Maintenant',
-    'common.view_details': 'Voir Détails',
-    'common.in_stock': 'En stock',
-    'common.out_of_stock': 'Rupture de stock',
-    'common.limited_stock': 'Stock limité',
-    'common.on_order': 'Sur commande',
-    'common.delivery': 'Livraison',
-    'common.vendor': 'Vendeur',
-    'common.rating': 'Note',
-    'common.reviews': 'avis',
-    'common.search': 'Rechercher',
-    'common.filter': 'Filtrer',
-    'common.sort': 'Trier',
-    'common.save': 'Sauvegarder',
-    'common.cancel': 'Annuler',
-    'common.edit': 'Modifier',
-    'common.delete': 'Supprimer',
-    'common.view': 'Voir',
-    'common.loading': 'Chargement...',
-    'common.error': 'Erreur',
-    'common.success': 'Succès',
-    
-    // Cart & Checkout
-    'cart.title': 'Mon Panier',
-    'cart.empty': 'Votre panier est vide',
-    'cart.subtotal': 'Sous-total',
-    'cart.commission': 'Commission plateforme',
-    'cart.shipping': 'Livraison',
-    'cart.total': 'Total',
-    'cart.proceed_payment': 'Procéder au paiement',
-    'cart.continue_shopping': 'Continuer les achats',
-    
-    // Auth
-    'auth.login': 'Connexion',
-    'auth.register': 'Inscription',
-    'auth.vendor_register': 'Devenir Vendeur',
-    'auth.email': 'Email',
-    'auth.password': 'Mot de passe',
-    'auth.confirm_password': 'Confirmer le mot de passe',
-    'auth.first_name': 'Prénom',
-    'auth.last_name': 'Nom',
-    'auth.phone': 'Téléphone',
-    'auth.address': 'Adresse',
-    'auth.business_name': 'Nom de l\'atelier',
-    'auth.business_description': 'Description de l\'activité',
-    
-    // Dashboard
-    'dashboard.welcome': 'Bienvenue',
-    'dashboard.overview': 'Vue d\'ensemble',
-    'dashboard.products': 'Mes Produits',
-    'dashboard.orders': 'Commandes',
-    'dashboard.analytics': 'Statistiques',
-    'dashboard.profile': 'Mon Profil',
-    'dashboard.logout': 'Déconnexion',
-    
-    // Footer
-    'footer.about': 'À propos',
-    'footer.contact': 'Contact',
-    'footer.privacy': 'Politique de Confidentialité',
-    'footer.terms': 'Conditions d\'Utilisation',
-    'footer.made_with_love': 'Fait avec ❤️ au Sénégal',
+    'nav.vendors': 'Vendeurs',
+    'nav.about': 'À Propos',
+    'nav.contact': 'Contact',
+    'nav.language': 'Langue',
+    'nav.currency': 'Devise',
+    'nav.country': 'Pays',
+    'nav.search': 'Rechercher...',
+    'nav.cart': 'Panier',
+    'nav.profile': 'Profil',
+    'nav.login': 'Connexion',
+    'nav.register': 'S\'inscrire',
+    'nav.logout': 'Déconnexion',
     
     // Hero
     'hero.authentic_couture': 'Couture Authentique',
-    'hero.elegance': 'L\'élégance',
+    'hero.elegance': 'Élégance',
     'hero.senegalese': 'sénégalaise',
     'hero.at_your_fingertips': 'à portée de main',
     'hero.subtitle': 'Découvrez une collection exceptionnelle de tenues traditionnelles et d\'accessoires artisanaux,',
@@ -191,123 +163,44 @@ const translations: Translations = {
     'dashboard.average_rating': 'Note moyenne',
     'dashboard.vendor_space': 'Espace Vendeur',
     'dashboard.my_workshop': 'Mon Atelier',
-    'dashboard.add_product': 'Ajouter un produit',
-    'dashboard.create_promotion': 'Créer une promo',
-    'dashboard.view_stats': 'Voir les stats',
-    'dashboard.recent_orders': 'Commandes récentes',
-    'dashboard.my_products': 'Mes Produits',
-    'dashboard.search': 'Rechercher',
-    'dashboard.new_product': 'Nouveau Produit',
-    'dashboard.view': 'Voir',
-    'dashboard.edit': 'Modifier',
-    'dashboard.restock': 'Réapprovisionner',
-    'dashboard.order_management': 'Gestion des Commandes',
-    'dashboard.all_statuses': 'Tous les statuts',
-    'dashboard.confirmed': 'Confirmées',
-    'dashboard.processing': 'En cours',
-    'dashboard.shipped': 'Expédiées',
-    'dashboard.delivered': 'Livrées',
-    'dashboard.refresh': 'Actualiser',
-    'dashboard.contact': 'Contacter',
-    'dashboard.manage': 'Gérer',
-    'dashboard.customer_reviews': 'Avis Clients',
-    'dashboard.respond': 'Répondre',
-    'dashboard.performance_stats': 'Statistiques de Performance',
-    'dashboard.sales_by_month': 'Ventes par mois',
-    'dashboard.best_selling': 'Produits les plus vendus',
-    'dashboard.vendor_profile': 'Mon Profil Vendeur',
-    'dashboard.workshop_info': 'Informations de l\'atelier',
-    'dashboard.workshop_name': 'Nom de l\'atelier',
-    'dashboard.description': 'Description',
-    'dashboard.phone': 'Téléphone',
-    'dashboard.address': 'Adresse',
-    'dashboard.save_changes': 'Sauvegarder les modifications',
+    'dashboard.quick_actions': 'Actions Rapides',
+    'dashboard.recent_orders': 'Commandes Récentes',
+    'dashboard.product_management': 'Gestion des Produits',
+    'dashboard.analytics': 'Analytiques',
+    'dashboard.settings': 'Paramètres',
     
-    // Navigation
-    'nav.account': 'Compte',
-    'nav.favorites': 'Favoris',
+    // Footer
+    'footer.about': 'À Propos',
+    'footer.about_text': 'Afrizar est votre destination pour découvrir l\'artisanat sénégalais authentique.',
+    'footer.quick_links': 'Liens Rapides',
+    'footer.customer_service': 'Service Client',
+    'footer.newsletter': 'Newsletter',
+    'footer.newsletter_text': 'Recevez nos dernières nouveautés et offres spéciales',
+    'footer.subscribe': 'S\'abonner',
+    'footer.follow_us': 'Suivez-nous',
+    'footer.payment_methods': 'Moyens de Paiement',
+    'footer.shipping_countries': 'Pays de Livraison',
+    'footer.copyright': '© 2024 Afrizar. Tous droits réservés.',
+    'footer.made_with_love': 'Fait avec ❤️ au Sénégal',
   },
+  
   en: {
     // Navigation
     'nav.home': 'Home',
     'nav.catalog': 'Catalog',
-    'nav.women': 'Women\'s Wear',
-    'nav.men': 'Men\'s Wear',
-    'nav.accessories': 'Accessories',
-    'nav.custom': 'Custom Made',
-    'nav.tracking': 'Order Tracking',
-    'nav.become_vendor': 'Become a Vendor',
-    
-    // Hero Section
-    'hero.title': 'Senegalese elegance at your fingertips',
-    'hero.subtitle': 'Discover an exceptional collection of traditional outfits and handcrafted accessories, created by passionate artisans from Senegal.',
-    'hero.cta_catalog': 'Explore Catalog',
-    'hero.cta_custom': 'Custom Order',
-    
-    // Common
-    'common.price': 'Price',
-    'common.add_to_cart': 'Add to Cart',
-    'common.buy_now': 'Buy Now',
-    'common.view_details': 'View Details',
-    'common.in_stock': 'In Stock',
-    'common.out_of_stock': 'Out of Stock',
-    'common.limited_stock': 'Limited Stock',
-    'common.on_order': 'On Order',
-    'common.delivery': 'Delivery',
-    'common.vendor': 'Vendor',
-    'common.rating': 'Rating',
-    'common.reviews': 'reviews',
-    'common.search': 'Search',
-    'common.filter': 'Filter',
-    'common.sort': 'Sort',
-    'common.save': 'Save',
-    'common.cancel': 'Cancel',
-    'common.edit': 'Edit',
-    'common.delete': 'Delete',
-    'common.view': 'View',
-    'common.loading': 'Loading...',
-    'common.error': 'Error',
-    'common.success': 'Success',
-    
-    // Cart & Checkout
-    'cart.title': 'My Cart',
-    'cart.empty': 'Your cart is empty',
-    'cart.subtotal': 'Subtotal',
-    'cart.commission': 'Platform Commission',
-    'cart.shipping': 'Shipping',
-    'cart.total': 'Total',
-    'cart.proceed_payment': 'Proceed to Payment',
-    'cart.continue_shopping': 'Continue Shopping',
-    
-    // Auth
-    'auth.login': 'Login',
-    'auth.register': 'Sign Up',
-    'auth.vendor_register': 'Become a Vendor',
-    'auth.email': 'Email',
-    'auth.password': 'Password',
-    'auth.confirm_password': 'Confirm Password',
-    'auth.first_name': 'First Name',
-    'auth.last_name': 'Last Name',
-    'auth.phone': 'Phone',
-    'auth.address': 'Address',
-    'auth.business_name': 'Workshop Name',
-    'auth.business_description': 'Business Description',
-    
-    // Dashboard
-    'dashboard.welcome': 'Welcome',
-    'dashboard.overview': 'Overview',
-    'dashboard.products': 'My Products',
-    'dashboard.orders': 'Orders',
-    'dashboard.analytics': 'Analytics',
-    'dashboard.profile': 'My Profile',
-    'dashboard.logout': 'Logout',
-    
-    // Footer
-    'footer.about': 'About',
-    'footer.contact': 'Contact',
-    'footer.privacy': 'Privacy Policy',
-    'footer.terms': 'Terms of Service',
-    'footer.made_with_love': 'Made with ❤️ in Senegal',
+    'nav.custom': 'Custom',
+    'nav.vendors': 'Vendors',
+    'nav.about': 'About',
+    'nav.contact': 'Contact',
+    'nav.language': 'Language',
+    'nav.currency': 'Currency',
+    'nav.country': 'Country',
+    'nav.search': 'Search...',
+    'nav.cart': 'Cart',
+    'nav.profile': 'Profile',
+    'nav.login': 'Login',
+    'nav.register': 'Register',
+    'nav.logout': 'Logout',
     
     // Hero
     'hero.authentic_couture': 'Authentic Couture',
@@ -347,145 +240,93 @@ const translations: Translations = {
     'dashboard.average_rating': 'Average Rating',
     'dashboard.vendor_space': 'Vendor Space',
     'dashboard.my_workshop': 'My Workshop',
-    'dashboard.add_product': 'Add Product',
-    'dashboard.create_promotion': 'Create Promotion',
-    'dashboard.view_stats': 'View Stats',
+    'dashboard.quick_actions': 'Quick Actions',
     'dashboard.recent_orders': 'Recent Orders',
-    'dashboard.my_products': 'My Products',
-    'dashboard.search': 'Search',
-    'dashboard.new_product': 'New Product',
-    'dashboard.view': 'View',
-    'dashboard.edit': 'Edit',
-    'dashboard.restock': 'Restock',
-    'dashboard.order_management': 'Order Management',
-    'dashboard.all_statuses': 'All Statuses',
-    'dashboard.confirmed': 'Confirmed',
-    'dashboard.processing': 'Processing',
-    'dashboard.shipped': 'Shipped',
-    'dashboard.delivered': 'Delivered',
-    'dashboard.refresh': 'Refresh',
-    'dashboard.contact': 'Contact',
-    'dashboard.manage': 'Manage',
-    'dashboard.customer_reviews': 'Customer Reviews',
-    'dashboard.respond': 'Respond',
-    'dashboard.performance_stats': 'Performance Statistics',
-    'dashboard.sales_by_month': 'Sales by Month',
-    'dashboard.best_selling': 'Best Selling Products',
-    'dashboard.vendor_profile': 'My Vendor Profile',
-    'dashboard.workshop_info': 'Workshop Information',
-    'dashboard.workshop_name': 'Workshop Name',
-    'dashboard.description': 'Description',
-    'dashboard.phone': 'Phone',
-    'dashboard.address': 'Address',
-    'dashboard.save_changes': 'Save Changes',
+    'dashboard.product_management': 'Product Management',
+    'dashboard.analytics': 'Analytics',
+    'dashboard.settings': 'Settings',
     
-    // Navigation
-    'nav.account': 'Account',
-    'nav.favorites': 'Favorites',
+    // Footer
+    'footer.about': 'About',
+    'footer.about_text': 'Afrizar is your destination to discover authentic Senegalese craftsmanship.',
+    'footer.quick_links': 'Quick Links',
+    'footer.customer_service': 'Customer Service',
+    'footer.newsletter': 'Newsletter',
+    'footer.newsletter_text': 'Receive our latest news and special offers',
+    'footer.subscribe': 'Subscribe',
+    'footer.follow_us': 'Follow Us',
+    'footer.payment_methods': 'Payment Methods',
+    'footer.shipping_countries': 'Shipping Countries',
+    'footer.copyright': '© 2024 Afrizar. All rights reserved.',
+    'footer.made_with_love': 'Made with ❤️ in Senegal',
   }
 };
 
-const I18nContext = createContext<I18nContextType | undefined>(undefined);
+const InternationalizationContext = createContext<I18nContextType | undefined>(undefined);
 
-export const useI18n = () => {
-  const context = useContext(I18nContext);
-  if (context === undefined) {
-    throw new Error('useI18n must be used within an I18nProvider');
-  }
-  return context;
-};
-
-export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const InternationalizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState('fr');
   const [country, setCountry] = useState('SN');
+  const [currency, setCurrency] = useState('XOF');
 
-  // Détecter la langue du navigateur au premier chargement
   useEffect(() => {
-    const browserLang = navigator.language.split('-')[0];
-    const savedLang = localStorage.getItem('afrizar_language');
-    const savedCountry = localStorage.getItem('afrizar_country');
-    
-    if (savedLang) {
-      setLanguage(savedLang);
-    } else if (['fr', 'en'].includes(browserLang)) {
-      setLanguage(browserLang);
-    }
-    
-    if (savedCountry) {
-      setCountry(savedCountry);
-    }
+    // Charger les préférences depuis localStorage
+    const savedLanguage = localStorage.getItem('afrizar_language') || 'fr';
+    const savedCountry = localStorage.getItem('afrizar_country') || 'SN';
+    const savedCurrency = localStorage.getItem('afrizar_currency') || 'XOF';
+
+    setLanguage(savedLanguage);
+    setCountry(savedCountry);
+    setCurrency(savedCurrency);
   }, []);
 
-  const handleSetLanguage = (lang: string) => {
-    setLanguage(lang);
-    localStorage.setItem('afrizar_language', lang);
-  };
-
-  const handleSetCountry = (countryCode: string) => {
-    setCountry(countryCode);
-    localStorage.setItem('afrizar_country', countryCode);
-    
-    // Auto-switch language based on country
-    const selectedCountry = countries.find(c => c.code === countryCode);
-    if (selectedCountry) {
-      if (selectedCountry.languages.includes('en') && !selectedCountry.languages.includes('fr')) {
-        handleSetLanguage('en');
-      } else if (selectedCountry.languages.includes('fr')) {
-        handleSetLanguage('fr');
-      }
-    }
-  };
+  useEffect(() => {
+    // Sauvegarder les préférences
+    localStorage.setItem('afrizar_language', language);
+    localStorage.setItem('afrizar_country', country);
+    localStorage.setItem('afrizar_currency', currency);
+  }, [language, country, currency]);
 
   const t = (key: string): string => {
-    return translations[language]?.[key] || translations['fr'][key] || key;
-  };
-
-  const getCurrentCurrency = (): string => {
-    const selectedCountry = countries.find(c => c.code === country);
-    return selectedCountry?.currency || 'XOF';
-  };
-
-  const convertPrice = (price: number, fromCurrency: string, toCurrency: string): number => {
-    const fromRate = currencies.find(c => c.code === fromCurrency)?.rate || 1;
-    const toRate = currencies.find(c => c.code === toCurrency)?.rate || 1;
-    
-    // Convert to FCFA first, then to target currency
-    const fcfaPrice = price / fromRate;
-    return fcfaPrice * toRate;
+    return translations[language]?.[key] || key;
   };
 
   const formatPrice = (price: number, currencyCode?: string): string => {
-    const targetCurrency = currencyCode || getCurrentCurrency();
-    const convertedPrice = convertPrice(price, 'XOF', targetCurrency);
-    const currency = currencies.find(c => c.code === targetCurrency);
+    const code = currencyCode || currency;
+    const currencyData = currencies.find(c => c.code === code);
     
-    if (!currency) return `${price} FCFA`;
-    
-    // Format selon la devise
-    switch (targetCurrency) {
-      case 'USD':
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD'
-        }).format(convertedPrice);
-      case 'CAD':
-        return new Intl.NumberFormat('en-CA', {
-          style: 'currency',
-          currency: 'CAD'
-        }).format(convertedPrice);
-      case 'EUR':
-        return new Intl.NumberFormat('fr-FR', {
-          style: 'currency',
-          currency: 'EUR'
-        }).format(convertedPrice);
-      default:
-        return new Intl.NumberFormat('fr-FR').format(convertedPrice) + ' FCFA';
+    if (!currencyData) {
+      return `${price.toLocaleString()} ${code}`;
     }
+
+    const convertedPrice = price * currencyData.rate;
+    
+    if (code === 'XOF') {
+      return `${convertedPrice.toLocaleString()} ${currencyData.symbol}`;
+    }
+    
+    return `${currencyData.symbol}${convertedPrice.toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    })}`;
+  };
+
+  const convertPrice = (price: number, fromCurrency: string, toCurrency: string): number => {
+    const fromCurrencyData = currencies.find(c => c.code === fromCurrency);
+    const toCurrencyData = currencies.find(c => c.code === toCurrency);
+    
+    if (!fromCurrencyData || !toCurrencyData) {
+      return price;
+    }
+
+    // Convertir vers FCFA puis vers la devise cible
+    const priceInFCFA = price / fromCurrencyData.rate;
+    return priceInFCFA * toCurrencyData.rate;
   };
 
   const getShippingZone = (): string => {
-    const selectedCountry = countries.find(c => c.code === country);
-    return selectedCountry?.shippingZone || 'international';
+    const countryData = countries.find(c => c.code === country);
+    return countryData?.shippingZone || 'international';
   };
 
   const getSupportedCountries = (): Country[] => {
@@ -496,21 +337,31 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return currencies;
   };
 
+  const value: I18nContextType = {
+    language,
+    country,
+    currency,
+    setLanguage,
+    setCountry,
+    t,
+    formatPrice,
+    convertPrice,
+    getShippingZone,
+    getSupportedCountries,
+    getSupportedCurrencies,
+  };
+
   return (
-    <I18nContext.Provider value={{
-      language,
-      country,
-      currency: getCurrentCurrency(),
-      setLanguage: handleSetLanguage,
-      setCountry: handleSetCountry,
-      t,
-      formatPrice,
-      convertPrice,
-      getShippingZone,
-      getSupportedCountries,
-      getSupportedCurrencies
-    }}>
+    <InternationalizationContext.Provider value={value}>
       {children}
-    </I18nContext.Provider>
+    </InternationalizationContext.Provider>
   );
+};
+
+export const useI18n = (): I18nContextType => {
+  const context = useContext(InternationalizationContext);
+  if (context === undefined) {
+    throw new Error('useI18n must be used within an InternationalizationProvider');
+  }
+  return context;
 };

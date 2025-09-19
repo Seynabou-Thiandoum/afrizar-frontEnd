@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
-import { I18nProvider } from './contexts/InternationalizationContext';
+import { InternationalizationProvider } from './contexts/InternationalizationContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
@@ -21,7 +21,11 @@ import DeferredOrder from './components/DeferredOrder';
 import UserProfile from './components/UserProfile';
 import Footer from './components/Footer';
 import CategoriesPage from './components/CategoriesPage';
-import VendorsPage from './components/VendorsPage';
+import VendorsPageWrapper from './components/VendorsPageWrapper';
+import SimpleApiTest from './components/SimpleApiTest';
+import AccessoiresPage from './components/AccessoiresPage';
+import VetementsPage from './components/Vetements';
+import VendeursPage from './components/Vendeurs';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -59,13 +63,15 @@ function App() {
       case 'categories':
         return <CategoriesPage onBack={() => setCurrentPage('home')} />;
       case 'vendors':
-        return <VendorsPage onBack={() => setCurrentPage('home')} />;
+        return <VendorsPageWrapper onBack={() => setCurrentPage('home')} />;
+      case 'api-test':
+        return <SimpleApiTest />;
       case 'tenues-femmes':
         return <CategoryPage category="Tenues Femmes" onBack={() => setCurrentPage('home')} />;
       case 'tenues-hommes':
         return <CategoryPage category="Tenues Hommes" onBack={() => setCurrentPage('home')} />;
-      case 'accessoires':
-        return <CategoryPage category="Accessoires" onBack={() => setCurrentPage('home')} />;
+      // case 'accessoires':
+      //   return <CategoryPage category="Accessoires" onBack={() => setCurrentPage('home')} />;
       case 'sur-mesure':
         return <SurMesure onBack={() => setCurrentPage('home')} />;
       case 'cart':
@@ -88,6 +94,12 @@ function App() {
         return <Wishlist onBack={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
       case 'profile':
         return <UserProfile onBack={(page) => setCurrentPage(page || 'home')} />;
+      case 'accessoires':
+      return <AccessoiresPage onNavigate={setCurrentPage} />;
+      case 'vetements':
+      return <VetementsPage onNavigate={setCurrentPage} />;
+      case 'vendeurs':
+      return <VendeursPage onNavigate={setCurrentPage} />;
       default:
         return (
           <>
@@ -114,7 +126,7 @@ function App() {
     // Logique d'ajout au panier
   };
   return (
-    <I18nProvider>
+    <InternationalizationProvider>
       <AuthProvider>
         <div className="min-h-screen bg-gray-50">
           {!['cart', 'checkout', 'vendor-dashboard', 'client-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
@@ -150,7 +162,7 @@ function App() {
 
         </div>
       </AuthProvider>
-    </I18nProvider>
+    </InternationalizationProvider>
   );
 }
 

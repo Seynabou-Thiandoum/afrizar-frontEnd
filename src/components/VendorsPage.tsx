@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   User, 
@@ -19,192 +19,55 @@ import {
   Building,
   Truck,
   Heart,
-  ShoppingCart
+  ShoppingCart,
+  Loader2,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import VendorDetailModal from './VendorDetailModal';
+import { useVendors, useFeaturedVendors, useVendorManagement, useVendorErrorHandler } from '../hooks/useVendors';
+import { VendeurDto, VendeurFilters } from '../types/vendor';
 
 const VendorsPage = ({ onBack }) => {
-  const [selectedVendor, setSelectedVendor] = useState(null);
+  const [selectedVendor, setSelectedVendor] = useState<VendeurDto | null>(null);
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
+  
+  // Hooks pour la gestion des vendeurs
+  const { error, handleError, clearError } = useVendorErrorHandler();
+  const featuredVendorsQuery = useFeaturedVendors();
+  const vendorManagement = useVendorManagement();
+  
+  // État local pour les filtres
+  const [filters, setFilters] = useState<VendeurFilters>({});
 
-  const vendors = [
-    {
-      id: 1,
-      name: 'Atelier Fatou',
-      ownerName: 'Fatou Sall',
-      description: 'Spécialisée dans la création de boubous traditionnels pour femmes avec broderies dorées et perles. Plus de 10 ans d\'expérience dans la couture sénégalaise.',
-      image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
-      coverImage: 'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=800',
-      rating: 4.9,
-      reviews: 156,
-      products: 24,
-      orders: 342,
-      location: 'Dakar, Sénégal',
-      experience: '10 ans',
-      specialties: ['Boubous femmes', 'Broderies dorées', 'Perles traditionnelles'],
-      phone: '+221 77 123 45 67',
-      email: 'fatou@atelierfatou.sn',
-      website: 'www.atelierfatou.sn',
-      joinDate: '2024-01-15',
-      verified: true,
-      featured: true,
-      deliveryTime: '3-5 jours',
-      priceRange: '25,000 - 85,000 FCFA',
-      gallery: [
-        'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=300',
-        'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=300',
-        'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=300'
-      ],
-      story: 'Fatou a appris la couture auprès de sa grand-mère, maîtresse couturière reconnue à Dakar. Elle perpétue aujourd\'hui les techniques ancestrales tout en apportant une touche moderne à ses créations.',
-      achievements: ['Meilleur Artisan 2024', 'Prix de l\'Innovation Traditionnelle', 'Certification Qualité Premium']
-    },
-    {
-      id: 2,
-      name: 'Maître Ibrahima',
-      ownerName: 'Ibrahima Ndiaye',
-      description: 'Atelier familial spécialisé dans les tenues masculines traditionnelles. Transmission du savoir-faire de père en fils depuis 3 générations.',
-      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=500',
-      coverImage: 'https://images.pexels.com/photos/1121796/pexels-photo-1121796.jpeg?auto=compress&cs=tinysrgb&w=800',
-      rating: 4.8,
-      reviews: 134,
-      products: 18,
-      orders: 267,
-      location: 'Kaolack, Sénégal',
-      experience: '15 ans',
-      specialties: ['Boubous hommes', 'Costumes traditionnels', 'Broderies masculines'],
-      phone: '+221 78 234 56 78',
-      email: 'ibrahima@maitre-couture.sn',
-      website: '',
-      joinDate: '2024-02-20',
-      verified: true,
-      featured: true,
-      deliveryTime: '4-6 jours',
-      priceRange: '30,000 - 75,000 FCFA',
-      gallery: [
-        'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300',
-        'https://images.pexels.com/photos/1121796/pexels-photo-1121796.jpeg?auto=compress&cs=tinysrgb&w=300'
-      ],
-      story: 'L\'atelier Maître Ibrahima existe depuis 1980. Trois générations d\'artisans ont perfectionné l\'art du grand boubou masculin, créant des pièces d\'exception pour les grandes occasions.',
-      achievements: ['Artisan Traditionnel Certifié', 'Fournisseur Officiel Présidence', '40 ans d\'Excellence']
-    },
-    {
-      id: 3,
-      name: 'Bijoux Khadija',
-      ownerName: 'Khadija Diop',
-      description: 'Création de bijoux contemporains inspirés des traditions sénégalaises. Utilisation de matériaux locaux et techniques modernes.',
-      image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
-      coverImage: 'https://images.pexels.com/photos/1927248/pexels-photo-1927248.jpeg?auto=compress&cs=tinysrgb&w=800',
-      rating: 4.7,
-      reviews: 98,
-      products: 45,
-      orders: 189,
-      location: 'Saint-Louis, Sénégal',
-      experience: '7 ans',
-      specialties: ['Bijoux contemporains', 'Matériaux locaux', 'Design moderne'],
-      phone: '+221 76 345 67 89',
-      email: 'khadija@bijouxmodernes.sn',
-      website: 'www.bijouxmodernes.sn',
-      joinDate: '2024-03-10',
-      verified: true,
-      featured: false,
-      deliveryTime: '2-3 jours',
-      priceRange: '5,000 - 35,000 FCFA',
-      gallery: [
-        'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=300',
-        'https://images.pexels.com/photos/1927248/pexels-photo-1927248.jpeg?auto=compress&cs=tinysrgb&w=300'
-      ],
-      story: 'Khadija combine tradition et modernité dans ses créations. Formée aux techniques ancestrales, elle innove en intégrant des matériaux contemporains pour créer des bijoux uniques.',
-      achievements: ['Prix Jeune Créatrice 2023', 'Sélection Salon International', 'Mention Innovation Design']
-    },
-    {
-      id: 4,
-      name: 'Maroquinerie Salam',
-      ownerName: 'Salam Ba',
-      description: 'Maroquinerie artisanale de qualité supérieure. Sacs, chaussures et accessoires en cuir véritable avec finitions premium.',
-      image: 'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=500',
-      coverImage: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=800',
-      rating: 4.6,
-      reviews: 87,
-      products: 32,
-      orders: 156,
-      location: 'Mbour, Sénégal',
-      experience: '12 ans',
-      specialties: ['Maroquinerie', 'Cuir véritable', 'Finitions premium'],
-      phone: '+221 77 456 78 90',
-      email: 'salam@maroquinerie-salam.sn',
-      website: '',
-      joinDate: '2024-04-05',
-      verified: true,
-      featured: false,
-      deliveryTime: '3-5 jours',
-      priceRange: '15,000 - 50,000 FCFA',
-      gallery: [
-        'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=300',
-        'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=300'
-      ],
-      story: 'Salam a développé son expertise en maroquinerie en travaillant avec les meilleurs artisans du cuir. Son atelier produit des pièces durables alliant esthétique et fonctionnalité.',
-      achievements: ['Certification Cuir Premium', 'Partenaire Export Europe', 'Label Qualité Artisanale']
-    },
-    {
-      id: 5,
-      name: 'Couture Royale',
-      ownerName: 'Aminata Fall',
-      description: 'Atelier de haute couture spécialisé dans les caftans et robes de luxe. Créations sur mesure pour occasions spéciales.',
-      image: 'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=500',
-      coverImage: 'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=800',
-      rating: 4.9,
-      reviews: 76,
-      products: 15,
-      orders: 123,
-      location: 'Thiès, Sénégal',
-      experience: '8 ans',
-      specialties: ['Caftans luxe', 'Robes sur mesure', 'Occasions spéciales'],
-      phone: '+221 78 567 89 01',
-      email: 'aminata@couture-royale.sn',
-      website: 'www.couture-royale.sn',
-      joinDate: '2024-05-12',
-      verified: true,
-      featured: true,
-      deliveryTime: '5-8 jours',
-      priceRange: '40,000 - 120,000 FCFA',
-      gallery: [
-        'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=300',
-        'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=300'
-      ],
-      story: 'Aminata s\'est formée dans les plus prestigieux ateliers de Dakar avant de créer Couture Royale. Elle se spécialise dans les pièces d\'exception pour mariages et cérémonies.',
-      achievements: ['Couturière de l\'Année 2023', 'Créatrice Officielle Miss Sénégal', 'Prix Excellence Artisanale']
-    },
-    {
-      id: 6,
-      name: 'Cordonnerie Traditionnelle',
-      ownerName: 'Moussa Diagne',
-      description: 'Fabrication artisanale de chaussures traditionnelles. Babouches, sandales et chaussures en cuir selon les méthodes ancestrales.',
-      image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=500',
-      coverImage: 'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=800',
-      rating: 4.4,
-      reviews: 65,
-      products: 28,
-      orders: 145,
-      location: 'Touba, Sénégal',
-      experience: '20 ans',
-      specialties: ['Babouches', 'Sandales cuir', 'Chaussures traditionnelles'],
-      phone: '+221 77 678 90 12',
-      email: 'moussa@cordonnerie-trad.sn',
-      website: '',
-      joinDate: '2024-06-18',
-      verified: true,
-      featured: false,
-      deliveryTime: '4-7 jours',
-      priceRange: '8,000 - 25,000 FCFA',
-      gallery: [
-        'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=300'
-      ],
-      story: 'Moussa perpétue l\'art de la cordonnerie traditionnelle appris de son père. Ses babouches sont réputées pour leur confort et leur durabilité exceptionnelle.',
-      achievements: ['Maître Artisan Certifié', '20 ans d\'Expérience', 'Fournisseur Mosquées Officielles']
+  // Effet pour mettre à jour les filtres quand la recherche change
+  useEffect(() => {
+    const newFilters: VendeurFilters = {};
+    
+    if (searchTerm) {
+      // Pour l'instant, on utilise la recherche simple
+      // Dans une version plus avancée, on pourrait utiliser searchVendorsAdvanced
     }
-  ];
+    
+    if (selectedSpecialty !== 'all') {
+      newFilters.specialites = [selectedSpecialty];
+    }
+    
+    setFilters(newFilters);
+    vendorManagement.handleSearch(newFilters);
+  }, [searchTerm, selectedSpecialty]); // Supprimé vendorManagement des dépendances
+
+  // Gestion des erreurs
+  useEffect(() => {
+    if (vendorManagement.error) {
+      handleError(vendorManagement.error);
+    }
+    if (featuredVendorsQuery.error) {
+      handleError(featuredVendorsQuery.error);
+    }
+  }, [vendorManagement.error, featuredVendorsQuery.error, handleError]);
 
   const specialties = [
     'all',
@@ -216,25 +79,35 @@ const VendorsPage = ({ onBack }) => {
     'Chaussures traditionnelles'
   ];
 
-  const filteredVendors = vendors.filter(vendor => {
-    const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecialty = selectedSpecialty === 'all' || 
-                            vendor.specialties.some(spec => spec.includes(selectedSpecialty));
+  // Utiliser les données du backend
+  const allVendors = vendorManagement.vendors?.content || [];
+  const featuredVendors = featuredVendorsQuery.data || [];
+  
+  // Filtrer les vendeurs localement si nécessaire (pour la recherche par terme)
+  const filteredVendors = allVendors.filter(vendor => {
+    if (!searchTerm) return true;
     
-    return matchesSearch && matchesSpecialty;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      vendor.nomBoutique.toLowerCase().includes(searchLower) ||
+      `${vendor.nom} ${vendor.prenom}`.toLowerCase().includes(searchLower) ||
+      vendor.description?.toLowerCase().includes(searchLower) ||
+      vendor.specialites?.some(spec => spec.toLowerCase().includes(searchLower))
+    );
   });
 
-  const handleContactVendor = (vendor, method) => {
+  const handleContactVendor = (vendor: VendeurDto, method: string) => {
     if (method === 'whatsapp') {
-      const message = `Bonjour ${vendor.ownerName}, je suis intéressé(e) par vos créations de ${vendor.name}.`;
-      const whatsappUrl = `https://wa.me/${vendor.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      const message = `Bonjour ${vendor.prenom} ${vendor.nom}, je suis intéressé(e) par vos créations de ${vendor.nomBoutique}.`;
+      const phoneNumber = vendor.telephone?.replace(/[^0-9]/g, '') || '';
+      if (phoneNumber) {
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      }
     } else if (method === 'email') {
-      window.location.href = `mailto:${vendor.email}?subject=Demande d'information - ${vendor.name}`;
-    } else if (method === 'phone') {
-      window.location.href = `tel:${vendor.phone}`;
+      window.location.href = `mailto:${vendor.email}?subject=Demande d'information - ${vendor.nomBoutique}`;
+    } else if (method === 'phone' && vendor.telephone) {
+      window.location.href = `tel:${vendor.telephone}`;
     }
   };
 
@@ -244,6 +117,26 @@ const VendorsPage = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Affichage des erreurs */}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+              <button
+                onClick={clearError}
+                className="mt-2 text-sm text-red-600 hover:text-red-500"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -256,7 +149,9 @@ const VendorsPage = ({ onBack }) => {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Nos Vendeurs</h1>
-              <p className="text-gray-600 mt-1">Découvrez nos artisans partenaires • {filteredVendors.length} ateliers</p>
+              <p className="text-gray-600 mt-1">
+                Découvrez nos artisans partenaires • {vendorManagement.isLoading ? '...' : filteredVendors.length} ateliers
+              </p>
             </div>
           </div>
           
@@ -314,8 +209,26 @@ const VendorsPage = ({ onBack }) => {
         {/* Featured Vendors */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Vendeurs Vedettes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vendors.filter(v => v.featured).map((vendor) => (
+          
+          {featuredVendorsQuery.isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+              <span className="ml-2 text-gray-600">Chargement des vendeurs vedettes...</span>
+            </div>
+          ) : featuredVendorsQuery.isError ? (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <p className="text-gray-600">Erreur lors du chargement des vendeurs vedettes</p>
+              <button
+                onClick={() => featuredVendorsQuery.refetch()}
+                className="mt-4 text-orange-600 hover:text-orange-700 font-medium"
+              >
+                Réessayer
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredVendors.map((vendor) => (
               <div
                 key={vendor.id}
                 className="group relative bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer transform hover:-translate-y-2"
@@ -323,20 +236,22 @@ const VendorsPage = ({ onBack }) => {
               >
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={vendor.coverImage}
-                    alt={vendor.name}
+                    src={vendor.imageCouverture || vendor.imageProfil || 'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                    alt={vendor.nomBoutique}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                   
                   {/* Featured Badge */}
-                  <div className="absolute top-4 left-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
-                    <Crown className="h-3 w-3" />
-                    <span>Vedette</span>
-                  </div>
+                  {vendor.vedette && (
+                    <div className="absolute top-4 left-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
+                      <Crown className="h-3 w-3" />
+                      <span>Vedette</span>
+                    </div>
+                  )}
 
                   {/* Verified Badge */}
-                  {vendor.verified && (
+                  {vendor.verifie && (
                     <div className="absolute top-4 right-4 bg-green-500 text-white p-2 rounded-full">
                       <Award className="h-4 w-4" />
                     </div>
@@ -345,8 +260,8 @@ const VendorsPage = ({ onBack }) => {
                   {/* Vendor Avatar */}
                   <div className="absolute bottom-4 left-4">
                     <img
-                      src={vendor.image}
-                      alt={vendor.ownerName}
+                      src={vendor.imageProfil || 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500'}
+                      alt={`${vendor.prenom} ${vendor.nom}`}
                       className="w-16 h-16 rounded-2xl border-4 border-white shadow-lg object-cover"
                     />
                   </div>
@@ -355,37 +270,37 @@ const VendorsPage = ({ onBack }) => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
-                      {vendor.name}
+                      {vendor.nomBoutique}
                     </h3>
                     <div className="flex items-center space-x-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm font-medium">{vendor.rating}</span>
-                      <span className="text-xs text-gray-500">({vendor.reviews})</span>
+                      <span className="text-sm font-medium">{vendor.rating?.toFixed(1) || 'N/A'}</span>
+                      <span className="text-xs text-gray-500">({vendor.nombreEvaluations || 0})</span>
                     </div>
                   </div>
                   
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{vendor.description}</p>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{vendor.description || 'Aucune description disponible'}</p>
                   
                   <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
                     <div className="flex items-center space-x-1">
                       <MapPin className="h-4 w-4" />
-                      <span>{vendor.location}</span>
+                      <span>{vendor.ville || 'Non spécifié'}, {vendor.pays || 'Sénégal'}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Package className="h-4 w-4" />
-                      <span>{vendor.products} produits</span>
+                      <span>{vendor.nombreProduits || 0} produits</span>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {vendor.specialties.slice(0, 2).map((specialty, index) => (
+                    {vendor.specialites?.slice(0, 2).map((specialty, index) => (
                       <span key={index} className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
                         {specialty}
                       </span>
                     ))}
-                    {vendor.specialties.length > 2 && (
+                    {vendor.specialites && vendor.specialites.length > 2 && (
                       <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                        +{vendor.specialties.length - 2}
+                        +{vendor.specialites.length - 2}
                       </span>
                     )}
                   </div>
@@ -402,18 +317,47 @@ const VendorsPage = ({ onBack }) => {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* All Vendors */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Tous nos Vendeurs</h2>
-          <div className={
-            viewMode === 'grid' 
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-              : 'space-y-6'
-          }>
-            {filteredVendors.map((vendor) => (
+          
+          {vendorManagement.isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+              <span className="ml-2 text-gray-600">Chargement des vendeurs...</span>
+            </div>
+          ) : vendorManagement.isError ? (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <p className="text-gray-600">Erreur lors du chargement des vendeurs</p>
+              <button
+                onClick={() => vendorManagement.refetch()}
+                className="mt-4 text-orange-600 hover:text-orange-700 font-medium"
+              >
+                Réessayer
+              </button>
+            </div>
+          ) : filteredVendors.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Aucun vendeur trouvé</p>
+              {searchTerm && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Essayez de modifier vos critères de recherche
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className={
+              viewMode === 'grid' 
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                : 'space-y-6'
+            }>
+              {filteredVendors.map((vendor) => (
               <div
                 key={vendor.id}
                 className={`bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer ${
@@ -423,15 +367,15 @@ const VendorsPage = ({ onBack }) => {
               >
                 <div className={`relative overflow-hidden ${viewMode === 'list' ? 'w-48 flex-shrink-0' : ''}`}>
                   <img
-                    src={vendor.image}
-                    alt={vendor.name}
+                    src={vendor.imageProfil || 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500'}
+                    alt={vendor.nomBoutique}
                     className={`object-cover group-hover:scale-105 transition-transform duration-500 ${
                       viewMode === 'list' ? 'w-full h-48' : 'w-full h-48'
                     }`}
                   />
                   
                   {/* Verified Badge */}
-                  {vendor.verified && (
+                  {vendor.verifie && (
                     <div className="absolute top-3 right-3 bg-green-500 text-white p-1 rounded-full">
                       <Award className="h-4 w-4" />
                     </div>
@@ -472,39 +416,39 @@ const VendorsPage = ({ onBack }) => {
                 <div className={`p-5 ${viewMode === 'list' ? 'flex-1' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
-                      {vendor.name}
+                      {vendor.nomBoutique}
                     </h3>
                     <div className="flex items-center space-x-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm text-gray-600 font-medium">{vendor.rating}</span>
-                      <span className="text-xs text-gray-500">({vendor.reviews})</span>
+                      <span className="text-sm text-gray-600 font-medium">{vendor.rating?.toFixed(1) || 'N/A'}</span>
+                      <span className="text-xs text-gray-500">({vendor.nombreEvaluations || 0})</span>
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-600 mb-3">Par {vendor.ownerName}</p>
+                  <p className="text-sm text-gray-600 mb-3">Par {vendor.prenom} {vendor.nom}</p>
                   
                   <div className="flex items-center space-x-2 mb-3">
                     <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{vendor.location}</span>
+                    <span className="text-sm text-gray-600">{vendor.ville || 'Non spécifié'}, {vendor.pays || 'Sénégal'}</span>
                   </div>
 
                   <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
                     <div className="flex items-center space-x-1">
                       <Package className="h-4 w-4" />
-                      <span>{vendor.products} produits</span>
+                      <span>{vendor.nombreProduits || 0} produits</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Clock className="h-4 w-4" />
-                      <span>{vendor.deliveryTime}</span>
+                      <span>{vendor.delaiLivraison || 'Non spécifié'}</span>
                     </div>
                   </div>
 
                   {viewMode === 'list' && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{vendor.description}</p>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{vendor.description || 'Aucune description disponible'}</p>
                   )}
 
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {vendor.specialties.slice(0, 2).map((specialty, index) => (
+                    {vendor.specialites?.slice(0, 2).map((specialty, index) => (
                       <span key={index} className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
                         {specialty}
                       </span>
@@ -534,7 +478,48 @@ const VendorsPage = ({ onBack }) => {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
+          
+          {/* Pagination */}
+          {vendorManagement.vendors && vendorManagement.vendors.totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center space-x-2">
+              <button
+                onClick={() => vendorManagement.handlePageChange(vendorManagement.currentPage - 1)}
+                disabled={vendorManagement.currentPage === 0}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Précédent
+              </button>
+              
+              <div className="flex space-x-1">
+                {Array.from({ length: Math.min(5, vendorManagement.vendors.totalPages) }, (_, i) => {
+                  const page = i;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => vendorManagement.handlePageChange(page)}
+                      className={`px-3 py-2 rounded-lg ${
+                        vendorManagement.currentPage === page
+                          ? 'bg-orange-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page + 1}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => vendorManagement.handlePageChange(vendorManagement.currentPage + 1)}
+                disabled={vendorManagement.currentPage >= vendorManagement.vendors.totalPages - 1}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Suivant
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

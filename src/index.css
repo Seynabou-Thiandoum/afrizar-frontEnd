@@ -80,7 +80,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #fb923c, #dc2626);
+  background: linear-gradient(to bottom, #F99834, #dc2626);
   border-radius: 4px;
 }
 

@@ -31,7 +31,7 @@ const Categories = ({ onNavigate }) => {
   return (
     <section className="py-20 bg-gradient-to-br from-orange-50 via-white to-red-50 relative overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-orange-400/10 to-red-400/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-pink-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
       </div>
@@ -64,7 +64,6 @@ const Categories = ({ onNavigate }) => {
                 onClick={() => onNavigate(category.route)}
                 className="group relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer transform hover:-translate-y-4 hover:rotate-1 border border-white/50"
               >
-                {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
                 <div className="relative h-64 overflow-hidden rounded-t-3xl">
@@ -75,14 +74,12 @@ const Categories = ({ onNavigate }) => {
                   />
                   <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-20 group-hover:opacity-40 transition-opacity duration-500`}></div>
                   
-                  {/* Floating Icon */}
                   <div className="absolute top-6 right-6 transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
                     <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-lg">
                       <IconComponent className="h-7 w-7 text-orange-600" />
                     </div>
                   </div>
                   
-                  {/* Shine Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 </div>
                 
@@ -94,7 +91,6 @@ const Categories = ({ onNavigate }) => {
                     {category.description}
                   </p>
                   
-                  {/* Subcategories */}
                   <div className="flex flex-wrap gap-2 mb-6">
                     {category.subcategories.map((sub, index) => (
                       <span
@@ -115,16 +111,15 @@ const Categories = ({ onNavigate }) => {
                     </div>
                   </div>
                   
-                  {/* Bottom Accent */}
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                 </div>
               </div>
             );
           })}
         </div>
-        
+         */}
         {/* Call to Action */}
-        <div className="text-center mt-16 relative z-10">
+        {/* <div className="text-center mt-16 relative z-10">
           <button 
             onClick={() => onNavigate('catalog')}
             className="relative bg-gradient-to-r from-orange-600 to-red-600 text-white px-12 py-6 rounded-2xl font-bold text-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 shadow-2xl hover:shadow-orange-500/25 transform hover:scale-105 group"
@@ -135,8 +130,8 @@ const Categories = ({ onNavigate }) => {
               <Sparkles className="ml-3 h-6 w-6 group-hover:rotate-180 transition-transform duration-500" />
             </span>
           </button>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
     </section>
   );
 };
