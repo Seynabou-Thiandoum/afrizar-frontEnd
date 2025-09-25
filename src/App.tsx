@@ -26,6 +26,9 @@ import SimpleApiTest from './components/SimpleApiTest';
 import AccessoiresPage from './components/AccessoiresPage';
 import VetementsPage from './components/Vetements';
 import VendeursPage from './components/Vendeurs';
+import VendorProfilePage from './components/VendorProfilePage';
+import TendancesPage from './components/TendancesPage';
+import ContactPage from './ContactPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -35,6 +38,7 @@ function App() {
   const [showDeferredOrder, setShowDeferredOrder] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [pageParams, setPageParams] = useState(null);
 
   // Redirection automatique après connexion
   React.useEffect(() => {
@@ -47,6 +51,10 @@ function App() {
       }, 100);
     }
   }, []);
+  const handleNavigation = (page, params = null) => {
+  setCurrentPage(page);
+  setPageParams(params); // Stocker les paramètres
+};
 
   const renderPage = () => {
     switch (currentPage) {
@@ -100,6 +108,22 @@ function App() {
       return <VetementsPage onNavigate={setCurrentPage} />;
       case 'vendeurs':
       return <VendeursPage onNavigate={setCurrentPage} />;
+      case 'vendor-profile':
+      return <VendorProfilePage onNavigate={setCurrentPage} vendorId={1} onBack={() => setCurrentPage('vendeurs')} />;
+      case 'tendances':
+      // Utiliser pageParams au lieu de params
+      return <TendancesPage 
+        products={pageParams?.products || []} 
+        type={pageParams?.type || 'all'} 
+        onNavigate={handleNavigation} 
+      />;
+    
+    case 'back':
+      // Gérer la navigation retour
+      setCurrentPage('vetements'); // ou la page précédente
+      return <VetementsPage onNavigate={handleNavigation} />;
+      case 'contact':
+      return <ContactPage onNavigate={handleNavigation} />;
       default:
         return (
           <>
@@ -141,7 +165,9 @@ function App() {
             {renderPage()}
           </main>
           
-          {currentPage === 'home' && <Footer />}
+          {/* {currentPage === 'home' && <Footer />}
+          {currentPage === 'vetements' && <Footer />} */}
+          <Footer />
 
           {/* Auth Modal */}
           {showAuth && (

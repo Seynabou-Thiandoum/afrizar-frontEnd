@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt } from 'lucide-react';
+import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle } from 'lucide-react';
 
 const VetementsPage = ({ onNavigate }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedSubcategory, setSelectedSubcategory] = useState('all');
+  const [selectedType, setSelectedType] = useState('all'); // Changé de selectedSubcategory
   const [selectedSize, setSelectedSize] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [wishlistItems, setWishlistItems] = useState(new Set());
+  const [selectedProduct, setSelectedProduct] = useState(null); // Pour les détails produit
+
+  // Numéro WhatsApp (remplace par le vrai numéro)
+  const whatsappNumber = "221770450099"; // Format international sans le +
 
   // Données des vêtements organisées selon le schéma
   const vetements = {
@@ -28,7 +32,12 @@ const VetementsPage = ({ onNavigate }) => {
         discount: "-19%",
         sizes: ["L", "XL", "XXL"],
         colors: ["Blanc", "Bleu", "Beige"],
-        description: "Boubou traditionnel brodé main"
+        description: "Boubou traditionnel brodé main avec finitions de qualité supérieure. Parfait pour les cérémonies et occasions spéciales.",
+        gallery: [
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1564463836146-4e30522c2984?w=500&h=600&fit=crop",
+          "https://images.unsplash.com/photo-1581803118522-7b72a50f7e9f?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 2,
@@ -41,7 +50,10 @@ const VetementsPage = ({ onNavigate }) => {
         reviews: 28,
         sizes: ["M", "L", "XL"],
         colors: ["Noir", "Marine", "Gris"],
-        description: "Costume moderne avec motifs traditionnels"
+        description: "Costume moderne avec motifs traditionnels, coupe ajustée et tissus de qualité.",
+        gallery: [
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 3,
@@ -55,7 +67,10 @@ const VetementsPage = ({ onNavigate }) => {
         sizes: ["M", "L", "XL", "XXL"],
         colors: ["Blanc", "Beige", "Kaki"],
         isNew: true,
-        description: "Pantalon coupe droite en coton"
+        description: "Pantalon coupe droite en coton, confortable et élégant.",
+        gallery: [
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 4,
@@ -68,7 +83,10 @@ const VetementsPage = ({ onNavigate }) => {
         reviews: 42,
         sizes: ["S", "M", "L", "XL"],
         colors: ["Blanc", "Bleu clair", "Beige"],
-        description: "Chemise avec broderies artisanales"
+        description: "Chemise avec broderies artisanales, parfaite pour un look raffiné.",
+        gallery: [
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop"
+        ]
       }
     ],
     femme: [
@@ -83,7 +101,10 @@ const VetementsPage = ({ onNavigate }) => {
         reviews: 56,
         sizes: ["S", "M", "L", "XL"],
         colors: ["Multicolore", "Rouge", "Bleu"],
-        description: "Robe en tissu wax authentique"
+        description: "Robe en tissu wax authentique, coupe moderne et confortable.",
+        gallery: [
+          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 6,
@@ -98,7 +119,10 @@ const VetementsPage = ({ onNavigate }) => {
         discount: "-17%",
         sizes: ["M", "L", "XL", "XXL"],
         colors: ["Blanc", "Rose", "Violet"],
-        description: "Boubou avec broderies dorées"
+        description: "Boubou avec broderies dorées, élégance et tradition.",
+        gallery: [
+          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 7,
@@ -112,7 +136,10 @@ const VetementsPage = ({ onNavigate }) => {
         isNew: true,
         sizes: ["S", "M", "L"],
         colors: ["Wax multicolore", "Rouge", "Vert"],
-        description: "Ensemble coordonné moderne"
+        description: "Ensemble coordonné moderne, style africain contemporain.",
+        gallery: [
+          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 8,
@@ -125,7 +152,10 @@ const VetementsPage = ({ onNavigate }) => {
         reviews: 22,
         sizes: ["S", "M", "L", "XL"],
         colors: ["Or", "Bordeaux", "Marine"],
-        description: "Robe élégante pour occasions spéciales"
+        description: "Robe élégante pour occasions spéciales, finitions luxueuses.",
+        gallery: [
+          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
+        ]
       }
     ],
     enfant: [
@@ -140,7 +170,10 @@ const VetementsPage = ({ onNavigate }) => {
         reviews: 25,
         sizes: ["2 ans", "4 ans", "6 ans", "8 ans"],
         colors: ["Bleu", "Vert", "Rouge"],
-        description: "Ensemble traditionnel pour garçon"
+        description: "Ensemble traditionnel pour garçon, confort et style.",
+        gallery: [
+          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 10,
@@ -154,7 +187,10 @@ const VetementsPage = ({ onNavigate }) => {
         isNew: true,
         sizes: ["2 ans", "4 ans", "6 ans", "8 ans", "10 ans"],
         colors: ["Rose", "Multicolore", "Violet"],
-        description: "Robe colorée en wax pour fillette"
+        description: "Robe colorée en wax pour fillette, douce et confortable.",
+        gallery: [
+          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 11,
@@ -167,7 +203,10 @@ const VetementsPage = ({ onNavigate }) => {
         reviews: 18,
         sizes: ["4 ans", "6 ans", "8 ans", "10 ans"],
         colors: ["Marine", "Noir", "Gris"],
-        description: "Costume élégant pour garçon"
+        description: "Costume élégant pour garçon, parfait pour les cérémonies.",
+        gallery: [
+          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
+        ]
       },
       {
         id: 12,
@@ -182,7 +221,10 @@ const VetementsPage = ({ onNavigate }) => {
         discount: "-16%",
         sizes: ["3 ans", "5 ans", "7 ans", "9 ans"],
         colors: ["Rose", "Blanc", "Lilas"],
-        description: "Ensemble avec broderies délicates"
+        description: "Ensemble avec broderies délicates, douceur et élégance.",
+        gallery: [
+          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
+        ]
       }
     ]
   };
@@ -206,7 +248,7 @@ const VetementsPage = ({ onNavigate }) => {
 
   const filteredVetements = allVetements.filter(item => {
     const matchesCategory = selectedCategory === 'all' || item.subcategory === selectedCategory;
-    const matchesSubcategory = selectedSubcategory === 'all' || item.category === selectedSubcategory;
+    const matchesType = selectedType === 'all' || item.category === selectedType;
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -222,12 +264,8 @@ const VetementsPage = ({ onNavigate }) => {
       }
     }
     
-    return matchesCategory && matchesSubcategory && matchesSearch && matchesSize && matchesPrice;
+    return matchesCategory && matchesType && matchesSearch && matchesSize && matchesPrice;
   });
-
-  const handleSubcategoryClick = (subcat) => {
-    setSelectedSubcategory(selectedSubcategory === subcat ? 'all' : subcat);
-  };
 
   // Tri
   const sortedVetements = [...filteredVetements].sort((a, b) => {
@@ -236,13 +274,23 @@ const VetementsPage = ({ onNavigate }) => {
       case 'price-high': return parseInt(b.price.replace(/[^\d]/g, '')) - parseInt(a.price.replace(/[^\d]/g, ''));
       case 'rating': return b.rating - a.rating;
       case 'name': return a.name.localeCompare(b.name);
-      default: return b.reviews - a.reviews; // popular
+      default: return b.reviews - a.reviews;
     }
   });
 
+  // Fonction pour ouvrir WhatsApp avec message
+  const handleWhatsAppOrder = (e, item) => {
+    e.stopPropagation();
+    const message = `Bonjour ! Je suis intéressé(e) par cet article :\n\n📦 ${item.name}\n💰 Prix: ${item.price}\n📋 Catégorie: ${item.category}\n\nPouvez-vous me donner plus d'informations sur la disponibilité et les options de livraison ?\n\nMerci !`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  // Fonction pour afficher les détails d'un produit
   const handleProductClick = (productId) => {
-    if (onNavigate) {
-      onNavigate('product', { id: productId });
+    const product = allVetements.find(item => item.id === productId);
+    if (product) {
+      setSelectedProduct(product);
     }
   };
 
@@ -280,6 +328,165 @@ const VetementsPage = ({ onNavigate }) => {
     };
     return colorMap[color] || '#6b7280';
   };
+
+  // Composant pour les détails du produit
+  const ProductDetails = ({ product, onClose }) => {
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || '');
+    const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '');
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto w-full">
+          <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+            <button
+              onClick={onClose}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span>Retour</span>
+            </button>
+            <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
+            <div></div>
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Images */}
+              <div>
+                <div className="mb-4">
+                  <img
+                    src={product.gallery?.[selectedImageIndex] || product.image}
+                    alt={product.name}
+                    className="w-full h-96 object-cover rounded-lg"
+                  />
+                </div>
+                {product.gallery && product.gallery.length > 1 && (
+                  <div className="flex space-x-2">
+                    {product.gallery.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${
+                          selectedImageIndex === index ? 'border-orange-500' : 'border-gray-300'
+                        }`}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Détails */}
+              <div>
+                <div className="mb-4">
+                  <span className="text-sm text-[#F99834] font-semibold">{product.category}</span>
+                  <h1 className="text-2xl font-bold text-gray-900 mt-1">{product.name}</h1>
+                </div>
+
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center">
+                    <Star className="h-5 w-5 text-yellow-500 fill-current" />
+                    <span className="text-sm text-gray-600 ml-1">{product.rating} ({product.reviews} avis)</span>
+                  </div>
+                  {product.isNew && (
+                    <span className="ml-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                      Nouveau
+                    </span>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-3xl font-bold text-gray-900">{product.price}</span>
+                    {product.originalPrice && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg text-gray-500 line-through">{product.originalPrice}</span>
+                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-semibold">
+                          {product.discount}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <p className="text-gray-700">{product.description}</p>
+                </div>
+
+                {/* Couleurs */}
+                {product.colors && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Couleur</h3>
+                    <div className="flex space-x-2">
+                      {product.colors.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => setSelectedColor(color)}
+                          className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                            selectedColor === color
+                              ? 'border-[#F99834] bg-orange-50 text-[#F99834]'
+                              : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                          }`}
+                        >
+                          {color}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tailles */}
+                {product.sizes && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Taille</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.sizes.map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => setSelectedSize(size)}
+                          className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                            selectedSize === size
+                              ? 'border-[#F99834] bg-orange-50 text-[#F99834]'
+                              : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Boutons d'action */}
+                <div className="flex space-x-4">
+                  <button 
+                    onClick={() => handleWishlistClick({stopPropagation: () => {}}, product.id)}
+                    className="flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
+                  >
+                    <Heart className={`h-5 w-5 ${wishlistItems.has(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
+                  </button>
+                  <button
+                    onClick={(e) => handleWhatsAppOrder(e, product)}
+                    className="flex-1 bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    <span>Commander sur WhatsApp</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Si un produit est sélectionné, afficher ses détails
+  if (selectedProduct) {
+    return <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -319,7 +526,10 @@ const VetementsPage = ({ onNavigate }) => {
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setSelectedType('all'); // Reset type filter when category changes
+                      }}
                       className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
                         selectedCategory === cat.id 
                           ? 'bg-[#F99834] bg-opacity-10 text-[#F99834] border border-[#F99834] border-opacity-30' 
@@ -333,19 +543,29 @@ const VetementsPage = ({ onNavigate }) => {
                 </div>
               </div>
 
-              {/* Sous-catégories */}
+              {/* Types/Sous-catégories */}
               {selectedCategory !== 'all' && subcategories[selectedCategory] && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Types</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => setSelectedType('all')}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                        selectedType === 'all' 
+                          ? 'bg-[#F99834] text-white' 
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      Tous les types
+                    </button>
                     {subcategories[selectedCategory].map((subcat) => (
                       <button
                         key={subcat}
-                        onClick={() => handleSubcategoryClick(subcat)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors ${
-                          selectedSubcategory === subcat
-                            ? 'bg-[#F99834] text-white'
-                            : 'bg-[#F99834] bg-opacity-10 text-[#F99834] hover:bg-[#F99834] hover:bg-opacity-20'
+                        onClick={() => setSelectedType(subcat)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                          selectedType === subcat 
+                            ? 'bg-[#F99834] text-white' 
+                            : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
                         {subcat}
@@ -413,7 +633,7 @@ const VetementsPage = ({ onNavigate }) => {
                 <p className="text-gray-600">
                   <span className="font-semibold">{sortedVetements.length}</span> vêtement(s) trouvé(s)
                   {selectedCategory !== 'all' && <span> dans <span className="text-[#F99834] font-medium">{categories.find(c => c.id === selectedCategory)?.name}</span></span>}
-                  {selectedSubcategory !== 'all' && <span> - <span className="text-[#F99834] font-medium">{selectedSubcategory}</span></span>}
+                  {selectedType !== 'all' && <span> - <span className="text-[#F99834] font-medium">{selectedType}</span></span>}
                 </p>
               </div>
               
@@ -487,11 +707,21 @@ const VetementsPage = ({ onNavigate }) => {
                       </button>
                       
                       <div className="absolute bottom-3 right-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-[#F99834] hover:bg-opacity-10 transition-colors">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleProductClick(item.id);
+                          }}
+                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-[#F99834] hover:bg-opacity-10 transition-colors"
+                        >
                           <Eye className="h-4 w-4 text-gray-600" />
                         </button>
-                        <button className="bg-[#F99834] text-white p-2 rounded-full shadow-lg hover:bg-[#E5861A] transition-colors">
-                          <ShoppingBag className="h-4 w-4" />
+                        <button 
+                          onClick={(e) => handleWhatsAppOrder(e, item)}
+                          className="bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+                          title="Commander sur WhatsApp"
+                        >
+                          <MessageCircle className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -507,7 +737,7 @@ const VetementsPage = ({ onNavigate }) => {
                         </div>
                       </div>
                       
-                      <p className="text-xs text-gray-600 mb-3">{item.description}</p>
+                      <p className="text-xs text-gray-600 mb-3 line-clamp-2">{item.description}</p>
                       
                       {/* Tailles disponibles */}
                       <div className="flex flex-wrap gap-1 mb-3">
@@ -532,16 +762,25 @@ const VetementsPage = ({ onNavigate }) => {
                         </div>
                         
                         {item.colors && (
-                          <div className="flex space-x-1">
+                          <div 
+                            className="flex space-x-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {item.colors.slice(0, 3).map((color, index) => (
                               <div
                                 key={index}
-                                className="w-3 h-3 rounded-full border border-gray-300"
+                                className="w-3 h-3 rounded-full border border-gray-300 cursor-pointer hover:scale-110 transition-transform"
                                 style={{ backgroundColor: getColorStyle(color) }}
+                                title={color}
+                                onClick={(e) => e.stopPropagation()}
                               />
                             ))}
                             {item.colors.length > 3 && (
-                              <div className="w-3 h-3 rounded-full bg-gray-200 flex items-center justify-center">
+                              <div 
+                                className="w-3 h-3 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                                onClick={(e) => e.stopPropagation()}
+                                title={`+${item.colors.length - 3} couleurs`}
+                              >
                                 <Plus className="h-2 w-2 text-gray-500" />
                               </div>
                             )}
@@ -642,13 +881,23 @@ const VetementsPage = ({ onNavigate }) => {
                                   }`} />
                                 </button>
                                 
-                                <button className="p-2 rounded-full border border-gray-300 hover:bg-[#F99834] hover:bg-opacity-10 transition-colors">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleProductClick(item.id);
+                                  }}
+                                  className="p-2 rounded-full border border-gray-300 hover:bg-[#F99834] hover:bg-opacity-10 transition-colors"
+                                >
                                   <Eye className="h-5 w-5 text-gray-600" />
                                 </button>
                                 
-                                <button className="px-6 py-2 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors flex items-center space-x-2">
-                                  <ShoppingBag className="h-4 w-4" />
-                                  <span>Ajouter au panier</span>
+                                <button 
+                                  onClick={(e) => handleWhatsAppOrder(e, item)}
+                                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
+                                  title="Commander sur WhatsApp"
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                  <span>Commander</span>
                                 </button>
                               </div>
                             </div>
@@ -673,6 +922,7 @@ const VetementsPage = ({ onNavigate }) => {
                   <button 
                     onClick={() => {
                       setSelectedCategory('all');
+                      setSelectedType('all');
                       setSelectedSize('all');
                       setPriceRange('all');
                       setSearchTerm('');
@@ -680,35 +930,6 @@ const VetementsPage = ({ onNavigate }) => {
                     className="px-6 py-2 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors"
                   >
                     Réinitialiser les filtres
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Pagination simulée */}
-            {sortedVetements.length > 0 && (
-              <div className="mt-12 flex justify-center">
-                <div className="flex items-center space-x-2">
-                  <button className="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50" disabled>
-                    Précédent
-                  </button>
-                  
-                  <button className="px-3 py-2 text-sm text-white bg-[#F99834] border border-[#F99834] rounded-lg">
-                    1
-                  </button>
-                  
-                  <button className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                    2
-                  </button>
-                  
-                  <button className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                    3
-                  </button>
-                  
-                  <span className="px-3 py-2 text-sm text-gray-500">...</span>
-                  
-                  <button className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                    Suivant
                   </button>
                 </div>
               </div>
@@ -732,11 +953,56 @@ const VetementsPage = ({ onNavigate }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Articles tendance - sélection des mieux notés */}
-            {allVetements
-              .filter(item => item.rating >= 4.7)
-              .slice(0, 4)
-              .map((item) => (
+            {/* Articles tendance - sélection intelligente */}
+            {(() => {
+              // Tri par rating puis par nombre de reviews pour éviter les doublons
+              const topItems = allVetements
+                .filter(item => item.rating >= 4.6) // Critère plus large
+                .sort((a, b) => {
+                  if (b.rating === a.rating) {
+                    return b.reviews - a.reviews; // Si même rating, privilégier plus de reviews
+                  }
+                  return b.rating - a.rating;
+                })
+                .slice(0, 8); // Prendre plus d'options
+
+              // Assurer une diversité des catégories
+              const diverseItems = [];
+              const usedCategories = new Set();
+              
+              // D'abord, prendre un item de chaque catégorie principale
+              ['homme', 'femme', 'enfant'].forEach(category => {
+                const categoryItem = topItems.find(item => 
+                  item.subcategory === category && !diverseItems.includes(item)
+                );
+                if (categoryItem) {
+                  diverseItems.push(categoryItem);
+                  usedCategories.add(category);
+                }
+              });
+              
+              // Compléter avec les meilleurs items restants
+              topItems.forEach(item => {
+                if (diverseItems.length < 4 && !diverseItems.includes(item)) {
+                  diverseItems.push(item);
+                }
+              });
+              
+              // Garantir au minimum 4 items même si peu d'items de qualité
+              while (diverseItems.length < 4 && diverseItems.length < allVetements.length) {
+                const remainingItems = allVetements
+                  .filter(item => !diverseItems.includes(item))
+                  .sort((a, b) => b.rating - a.rating);
+                
+                if (remainingItems.length > 0) {
+                  diverseItems.push(remainingItems[0]);
+                } else {
+                  break;
+                }
+              }
+              
+              return diverseItems.slice(0, 4);
+            })().map((item) => (
                 <div
                   key={item.id}
                   onClick={() => handleProductClick(item.id)}
@@ -768,8 +1034,12 @@ const VetementsPage = ({ onNavigate }) => {
                     </button>
                     
                     <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="bg-[#F99834] text-white p-2 rounded-full shadow-lg hover:bg-[#E5861A] transition-colors">
-                        <ShoppingBag className="h-4 w-4" />
+                      <button 
+                        onClick={(e) => handleWhatsAppOrder(e, item)}
+                        className="bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+                        title="Commander sur WhatsApp"
+                      >
+                        <MessageCircle className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -801,43 +1071,25 @@ const VetementsPage = ({ onNavigate }) => {
               ))}
           </div>
           
-          {/* Footer links */}
-          <div className="mt-8 pt-8 border-t border-white/20">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
-              <div>
-                <h4 className="font-semibold mb-3">À propos</h4>
-                <ul className="space-y-2 text-[#F99834] text-opacity-70">
-                  <li>Notre histoire</li>
-                  <li>Artisans partenaires</li>
-                  <li>Qualité & Authenticité</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-3">Service client</h4>
-                <ul className="space-y-2 text-[#F99834] text-opacity-70">
-                  <li>Contact</li>
-                  <li>Guide des tailles</li>
-                  <li>Livraison & Retours</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-3">Collections</h4>
-                <ul className="space-y-2 text-[#F99834] text-opacity-70">
-                  <li>Homme</li>
-                  <li>Femme</li>
-                  <li>Enfant</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-3">Suivez-nous</h4>
-                <ul className="space-y-2 text-[#F99834] text-opacity-70">
-                  <li>Facebook</li>
-                  <li>Instagram</li>
-                  <li>WhatsApp</li>
-                </ul>
-              </div>
+          {/* Bouton voir plus de tendances si nécessaire */}
+          {allVetements.filter(item => item.rating >= 4.6).length > 4 && (
+            <div className="text-center mt-8">
+              <button 
+                onClick={() => {
+                  // Naviguer vers une page dédiée aux tendances
+                  if (onNavigate) {
+                    onNavigate('tendances', { 
+                    products: allVetements.filter(item => item.rating >= 4.6),
+                    type: 'vetements'
+                    });
+                  }
+                }}
+                className="px-6 py-3 bg-white text-[#F99834] rounded-lg hover:bg-gray-50 transition-colors font-semibold shadow-md"
+              >
+                Voir toutes les tendances ({allVetements.filter(item => item.rating >= 4.6).length} articles)
+              </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

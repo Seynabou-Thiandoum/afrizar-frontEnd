@@ -558,6 +558,12 @@ const toggleLanguage = () => setLanguage(prev => prev === 'fr' ? 'en' : 'fr');
   >
     {t('Vendeurs')}
   </button>
+ <button
+              onClick={() => handleNavigation('contact')}
+              className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
+            >
+              Contact
+            </button> 
 </nav>
 
             {/* Recherche et Actions */}

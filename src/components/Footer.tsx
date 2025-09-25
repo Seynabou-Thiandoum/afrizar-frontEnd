@@ -37,6 +37,34 @@ const Footer = () => {
                 Nous valorisons le savoir-faire artisanal sénégalais.
               </p>
               <div className="flex space-x-4">
+                <a 
+                  href="https://www.facebook.com/share/1E5x9Ur8Js/?mibextid=wwXIfr" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-gray-800 hover:bg-gray-700 p-3 rounded-full transition-colors"
+                >
+                  <Facebook className="h-5 w-5" />
+                </a>
+                
+                <a 
+                  href="https://www.instagram.com/afri_zar/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-gray-800 hover:bg-gray-700 p-3 rounded-full transition-colors"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+                
+                <a 
+                  href="https://www.twitter.com/votrecomptetwitter" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-gray-800 hover:bg-gray-700 p-3 rounded-full transition-colors"
+                >
+                  <Twitter className="h-5 w-5" />
+                </a>
+              </div>
+              {/* <div className="flex space-x-4">
                 <button className="bg-gray-800 hover:bg-gray-700 p-3 rounded-full transition-colors">
                   <Facebook className="h-5 w-5" />
                 </button>
@@ -46,7 +74,8 @@ const Footer = () => {
                 <button className="bg-gray-800 hover:bg-gray-700 p-3 rounded-full transition-colors">
                   <Twitter className="h-5 w-5" />
                 </button>
-              </div>
+              </div> */}
+              
             </div>
 
             {/* Liens Rapides */}
@@ -67,11 +96,11 @@ const Footer = () => {
               <ul className="space-y-3">
                 <li className="flex items-center text-gray-300">
                   <Phone className="h-4 w-4 mr-3 text-orange-500" />
-                  +221 77 123 45 67
+                  +221 77 045 00 99
                 </li>
                 <li className="flex items-center text-gray-300">
                   <Mail className="h-4 w-4 mr-3 text-orange-500" />
-                  contact@afrizar.sn
+                  afrizarsenegal@afrizar.com
                 </li>
                 <li className="flex items-start text-gray-300">
                   <MapPin className="h-4 w-4 mr-3 text-orange-500 mt-1" />
