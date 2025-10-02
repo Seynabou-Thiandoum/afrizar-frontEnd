@@ -449,7 +449,7 @@ import LanguageSelector from './LanguageSelector';
 
 const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const { user, logout, isAuthenticated } = useAuth();
-  const { t } = useI18n();
+  const { t, switchLanguage, language } = useI18n();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -486,8 +486,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
     setShowUserMenu(false);
     handleNavigation('home');
   };
-  const [language, setLanguage] = useState('fr');
-const toggleLanguage = () => setLanguage(prev => prev === 'fr' ? 'en' : 'fr');
+
 
   const getRoleColor = (role) => {
     const colors = {
@@ -533,37 +532,37 @@ const toggleLanguage = () => setLanguage(prev => prev === 'fr' ? 'en' : 'fr');
               <a href="#" className="text-gray-700 hover:text-orange-600 font-medium transition-colors">{t('Vendeurs')}</a>
               
             </nav> */}
-            <nav className="hidden md:flex space-x-8">
+<nav className="hidden md:flex space-x-8">
   <button
     onClick={() => handleNavigation('home')}
-    className="text-gray-900 hover:text-orange-600 font-medium transition-colors"
+    className="text-gray-900 hover:text-[#F99834] font-medium transition-colors"
   >
-    Accueil
+    {t('home')}
   </button>
   <button
     onClick={() => handleNavigation('vetements')}
-    className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
+    className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
   >
-    Vêtements
+    {t('clothes')}
   </button>
   <button
     onClick={() => handleNavigation('accessoires')}
-    className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
+    className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
   >
-    {t('Accessories')}
+    {t('accessories')}
   </button>
   <button
     onClick={() => handleNavigation('vendeurs')}
-    className="text-gray-700 hover:text-orange-600 font-medium transition-colors"
+    className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
   >
-    {t('Vendeurs')}
+    {t('vendors')}
   </button>
- <button
-              onClick={() => handleNavigation('contact')}
-              className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
-            >
-              Contact
-            </button> 
+  <button
+    onClick={() => handleNavigation('contact')}
+    className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
+  >
+    {t('contact')}
+  </button>
 </nav>
 
             {/* Recherche et Actions */}
@@ -579,7 +578,7 @@ const toggleLanguage = () => setLanguage(prev => prev === 'fr' ? 'en' : 'fr');
                 <Search className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
 
-              <button onClick={toggleLanguage} className="flex items-center space-x-1 text-gray-700 hover:text-orange-600 transition-colors">
+              <button onClick={switchLanguage} className="flex items-center space-x-1 text-gray-700 hover:text-[#F99834] transition-colors">
                 <Globe className="h-5 w-5" />
                 <span className="font-medium">{language.toUpperCase()}</span>
               </button>
@@ -623,7 +622,7 @@ const toggleLanguage = () => setLanguage(prev => prev === 'fr' ? 'en' : 'fr');
                       </>
                     ) : (
                       <button 
-                        onClick={() => setIsAuthenticated(true)}
+                        onClick={() => onOpenAuth('login')}
                         className="block w-full text-left px-4 py-2 text-orange-600 hover:bg-gray-100 font-medium"
                       >
                         {t('login')}

@@ -28,7 +28,6 @@ import VetementsPage from './components/Vetements';
 import VendeursPage from './components/Vendeurs';
 import VendorProfilePage from './components/VendorProfilePage';
 import TendancesPage from './components/TendancesPage';
-import ContactPage from './ContactPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -62,8 +61,8 @@ function App() {
         return (
           <>
             <Hero onNavigate={setCurrentPage} />
-            <Categories onNavigate={setCurrentPage} />
-            <FeaturedProducts onNavigate={setCurrentPage} />
+            {/* <Categories onNavigate={setCurrentPage} />
+            <FeaturedProducts onNavigate={setCurrentPage} /> */}
           </>
         );
       case 'catalog':
