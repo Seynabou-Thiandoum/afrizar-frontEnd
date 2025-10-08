@@ -1,25 +1,84 @@
 // Configuration de l'API
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8080/afrizar',
-  VENDORS_ENDPOINT: '/api/vendeurs',
+  BASE_URL: 'http://localhost:8080',
   TIMEOUT: 10000, // 10 secondes
   RETRY_ATTEMPTS: 3,
 };
 
 // URLs complètes pour les endpoints
 export const API_ENDPOINTS = {
-  VENDORS: `${API_CONFIG.BASE_URL}${API_CONFIG.VENDORS_ENDPOINT}`,
-  VENDORS_VERIFIED: `${API_CONFIG.BASE_URL}${API_CONFIG.VENDORS_ENDPOINT}/verifies`,
-  VENDORS_FEATURED: `${API_CONFIG.BASE_URL}${API_CONFIG.VENDORS_ENDPOINT}/vedettes`,
-  VENDORS_SEARCH: `${API_CONFIG.BASE_URL}${API_CONFIG.VENDORS_ENDPOINT}/recherche`,
-  VENDORS_STATS: `${API_CONFIG.BASE_URL}${API_CONFIG.VENDORS_ENDPOINT}/statistiques-globales`,
-  EMAIL_CHECK: `${API_CONFIG.BASE_URL}${API_CONFIG.VENDORS_ENDPOINT}/email`,
+  // Auth
+  AUTH_LOGIN: `${API_CONFIG.BASE_URL}/api/auth/connexion`,
+  AUTH_REGISTER: `${API_CONFIG.BASE_URL}/api/auth/inscription`,
+  AUTH_LOGOUT: `${API_CONFIG.BASE_URL}/api/auth/deconnexion`,
+  AUTH_PROFILE: `${API_CONFIG.BASE_URL}/api/auth/profil`,
+  AUTH_VALIDATE_TOKEN: `${API_CONFIG.BASE_URL}/api/auth/valider-token`,
+  
+  // Produits
+  PRODUCTS: `${API_CONFIG.BASE_URL}/api/produits`,
+  PRODUCTS_SEARCH: `${API_CONFIG.BASE_URL}/api/produits/recherche`,
+  PRODUCTS_BY_VENDOR: (vendorId: number) => `${API_CONFIG.BASE_URL}/api/produits/vendeur/${vendorId}`,
+  PRODUCTS_BY_CATEGORY: (categoryId: number) => `${API_CONFIG.BASE_URL}/api/produits/categorie/${categoryId}`,
+  PRODUCTS_IN_STOCK: `${API_CONFIG.BASE_URL}/api/produits/en-stock`,
+  PRODUCTS_TOP_RATED: `${API_CONFIG.BASE_URL}/api/produits/mieux-notes`,
+  
+  // Vendeurs
+  VENDORS: `${API_CONFIG.BASE_URL}/api/vendeurs`,
+  VENDORS_VERIFIED: `${API_CONFIG.BASE_URL}/api/vendeurs/verifies`,
+  VENDORS_SEARCH: `${API_CONFIG.BASE_URL}/api/vendeurs/recherche`,
+  
+  // Categories
+  CATEGORIES: `${API_CONFIG.BASE_URL}/api/categories`,
+  
+  // Commandes
+  ORDERS: `${API_CONFIG.BASE_URL}/api/commandes`,
+  ORDERS_BY_CLIENT: (clientId: number) => `${API_CONFIG.BASE_URL}/api/commandes/client/${clientId}`,
+  
+  // Admin
+  ADMIN_PRODUCTS_PENDING: `${API_CONFIG.BASE_URL}/api/admin/produits/en-attente`,
+  ADMIN_PRODUCTS_ALL: `${API_CONFIG.BASE_URL}/api/admin/produits/tous`,
+  ADMIN_PRODUCT_VALIDATE: (id: number) => `${API_CONFIG.BASE_URL}/api/admin/produits/${id}/valider`,
+  ADMIN_PRODUCT_REJECT: (id: number) => `${API_CONFIG.BASE_URL}/api/admin/produits/${id}/rejeter`,
+  
+  ADMIN_VENDORS_ALL: `${API_CONFIG.BASE_URL}/api/admin/vendeurs/tous`,
+  ADMIN_VENDORS_UNVERIFIED: `${API_CONFIG.BASE_URL}/api/admin/vendeurs/non-verifies`,
+  ADMIN_VENDOR_VERIFY: (id: number) => `${API_CONFIG.BASE_URL}/api/admin/vendeurs/${id}/verifier`,
+  ADMIN_VENDOR_DEACTIVATE: (id: number) => `${API_CONFIG.BASE_URL}/api/admin/vendeurs/${id}/desactiver`,
+  ADMIN_VENDOR_ACTIVATE: (id: number) => `${API_CONFIG.BASE_URL}/api/admin/vendeurs/${id}/activer`,
+  
+  ADMIN_USERS_ALL: `${API_CONFIG.BASE_URL}/api/admin/utilisateurs/tous`,
+  ADMIN_USER_DEACTIVATE: (id: number) => `${API_CONFIG.BASE_URL}/api/admin/utilisateurs/${id}/desactiver`,
+  ADMIN_USER_ACTIVATE: (id: number) => `${API_CONFIG.BASE_URL}/api/admin/utilisateurs/${id}/activer`,
+  
+  ADMIN_STATS_DASHBOARD: `${API_CONFIG.BASE_URL}/api/admin/statistiques/dashboard`,
+  
+  // Support
+  SUPPORT_CLIENTS: `${API_CONFIG.BASE_URL}/api/support/clients`,
+  SUPPORT_VENDORS: `${API_CONFIG.BASE_URL}/api/support/vendeurs`,
+  SUPPORT_ORDERS: `${API_CONFIG.BASE_URL}/api/support/commandes`,
+  SUPPORT_STATS_CLIENTS: `${API_CONFIG.BASE_URL}/api/support/statistiques/clients`,
+  SUPPORT_STATS_VENDORS: `${API_CONFIG.BASE_URL}/api/support/statistiques/vendeurs`,
+  
+  // Email check
+  EMAIL_CHECK: `${API_CONFIG.BASE_URL}/api/vendeurs/email`,
 };
 
 // Configuration des headers par défaut
 export const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
+};
+
+// Fonction pour obtenir les headers avec authentification
+export const getAuthHeaders = (): HeadersInit => {
+  const token = localStorage.getItem('afrizar_token');
+  const headers: HeadersInit = { ...DEFAULT_HEADERS };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
 };
 
 // Messages d'erreur
@@ -29,6 +88,6 @@ export const ERROR_MESSAGES = {
   NOT_FOUND: 'Ressource non trouvée',
   SERVER_ERROR: 'Erreur interne du serveur',
   VALIDATION_ERROR: 'Données invalides',
-  UNAUTHORIZED: 'Non autorisé',
-  FORBIDDEN: 'Accès interdit',
+  UNAUTHORIZED: 'Non autorisé - Veuillez vous connecter',
+  FORBIDDEN: 'Accès interdit - Vous n\'avez pas les permissions nécessaires',
 };

@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import authService, { AuthResponse, User as BackendUser } from '../services/authService';
 
 interface User {
-  id: string;
+  id: number;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'client' | 'vendor' | 'support' | 'admin' | 'developer' | 'founder';
+  role: 'client' | 'vendor' | 'support' | 'admin';
   avatar?: string;
   businessName?: string;
   permissions: string[];
@@ -13,16 +14,18 @@ interface User {
   isApproved?: boolean;
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  pointsFidelite?: number;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string }>;
-  register: (userData: any, userType: 'client' | 'vendor') => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string; error?: string }>;
+  register: (userData: any, userType: 'client' | 'vendor') => Promise<{ success: boolean; message?: string; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
   hasPermission: (permission: string) => boolean;
   switchRole: (role: string) => void;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,99 +42,180 @@ const rolePermissions = {
   client: ['view_products', 'place_orders', 'track_orders', 'manage_profile'],
   vendor: ['manage_products', 'view_orders', 'manage_inventory', 'view_analytics', 'customer_communication'],
   support: ['manage_all_orders', 'customer_support', 'vendor_support', 'view_all_products', 'moderate_content'],
-  admin: ['manage_users', 'view_analytics', 'manage_platform', 'financial_reports', 'system_settings'],
-  developer: ['system_access', 'debug_mode', 'manage_platform', 'view_logs', 'technical_support'],
-  founder: ['full_access', 'strategic_decisions', 'financial_oversight', 'team_management']
+  admin: ['manage_users', 'view_analytics', 'manage_platform', 'financial_reports', 'system_settings', 'validate_products', 'verify_vendors', 'full_access'],
+};
+
+// Mapper les rôles du backend vers les rôles du frontend
+const mapBackendRole = (backendRole: 'ADMIN' | 'CLIENT' | 'VENDEUR' | 'SUPPORT'): 'admin' | 'client' | 'vendor' | 'support' => {
+  const roleMap = {
+    'ADMIN': 'admin' as const,
+    'CLIENT': 'client' as const,
+    'VENDEUR': 'vendor' as const,
+    'SUPPORT': 'support' as const,
+  };
+  return roleMap[backendRole];
+};
+
+// Convertir l'utilisateur du backend vers le format frontend
+const convertBackendUser = (backendUser: BackendUser): User => {
+  const frontendRole = mapBackendRole(backendUser.role);
+  
+  return {
+    id: backendUser.id,
+    email: backendUser.email,
+    firstName: backendUser.prenom,
+    lastName: backendUser.nom,
+    role: frontendRole,
+    businessName: backendUser.nomBoutique,
+    permissions: rolePermissions[frontendRole],
+    isActive: backendUser.actif,
+    isApproved: backendUser.verifie !== undefined ? backendUser.verifie : true,
+    approvalStatus: backendUser.verifie === false ? 'pending' : 'approved',
+    createdAt: new Date().toISOString(),
+    pointsFidelite: backendUser.pointsFidelite,
+  };
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Utilisateurs de démonstration
-  const demoUsers = {
-    'client@afrizar.sn': {
-      id: '1',
-      email: 'client@afrizar.sn',
-      firstName: 'Aminata',
-      lastName: 'Diallo',
-      role: 'client' as const,
-      permissions: rolePermissions.client,
-      isActive: true,
-      createdAt: '2025-01-01'
-    },
-    'vendor@afrizar.sn': {
-      id: '2',
-      email: 'vendor@afrizar.sn',
-      firstName: 'Fatou',
-      lastName: 'Sall',
-      role: 'vendor' as const,
-      businessName: 'Atelier Fatou',
-      permissions: rolePermissions.vendor,
-      isActive: true,
-      createdAt: '2025-01-01'
-    },
-    'support@afrizar.sn': {
-      id: '3',
-      email: 'support@afrizar.sn',
-      firstName: 'Moussa',
-      lastName: 'Ba',
-      role: 'support' as const,
-      permissions: rolePermissions.support,
-      isActive: true,
-      createdAt: '2025-01-01'
-    },
-    'admin@afrizar.sn': {
-      id: '4',
-      email: 'admin@afrizar.sn',
-      firstName: 'Ibrahima',
-      lastName: 'Ndiaye',
-      role: 'admin' as const,
-      permissions: rolePermissions.admin,
-      isActive: true,
-      createdAt: '2025-01-01'
-    },
-    'dev@afrizar.sn': {
-      id: '5',
-      email: 'dev@afrizar.sn',
-      firstName: 'Cheikh',
-      lastName: 'Fall',
-      role: 'developer' as const,
-      permissions: rolePermissions.developer,
-      isActive: true,
-      createdAt: '2025-01-01'
-    },
-    'founder@afrizar.sn': {
-      id: '6',
-      email: 'founder@afrizar.sn',
-      firstName: 'Ousmane',
-      lastName: 'Diop',
-      role: 'founder' as const,
-      permissions: rolePermissions.founder,
-      isActive: true,
-      createdAt: '2025-01-01'
-    }
-  };
+  // Charger l'utilisateur depuis le localStorage au démarrage
+  useEffect(() => {
+    const initAuth = async () => {
+      const savedUser = authService.getUser();
+      const token = authService.getToken();
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; redirectTo?: string }> => {
-    // Simulation de connexion
-    const userData = demoUsers[email as keyof typeof demoUsers];
-    if (userData && password === 'demo123') {
-      setUser(userData);
-      localStorage.setItem('afrizar_user', JSON.stringify(userData));
+      if (savedUser && token) {
+        // Vérifier si le token est toujours valide
+        const isValid = await authService.validateToken();
+        
+        if (isValid) {
+          setUser(convertBackendUser(savedUser));
+        } else {
+          // Token invalide, déconnecter
+          authService.removeToken();
+        }
+      }
       
-      return { success: true, user: userData };
+      setLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; redirectTo?: string; error?: string }> => {
+    try {
+      setLoading(true);
+      const response: AuthResponse = await authService.login(email, password);
+      
+      const backendUser: BackendUser = {
+        id: response.utilisateurId,
+        email: response.email,
+        nom: response.nom,
+        prenom: response.prenom,
+        role: response.role,
+        actif: response.actif,
+        nomBoutique: response.nomBoutique,
+        verifie: response.verifie,
+        pointsFidelite: response.pointsFidelite,
+      };
+
+      const frontendUser = convertBackendUser(backendUser);
+      setUser(frontendUser);
+
+      // Déterminer la redirection selon le rôle
+      let redirectTo = '/';
+      switch (frontendUser.role) {
+        case 'admin':
+          redirectTo = '/admin/dashboard';
+          break;
+        case 'vendor':
+          redirectTo = '/vendor/dashboard';
+          break;
+        case 'client':
+          redirectTo = '/';
+          break;
+        case 'support':
+          redirectTo = '/support/dashboard';
+          break;
+      }
+
+      return { success: true, redirectTo };
+    } catch (error: any) {
+      console.error('Erreur de connexion:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Email ou mot de passe incorrect'
+      };
+    } finally {
+      setLoading(false);
     }
-    return { success: false };
   };
 
-  const register = async (userData: any, userType: 'client' | 'vendor'): Promise<{ success: boolean; message?: string }> => {
-    // Simulation d'inscription
-    return { success: true, message: 'Inscription réussie' };
+  const register = async (userData: any, userType: 'client' | 'vendor'): Promise<{ success: boolean; message?: string; error?: string }> => {
+    try {
+      setLoading(true);
+      
+      // Mapper le type d'utilisateur vers le rôle backend
+      const role = userType === 'client' ? 'CLIENT' : 'VENDEUR';
+      
+      const registerData = {
+        nom: userData.lastName,
+        prenom: userData.firstName,
+        email: userData.email,
+        motDePasse: userData.password,
+        telephone: userData.phone,
+        role,
+        // Champs client
+        adresse: userData.address,
+        ville: userData.city,
+        codePostal: userData.postalCode,
+        pays: userData.country || 'Sénégal',
+        // Champs vendeur
+        nomBoutique: userData.businessName,
+        description: userData.description,
+        adresseBoutique: userData.businessAddress,
+        specialites: userData.specialties,
+      };
+
+      const response: AuthResponse = await authService.register(registerData);
+      
+      const backendUser: BackendUser = {
+        id: response.utilisateurId,
+        email: response.email,
+        nom: response.nom,
+        prenom: response.prenom,
+        role: response.role,
+        actif: response.actif,
+        nomBoutique: response.nomBoutique,
+        verifie: response.verifie,
+        pointsFidelite: response.pointsFidelite,
+      };
+
+      const frontendUser = convertBackendUser(backendUser);
+      setUser(frontendUser);
+
+      let message = 'Inscription réussie !';
+      if (userType === 'vendor' && !response.verifie) {
+        message = 'Inscription réussie ! Votre compte sera vérifié par un administrateur avant que vous puissiez commencer à vendre.';
+      }
+
+      return { success: true, message };
+    } catch (error: any) {
+      console.error('Erreur d\'inscription:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Erreur lors de l\'inscription'
+      };
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
+    authService.logout();
     setUser(null);
-    localStorage.removeItem('afrizar_user');
   };
 
   const hasPermission = (permission: string): boolean => {
@@ -140,21 +224,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchRole = (role: string) => {
-    if (user && hasPermission('full_access')) {
-      setUser({
-        ...user,
-        role: role as User['role'],
-        permissions: rolePermissions[role as keyof typeof rolePermissions]
-      });
-    }
+    // Cette fonction n'est plus utilisée avec le vrai backend
+    // Le rôle est déterminé par le serveur
+    console.warn('switchRole is not supported with real backend authentication');
   };
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('afrizar_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
 
   return (
     <AuthContext.Provider value={{
@@ -164,7 +237,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout,
       isAuthenticated: !!user,
       hasPermission,
-      switchRole
+      switchRole,
+      loading
     }}>
       {children}
     </AuthContext.Provider>
