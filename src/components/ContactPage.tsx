@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, Send, MessageSquare, User, Star } from 'lucide-react';
+import { useI18n } from '../contexts/InternationalizationContext';
 
 const ContactPage = ({ onNavigate }) => {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -49,10 +51,9 @@ const ContactPage = ({ onNavigate }) => {
         
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-black text-gray-900 mb-4">Contactez-nous</h1>
+          <h1 className="text-5xl font-black text-gray-900 mb-4">{t('contact.title')}</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Nous sommes là pour vous accompagner dans votre expérience Afizar. 
-            N'hésitez pas à nous contacter pour toute question ou demande.
+            {t('contact.subtitle')}
           </p>
         </div>
 
@@ -61,7 +62,7 @@ const ContactPage = ({ onNavigate }) => {
           {/* Informations de contact */}
           <div className="space-y-8">
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Nos coordonnées</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('contact.our_info')}</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
@@ -69,8 +70,8 @@ const ContactPage = ({ onNavigate }) => {
                     <MapPin className="h-6 w-6 text-[#F99834]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Adresse</h3>
-                    <p className="text-gray-600">123 Avenue Léopold Sédar Senghor<br />Dakar, Sénégal</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">{t('contact.address')}</h3>
+                    <p className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{t('contact.address_value')}</p>
                   </div>
                 </div>
 
@@ -79,8 +80,8 @@ const ContactPage = ({ onNavigate }) => {
                     <Phone className="h-6 w-6 text-[#F99834]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Téléphone</h3>
-                    <p className="text-gray-600">+221 33 123 45 67<br />+221 77 123 45 67</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">{t('contact.phone')}</h3>
+                    <p className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{t('contact.phone_value')}</p>
                   </div>
                 </div>
 
@@ -89,8 +90,8 @@ const ContactPage = ({ onNavigate }) => {
                     <Mail className="h-6 w-6 text-[#F99834]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                    <p className="text-gray-600">contact@afizar.com<br />support@afizar.com</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">{t('contact.email')}</h3>
+                    <p className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>{t('contact.email_value')}</p>
                   </div>
                 </div>
 
@@ -99,11 +100,9 @@ const ContactPage = ({ onNavigate }) => {
                     <Clock className="h-6 w-6 text-[#F99834]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Horaires</h3>
-                    <p className="text-gray-600">
-                      Lundi - Vendredi: 8h00 - 18h00<br />
-                      Samedi: 9h00 - 16h00<br />
-                      Dimanche: Fermé
+                    <h3 className="font-semibold text-gray-900 mb-1">{t('contact.hours')}</h3>
+                    <p className="text-gray-600" style={{ whiteSpace: 'pre-line' }}>
+                      {t('contact.hours_value')}
                     </p>
                   </div>
                 </div>
@@ -113,17 +112,17 @@ const ContactPage = ({ onNavigate }) => {
               <div className="mt-8 p-4 bg-green-50 rounded-xl border border-green-200">
                 <div className="flex items-center space-x-3 mb-3">
                   <MessageSquare className="h-6 w-6 text-green-600" />
-                  <h3 className="font-semibold text-green-900">Contact rapide</h3>
+                  <h3 className="font-semibold text-green-900">{t('contact.whatsapp_title')}</h3>
                 </div>
                 <p className="text-green-700 mb-4">
-                  Besoin d'une réponse immédiate ? Contactez-nous sur WhatsApp !
+                  {t('contact.whatsapp_desc')}
                 </p>
                 <button
                   onClick={handleWhatsAppContact}
                   className="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  <span>Contacter sur WhatsApp</span>
+                  <span>{t('contact.whatsapp_button')}</span>
                 </button>
               </div>
             </div>
@@ -162,16 +161,16 @@ const ContactPage = ({ onNavigate }) => {
 
           {/* Formulaire de contact */}
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Envoyez-nous un message</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('contact.form_title')}</h2>
             
             {isSubmitted ? (
               <div className="text-center py-12">
                 <div className="bg-green-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
                   <Send className="h-12 w-12 text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-green-900 mb-2">Message envoyé !</h3>
+                <h3 className="text-xl font-bold text-green-900 mb-2">{t('contact.success')}</h3>
                 <p className="text-green-700">
-                  Merci pour votre message. Nous vous répondrons dans les plus brefs délais.
+                  {t('contact.subtitle')}
                 </p>
               </div>
             ) : (
@@ -179,7 +178,7 @@ const ContactPage = ({ onNavigate }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nom complet *
+                      {t('contact.name')} *
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -190,14 +189,14 @@ const ContactPage = ({ onNavigate }) => {
                         value={formData.name}
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
-                        placeholder="Votre nom"
+                        placeholder={t('contact.name')}
                       />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email *
+                      {t('contact.email')} *
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -208,7 +207,7 @@ const ContactPage = ({ onNavigate }) => {
                         value={formData.email}
                         onChange={handleInputChange}
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
-                        placeholder="votre@email.com"
+                        placeholder={t('contact.email_placeholder')}
                       />
                     </div>
                   </div>
@@ -216,7 +215,7 @@ const ContactPage = ({ onNavigate }) => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Téléphone (optionnel)
+                    {t('contact.phone')}
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -226,14 +225,14 @@ const ContactPage = ({ onNavigate }) => {
                       value={formData.phone}
                       onChange={handleInputChange}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
-                      placeholder="+221 XX XXX XX XX"
+                      placeholder={t('contact.phone_placeholder')}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Sujet *
+                    {t('contact.subject')} *
                   </label>
                   <select
                     name="subject"
@@ -254,7 +253,7 @@ const ContactPage = ({ onNavigate }) => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Message *
+                    {t('contact.message')} *
                   </label>
                   <textarea
                     name="message"
@@ -263,7 +262,7 @@ const ContactPage = ({ onNavigate }) => {
                     value={formData.message}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent resize-none"
-                    placeholder="Décrivez votre demande en détail..."
+                    placeholder={t('contact.message')}
                   />
                 </div>
 
@@ -272,7 +271,7 @@ const ContactPage = ({ onNavigate }) => {
                   className="w-full bg-[#F99834] text-white py-4 px-6 rounded-lg hover:bg-[#E5861A] transition-colors flex items-center justify-center space-x-2 font-semibold"
                 >
                   <Send className="h-5 w-5" />
-                  <span>Envoyer le message</span>
+                  <span>{t('contact.send')}</span>
                 </button>
               </div>
             )}

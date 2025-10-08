@@ -166,7 +166,7 @@ function App() {
           
           {/* {currentPage === 'home' && <Footer />}
           {currentPage === 'vetements' && <Footer />} */}
-          <Footer />
+          <Footer onNavigate={handleNavigation} />
 
           {/* Auth Modal */}
           {showAuth && (

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
 
-const Footer = () => {
+const Footer = ({ onNavigate }) => {
   const { t, formatPrice } = useI18n();
   const currentYear = new Date().getFullYear();
 
@@ -33,8 +33,7 @@ const Footer = () => {
                 </span>
               </div>
               <p className="text-gray-300 mb-6 max-w-md">
-                Votre destination privilégiée pour découvrir et acheter des créations authentiques Made in Senegal. 
-                Nous valorisons le savoir-faire artisanal sénégalais.
+                {t('footer.about_text')}
               </p>
               <div className="flex space-x-4">
                 <a 
@@ -80,19 +79,54 @@ const Footer = () => {
 
             {/* Liens Rapides */}
             <div>
-              <h3 className="text-lg font-bold mb-4">Liens Rapides</h3>
+              <h3 className="text-lg font-bold mb-4">{t('footer.quick_links')}</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">À propos</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">Nos Artisans</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">Comment ça marche</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">Blog</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">FAQ</a></li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('home')} 
+                    className="text-gray-300 hover:text-orange-500 transition-colors text-left"
+                  >
+                    {t('footer.about_link')}
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('vendeurs')} 
+                    className="text-gray-300 hover:text-orange-500 transition-colors text-left"
+                  >
+                    {t('footer.artisans')}
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('home')} 
+                    className="text-gray-300 hover:text-orange-500 transition-colors text-left"
+                  >
+                    {t('footer.how_it_works')}
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('home')} 
+                    className="text-gray-300 hover:text-orange-500 transition-colors text-left"
+                  >
+                    {t('footer.blog')}
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('contact')} 
+                    className="text-gray-300 hover:text-orange-500 transition-colors text-left"
+                  >
+                    {t('footer.faq')}
+                  </button>
+                </li>
               </ul>
             </div>
 
             {/* Contact */}
             <div>
-              <h3 className="text-lg font-bold mb-4">Contact</h3>
+              <h3 className="text-lg font-bold mb-4">{t('footer.contact')}</h3>
               <ul className="space-y-3">
                 <li className="flex items-center text-gray-300">
                   <Phone className="h-4 w-4 mr-3 text-orange-500" />
@@ -113,18 +147,27 @@ const Footer = () => {
           <div className="border-t border-gray-800 mt-8 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-400 text-sm">
-                © 2024 Afrizar.sn. Tous droits réservés.
+                © 2024 Afrizar.sn. {t('footer.copyright').split('©')[1]?.split('Afrizar')[1] || 'Tous droits réservés.'}
               </p>
               <div className="flex space-x-6 mt-4 md:mt-0">
-                <a href="#" className="text-gray-400 hover:text-orange-500 text-sm transition-colors">
-                  Politique de confidentialité
-                </a>
-                <a href="#" className="text-gray-400 hover:text-orange-500 text-sm transition-colors">
-                  Conditions d'utilisation
-                </a>
-                <a href="#" className="text-gray-400 hover:text-orange-500 text-sm transition-colors">
-                  Mentions légales
-                </a>
+                <button 
+                  onClick={() => onNavigate && onNavigate('home')} 
+                  className="text-gray-400 hover:text-orange-500 text-sm transition-colors"
+                >
+                  {t('footer.privacy')}
+                </button>
+                <button 
+                  onClick={() => onNavigate && onNavigate('home')} 
+                  className="text-gray-400 hover:text-orange-500 text-sm transition-colors"
+                >
+                  {t('footer.terms')}
+                </button>
+                <button 
+                  onClick={() => onNavigate && onNavigate('contact')} 
+                  className="text-gray-400 hover:text-orange-500 text-sm transition-colors"
+                >
+                  {t('footer.legal')}
+                </button>
               </div>
             </div>
           </div>

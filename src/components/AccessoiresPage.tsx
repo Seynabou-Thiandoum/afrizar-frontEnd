@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, ArrowLeft, MessageCircle } from 'lucide-react';
+import { useI18n } from '../contexts/InternationalizationContext';
 
 const AccessoiresPage = ({ onNavigate }) => {
+  const { t } = useI18n();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Nouveau état pour les types
   const [priceRange, setPriceRange] = useState('all');
@@ -376,11 +378,11 @@ const AccessoiresPage = ({ onNavigate }) => {
                 <div className="flex items-center mb-4">
                   <div className="flex items-center">
                     <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                    <span className="text-sm text-gray-600 ml-1">{product.rating} ({product.reviews} avis)</span>
+                    <span className="text-sm text-gray-600 ml-1">{product.rating} ({product.reviews} {t('clothes.reviews')})</span>
                   </div>
                   {product.isNew && (
                     <span className="ml-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-                      Nouveau
+                      {t('clothes.new_badge')}
                     </span>
                   )}
                 </div>
@@ -482,8 +484,8 @@ const AccessoiresPage = ({ onNavigate }) => {
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-gray-900 mb-2">Accessoires</h1>
-          <p className="text-gray-600">Complétez votre style avec nos accessoires authentiques</p>
+          <h1 className="text-4xl font-black text-gray-900 mb-2">{t('accessories.page_title')}</h1>
+          <p className="text-gray-600">{t('accessories.discover')}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle } from 'lucide-react';
+import { useI18n } from '../contexts/InternationalizationContext';
 
 const VetementsPage = ({ onNavigate }) => {
+  const { t } = useI18n();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Changé de selectedSubcategory
   const [selectedSize, setSelectedSize] = useState('all');
@@ -344,7 +346,7 @@ const VetementsPage = ({ onNavigate }) => {
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="h-5 w-5" />
-              <span>Retour</span>
+              <span>{t('clothes.back')}</span>
             </button>
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             <div></div>
@@ -388,11 +390,11 @@ const VetementsPage = ({ onNavigate }) => {
                 <div className="flex items-center mb-4">
                   <div className="flex items-center">
                     <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                    <span className="text-sm text-gray-600 ml-1">{product.rating} ({product.reviews} avis)</span>
+                    <span className="text-sm text-gray-600 ml-1">{product.rating} ({product.reviews} {t('clothes.reviews')})</span>
                   </div>
                   {product.isNew && (
                     <span className="ml-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-                      Nouveau
+                      {t('clothes.new_badge')}
                     </span>
                   )}
                 </div>
@@ -472,7 +474,7 @@ const VetementsPage = ({ onNavigate }) => {
                     className="flex-1 bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
                   >
                     <MessageCircle className="h-5 w-5" />
-                    <span>Commander sur WhatsApp</span>
+                    <span>{t('clothes.order_whatsapp')}</span>
                   </button>
                 </div>
               </div>
@@ -494,8 +496,8 @@ const VetementsPage = ({ onNavigate }) => {
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-gray-900 mb-2">Vêtements</h1>
-          <p className="text-gray-600">Découvrez notre collection de vêtements traditionnels sénégalais</p>
+          <h1 className="text-4xl font-black text-gray-900 mb-2">{t('clothes.page_title')}</h1>
+          <p className="text-gray-600">{t('clothes.discover')}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -506,12 +508,12 @@ const VetementsPage = ({ onNavigate }) => {
               
               {/* Recherche */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Rechercher</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('search')}</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Nom, catégorie, description..."
+                    placeholder={t('clothes.search_placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
@@ -521,7 +523,7 @@ const VetementsPage = ({ onNavigate }) => {
 
               {/* Catégories */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Catégories</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('categories')}</h3>
                 <div className="space-y-2">
                   {categories.map((cat) => (
                     <button
@@ -556,7 +558,7 @@ const VetementsPage = ({ onNavigate }) => {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      Tous les types
+                      {t('clothes.all_types')}
                     </button>
                     {subcategories[selectedCategory].map((subcat) => (
                       <button
@@ -577,13 +579,13 @@ const VetementsPage = ({ onNavigate }) => {
 
               {/* Tailles */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Tailles</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('clothes.all_sizes')}</h3>
                 <select
                   value={selectedSize}
                   onChange={(e) => setSelectedSize(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
                 >
-                  <option value="all">Toutes les tailles</option>
+                  <option value="all">{t('clothes.all_sizes')}</option>
                   <optgroup label="Adultes">
                     <option value="XS">XS</option>
                     <option value="S">S</option>
@@ -608,16 +610,16 @@ const VetementsPage = ({ onNavigate }) => {
 
               {/* Prix */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Prix</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('clothes.all_prices')}</h3>
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
                 >
-                  <option value="all">Tous les prix</option>
-                  <option value="low">Moins de 35,000 FCFA</option>
-                  <option value="medium">35,000 - 60,000 FCFA</option>
-                  <option value="high">Plus de 60,000 FCFA</option>
+                  <option value="all">{t('clothes.all_prices')}</option>
+                  <option value="low">{t('clothes.under_30k')}</option>
+                  <option value="medium">{t('clothes.30k_60k')}</option>
+                  <option value="high">{t('clothes.over_100k')}</option>
                 </select>
               </div>
 
@@ -631,7 +633,7 @@ const VetementsPage = ({ onNavigate }) => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-sm">
               <div className="mb-4 sm:mb-0">
                 <p className="text-gray-600">
-                  <span className="font-semibold">{sortedVetements.length}</span> vêtement(s) trouvé(s)
+                  <span className="font-semibold">{sortedVetements.length}</span> {t('clothes.found')}
                   {selectedCategory !== 'all' && <span> dans <span className="text-[#F99834] font-medium">{categories.find(c => c.id === selectedCategory)?.name}</span></span>}
                   {selectedType !== 'all' && <span> - <span className="text-[#F99834] font-medium">{selectedType}</span></span>}
                 </p>
@@ -643,11 +645,11 @@ const VetementsPage = ({ onNavigate }) => {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
                 >
-                  <option value="popular">Plus populaires</option>
-                  <option value="price-low">Prix croissant</option>
-                  <option value="price-high">Prix décroissant</option>
-                  <option value="rating">Mieux notés</option>
-                  <option value="name">Nom A-Z</option>
+                  <option value="popular">{t('clothes.popular')}</option>
+                  <option value="price-low">{t('clothes.price_low')}</option>
+                  <option value="price-high">{t('clothes.price_high')}</option>
+                  <option value="rating">{t('clothes.rating')}</option>
+                  <option value="name">A-Z</option>
                 </select>
                 
                 <div className="flex bg-gray-200 rounded-lg p-1">
@@ -685,7 +687,7 @@ const VetementsPage = ({ onNavigate }) => {
                       
                       {item.isNew && (
                         <span className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Nouveau
+                          {t('clothes.new_badge')}
                         </span>
                       )}
                       
@@ -809,7 +811,7 @@ const VetementsPage = ({ onNavigate }) => {
                         />
                         {item.isNew && (
                           <span className="absolute -top-2 -right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                            Nouveau
+                            {t('clothes.new_badge')}
                           </span>
                         )}
                         {item.discount && !item.isNew && (
