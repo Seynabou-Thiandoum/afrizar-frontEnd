@@ -11,7 +11,7 @@ import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import SurMesure from './components/SurMesure';
 import VendorDashboard from './components/VendorDashboard';
-import AdminDashboard from './components/AdminDashboard';
+import AdminDashboard from './components/AdminDashboardNew';
 import SupportDashboard from './components/SupportDashboard';
 import ClientDashboard from './components/ClientDashboard';
 import Auth from './components/Auth';

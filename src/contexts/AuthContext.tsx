@@ -19,7 +19,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string; error?: string; user?: User }>;
   register: (userData: any, userType: 'client' | 'vendor') => Promise<{ success: boolean; message?: string; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           break;
       }
 
-      return { success: true, redirectTo };
+      return { success: true, redirectTo, user: frontendUser };
     } catch (error: any) {
       console.error('Erreur de connexion:', error);
       return { 

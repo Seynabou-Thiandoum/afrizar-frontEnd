@@ -120,7 +120,7 @@ const Auth = ({ onClose, initialMode = 'login' }) => {
             }, 100);
           }
         } else {
-          setLoginError('Email ou mot de passe incorrect');
+          setLoginError(result.error || 'Email ou mot de passe incorrect');
         }
       } else if (mode === 'register') {
         // Simulate registration
