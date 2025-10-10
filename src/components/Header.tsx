@@ -609,20 +609,111 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                   <User className="h-6 w-6" />
                 </button>
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                    {isAuthenticated ? (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-2 z-50">
+                    {isAuthenticated && user ? (
                       <>
-                        <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mon Compte</a>
-                        <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mes Commandes</a>
-                        <hr className="my-2" />
-                        <button className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <div className="font-bold text-gray-900">{user.firstName} {user.lastName}</div>
+                          <div className="text-sm text-gray-600">{user.email}</div>
+                          <div className="text-xs text-gray-500 mt-1 capitalize">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-white text-xs font-semibold bg-gradient-to-r ${getRoleColor(user.role)}`}>
+                              {getRoleLabel(user.role)}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="py-1">
+                          {user.role === 'admin' && (
+                            <button
+                              onClick={() => {
+                                handleNavigation('admin-dashboard');
+                                setShowUserMenu(false);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                            >
+                              <Settings className="h-4 w-4 inline mr-2" />
+                              Dashboard Admin
+                            </button>
+                          )}
+                          
+                          {user.role === 'vendor' && (
+                            <button
+                              onClick={() => {
+                                handleNavigation('vendor-dashboard');
+                                setShowUserMenu(false);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                            >
+                              <Settings className="h-4 w-4 inline mr-2" />
+                              Dashboard Vendeur
+                            </button>
+                          )}
+                          
+                          {user.role === 'client' && (
+                            <button
+                              onClick={() => {
+                                handleNavigation('client-dashboard');
+                                setShowUserMenu(false);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                            >
+                              <Settings className="h-4 w-4 inline mr-2" />
+                              Mon Espace
+                            </button>
+                          )}
+                          
+                          {user.role === 'support' && (
+                            <button
+                              onClick={() => {
+                                handleNavigation('support-dashboard');
+                                setShowUserMenu(false);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                            >
+                              <Settings className="h-4 w-4 inline mr-2" />
+                              Dashboard Support
+                            </button>
+                          )}
+                          
+                          <button
+                            onClick={() => {
+                              handleNavigation('profile');
+                              setShowUserMenu(false);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                          >
+                            <User className="h-4 w-4 inline mr-2" />
+                            Mon Profil
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              handleNavigation('order-tracking');
+                              setShowUserMenu(false);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                          >
+                            <ShoppingBag className="h-4 w-4 inline mr-2" />
+                            Mes Commandes
+                          </button>
+                        </div>
+                        
+                        <hr className="my-1" />
+                        
+                        <button 
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
+                        >
                           <LogOut className="h-4 w-4 inline mr-2" />
                           Déconnexion
                         </button>
                       </>
                     ) : (
                       <button 
-                        onClick={() => onOpenAuth('login')}
+                        onClick={() => {
+                          onOpenAuth('login');
+                          setShowUserMenu(false);
+                        }}
                         className="block w-full text-left px-4 py-2 text-orange-600 hover:bg-gray-100 font-medium"
                       >
                         {t('login')}
@@ -651,16 +742,107 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                 <input
                   type="text"
                   placeholder={t('search')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && searchTerm.trim()) {
+                      if (onSearch) onSearch(searchTerm);
+                      handleNavigation('catalog');
+                      setSearchTerm('');
+                    }
+                  }}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500"
                 />
                 <Search className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
               <nav className="space-y-2">
-                <a href="#" className="block text-gray-900 font-medium">Accueil</a>
-                <a href="#" className="block text-gray-700">{t('categories')}</a>
-                <a href="" className="block text-gray-700">{t('accessories')}</a>
-                <a href="#" className="block text-gray-700">{t('vendors')}</a>
+                <button onClick={() => handleNavigation('home')} className="block w-full text-left text-gray-900 font-medium hover:text-orange-600 py-2">{t('home')}</button>
+                <button onClick={() => handleNavigation('vetements')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('clothes')}</button>
+                <button onClick={() => handleNavigation('accessoires')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('accessories')}</button>
+                <button onClick={() => handleNavigation('vendeurs')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('vendors')}</button>
+                <button onClick={() => handleNavigation('contact')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('contact')}</button>
                 
+                {isAuthenticated && user && (
+                  <>
+                    <hr className="my-2" />
+                    <div className="px-2 py-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm font-bold text-gray-900">{user.firstName} {user.lastName}</div>
+                      <div className="text-xs text-gray-600">{user.email}</div>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-white text-xs font-semibold bg-gradient-to-r ${getRoleColor(user.role)} mt-1`}>
+                        {getRoleLabel(user.role)}
+                      </span>
+                    </div>
+                    
+                    {user.role === 'admin' && (
+                      <button
+                        onClick={() => handleNavigation('admin-dashboard')}
+                        className="block w-full text-left text-gray-700 hover:text-orange-600 py-2 font-medium"
+                      >
+                        <Settings className="h-4 w-4 inline mr-2" />
+                        Dashboard Admin
+                      </button>
+                    )}
+                    
+                    {user.role === 'vendor' && (
+                      <button
+                        onClick={() => handleNavigation('vendor-dashboard')}
+                        className="block w-full text-left text-gray-700 hover:text-orange-600 py-2 font-medium"
+                      >
+                        <Settings className="h-4 w-4 inline mr-2" />
+                        Dashboard Vendeur
+                      </button>
+                    )}
+                    
+                    {user.role === 'client' && (
+                      <button
+                        onClick={() => handleNavigation('client-dashboard')}
+                        className="block w-full text-left text-gray-700 hover:text-orange-600 py-2 font-medium"
+                      >
+                        <Settings className="h-4 w-4 inline mr-2" />
+                        Mon Espace
+                      </button>
+                    )}
+                    
+                    {user.role === 'support' && (
+                      <button
+                        onClick={() => handleNavigation('support-dashboard')}
+                        className="block w-full text-left text-gray-700 hover:text-orange-600 py-2 font-medium"
+                      >
+                        <Settings className="h-4 w-4 inline mr-2" />
+                        Dashboard Support
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => handleNavigation('profile')}
+                      className="block w-full text-left text-gray-700 hover:text-orange-600 py-2"
+                    >
+                      <User className="h-4 w-4 inline mr-2" />
+                      Mon Profil
+                    </button>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left text-red-600 hover:text-red-700 py-2 font-medium"
+                    >
+                      <LogOut className="h-4 w-4 inline mr-2" />
+                      Déconnexion
+                    </button>
+                  </>
+                )}
+                
+                {!isAuthenticated && (
+                  <button
+                    onClick={() => {
+                      onOpenAuth('login');
+                      setIsMenuOpen(false);
+                    }}
+                    className="block w-full text-left text-orange-600 hover:text-orange-700 py-2 font-bold"
+                  >
+                    <User className="h-4 w-4 inline mr-2" />
+                    {t('login')}
+                  </button>
+                )}
               </nav>
             </div>
           </div>

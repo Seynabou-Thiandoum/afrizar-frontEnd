@@ -1,46 +1,7 @@
-import { API_ENDPOINTS, getAuthHeaders } from '../config/api';
+import { API_CONFIG } from '../config/api';
+import authService from './authService';
 
-export interface Product {
-  id: number;
-  nom: string;
-  description: string;
-  prix: number;
-  stock: number;
-  statut: 'ACTIF' | 'INACTIF' | 'ARCHIVE' | 'EN_ATTENTE_VALIDATION';
-  vendeurId: number;
-  nomVendeur: string;
-  nomBoutique: string;
-  dateCreation: string;
-  photos?: string[];
-}
-
-export interface Vendor {
-  id: number;
-  nom: string;
-  prenom: string;
-  email: string;
-  telephone: string;
-  nomBoutique: string;
-  description: string;
-  verifie: boolean;
-  actif: boolean;
-  rating: number;
-  nombreEvaluations: number;
-  dateCreation: string;
-}
-
-export interface User {
-  id: number;
-  nom: string;
-  prenom: string;
-  email: string;
-  telephone: string;
-  role: 'ADMIN' | 'CLIENT' | 'VENDEUR' | 'SUPPORT';
-  actif: boolean;
-  dateCreation: string;
-  derniereConnexion: string;
-}
-
+// Types
 export interface DashboardStats {
   produits: {
     total: number;
@@ -62,188 +23,352 @@ export interface DashboardStats {
   };
 }
 
+export interface Produit {
+  id: number;
+  nom: string;
+  description: string;
+  prix: number;
+  prixPromo?: number;
+  categorie: string;
+  imageUrl?: string;
+  stock: number;
+  statut: 'EN_ATTENTE' | 'ACTIF' | 'REFUSE' | 'BROUILLON';
+  vendeurId: number;
+  vendeurNom?: string;
+  dateCreation: string;
+  dateModification?: string;
+}
+
+export interface Vendeur {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  nomBoutique: string;
+  description?: string;
+  adresseBoutique?: string;
+  specialites?: string;
+  verifie: boolean;
+  actif: boolean;
+  dateCreation: string;
+}
+
+export interface Utilisateur {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  role: 'ADMIN' | 'CLIENT' | 'VENDEUR' | 'SUPPORT';
+  actif: boolean;
+  dateCreation: string;
+  derniereConnexion?: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
 class AdminService {
-  // ===================== GESTION DES PRODUITS =====================
+  private baseUrl = `${API_CONFIG.BASE_URL}/api/admin`;
 
-  async getPendingProducts(page = 0, size = 20): Promise<{ content: Product[]; totalPages: number; totalElements: number }> {
-    const response = await fetch(`${API_ENDPOINTS.ADMIN_PRODUCTS_PENDING}?page=${page}&size=${size}`, {
-      headers: getAuthHeaders(),
-    });
+  // Headers avec authentification
+  private getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
 
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des produits en attente');
+    const token = authService.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
-    return response.json();
-  }
-
-  async getAllProducts(page = 0, size = 20, statut?: string): Promise<{ content: Product[]; totalPages: number; totalElements: number }> {
-    let url = `${API_ENDPOINTS.ADMIN_PRODUCTS_ALL}?page=${page}&size=${size}`;
-    if (statut) {
-      url += `&statut=${statut}`;
-    }
-
-    const response = await fetch(url, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des produits');
-    }
-
-    return response.json();
-  }
-
-  async validateProduct(productId: number): Promise<Product> {
-    const response = await fetch(API_ENDPOINTS.ADMIN_PRODUCT_VALIDATE(productId), {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la validation du produit');
-    }
-
-    return response.json();
-  }
-
-  async rejectProduct(productId: number, motif?: string): Promise<void> {
-    let url = API_ENDPOINTS.ADMIN_PRODUCT_REJECT(productId);
-    if (motif) {
-      url += `?motif=${encodeURIComponent(motif)}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors du rejet du produit');
-    }
-  }
-
-  // ===================== GESTION DES VENDEURS =====================
-
-  async getAllVendors(page = 0, size = 20, includeNonVerifies = true): Promise<{ content: Vendor[]; totalPages: number; totalElements: number }> {
-    const response = await fetch(`${API_ENDPOINTS.ADMIN_VENDORS_ALL}?page=${page}&size=${size}&includeNonVerifies=${includeNonVerifies}`, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des vendeurs');
-    }
-
-    return response.json();
-  }
-
-  async getUnverifiedVendors(): Promise<Vendor[]> {
-    const response = await fetch(API_ENDPOINTS.ADMIN_VENDORS_UNVERIFIED, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des vendeurs non vérifiés');
-    }
-
-    return response.json();
-  }
-
-  async verifyVendor(vendorId: number): Promise<Vendor> {
-    const response = await fetch(API_ENDPOINTS.ADMIN_VENDOR_VERIFY(vendorId), {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la vérification du vendeur');
-    }
-
-    return response.json();
-  }
-
-  async deactivateVendor(vendorId: number, motif?: string): Promise<void> {
-    let url = API_ENDPOINTS.ADMIN_VENDOR_DEACTIVATE(vendorId);
-    if (motif) {
-      url += `?motif=${encodeURIComponent(motif)}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la désactivation du vendeur');
-    }
-  }
-
-  async activateVendor(vendorId: number): Promise<Vendor> {
-    const response = await fetch(API_ENDPOINTS.ADMIN_VENDOR_ACTIVATE(vendorId), {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'activation du vendeur');
-    }
-
-    return response.json();
-  }
-
-  // ===================== GESTION DES UTILISATEURS =====================
-
-  async getAllUsers(page = 0, size = 20, role?: string): Promise<{ content: User[]; totalPages: number; totalElements: number }> {
-    let url = `${API_ENDPOINTS.ADMIN_USERS_ALL}?page=${page}&size=${size}`;
-    if (role) {
-      url += `&role=${role}`;
-    }
-
-    const response = await fetch(url, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des utilisateurs');
-    }
-
-    return response.json();
-  }
-
-  async deactivateUser(userId: number): Promise<void> {
-    const response = await fetch(API_ENDPOINTS.ADMIN_USER_DEACTIVATE(userId), {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la désactivation de l\'utilisateur');
-    }
-  }
-
-  async activateUser(userId: number): Promise<void> {
-    const response = await fetch(API_ENDPOINTS.ADMIN_USER_ACTIVATE(userId), {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'activation de l\'utilisateur');
-    }
+    return headers;
   }
 
   // ===================== STATISTIQUES =====================
 
   async getDashboardStats(): Promise<DashboardStats> {
-    const response = await fetch(API_ENDPOINTS.ADMIN_STATS_DASHBOARD, {
-      headers: getAuthHeaders(),
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/statistiques/dashboard`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
 
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des statistiques');
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des statistiques');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getDashboardStats:', error);
+      throw error;
     }
+  }
 
-    return response.json();
+  // ===================== GESTION DES PRODUITS =====================
+
+  async getProduitsEnAttente(page: number = 0, size: number = 20): Promise<PageResponse<Produit>> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/produits/en-attente?page=${page}&size=${size}`,
+        {
+          method: 'GET',
+          headers: this.getHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des produits en attente');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getProduitsEnAttente:', error);
+      throw error;
+    }
+  }
+
+  async getTousLesProduits(
+    page: number = 0,
+    size: number = 20,
+    statut?: string
+  ): Promise<PageResponse<Produit>> {
+    try {
+      let url = `${this.baseUrl}/produits/tous?page=${page}&size=${size}`;
+      if (statut) {
+        url += `&statut=${statut}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des produits');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getTousLesProduits:', error);
+      throw error;
+    }
+  }
+
+  async validerProduit(produitId: number): Promise<Produit> {
+    try {
+      const response = await fetch(`${this.baseUrl}/produits/${produitId}/valider`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la validation du produit');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur validerProduit:', error);
+      throw error;
+    }
+  }
+
+  async rejeterProduit(produitId: number, motif?: string): Promise<{ message: string; motif: string }> {
+    try {
+      let url = `${this.baseUrl}/produits/${produitId}/rejeter`;
+      if (motif) {
+        url += `?motif=${encodeURIComponent(motif)}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du rejet du produit');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur rejeterProduit:', error);
+      throw error;
+    }
+  }
+
+  // ===================== GESTION DES VENDEURS =====================
+
+  async getTousLesVendeurs(
+    page: number = 0,
+    size: number = 20,
+    includeNonVerifies: boolean = true
+  ): Promise<PageResponse<Vendeur>> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/vendeurs/tous?page=${page}&size=${size}&includeNonVerifies=${includeNonVerifies}`,
+        {
+          method: 'GET',
+          headers: this.getHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des vendeurs');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getTousLesVendeurs:', error);
+      throw error;
+    }
+  }
+
+  async getVendeursNonVerifies(): Promise<Vendeur[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vendeurs/non-verifies`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des vendeurs non vérifiés');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getVendeursNonVerifies:', error);
+      throw error;
+    }
+  }
+
+  async verifierVendeur(vendeurId: number): Promise<Vendeur> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vendeurs/${vendeurId}/verifier`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la vérification du vendeur');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur verifierVendeur:', error);
+      throw error;
+    }
+  }
+
+  async desactiverVendeur(vendeurId: number, motif?: string): Promise<{ message: string; motif: string }> {
+    try {
+      let url = `${this.baseUrl}/vendeurs/${vendeurId}/desactiver`;
+      if (motif) {
+        url += `?motif=${encodeURIComponent(motif)}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la désactivation du vendeur');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur desactiverVendeur:', error);
+      throw error;
+    }
+  }
+
+  async activerVendeur(vendeurId: number): Promise<Vendeur> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vendeurs/${vendeurId}/activer`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'activation du vendeur');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur activerVendeur:', error);
+      throw error;
+    }
+  }
+
+  // ===================== GESTION DES UTILISATEURS =====================
+
+  async getTousLesUtilisateurs(
+    page: number = 0,
+    size: number = 20,
+    role?: string
+  ): Promise<PageResponse<Utilisateur>> {
+    try {
+      let url = `${this.baseUrl}/utilisateurs/tous?page=${page}&size=${size}`;
+      if (role) {
+        url += `&role=${role}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des utilisateurs');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getTousLesUtilisateurs:', error);
+      throw error;
+    }
+  }
+
+  async desactiverUtilisateur(utilisateurId: number): Promise<{ message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/utilisateurs/${utilisateurId}/desactiver`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la désactivation de l\'utilisateur');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur desactiverUtilisateur:', error);
+      throw error;
+    }
+  }
+
+  async activerUtilisateur(utilisateurId: number): Promise<{ message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/utilisateurs/${utilisateurId}/activer`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'activation de l\'utilisateur');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur activerUtilisateur:', error);
+      throw error;
+    }
   }
 }
 
