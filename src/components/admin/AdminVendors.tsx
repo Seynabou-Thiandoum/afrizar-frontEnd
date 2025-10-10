@@ -16,6 +16,7 @@ import {
   Building
 } from 'lucide-react';
 import adminService, { Vendeur, PageResponse } from '../../services/adminService';
+import ImageUpload from '../common/ImageUpload';
 
 const AdminVendors = () => {
   const [vendors, setVendors] = useState<Vendeur[]>([]);
@@ -567,27 +568,12 @@ const AdminVendors = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Photo de profil (optionnel)</label>
-                    <input
-                      type="url"
+                    <ImageUpload
+                      label="Photo de profil (optionnel)"
                       value={vendorForm.photoUrl}
-                      onChange={(e) => setVendorForm({ ...vendorForm, photoUrl: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="https://exemple.com/photo.jpg"
+                      onChange={(url) => setVendorForm({ ...vendorForm, photoUrl: url })}
+                      required={false}
                     />
-                    <p className="mt-1 text-sm text-gray-500">URL de la photo de profil du vendeur</p>
-                    {vendorForm.photoUrl && (
-                      <div className="mt-2">
-                        <img
-                          src={vendorForm.photoUrl}
-                          alt="Aperçu"
-                          className="w-20 h-20 rounded-lg object-cover border border-gray-200"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex justify-end space-x-3 pt-4 border-t">

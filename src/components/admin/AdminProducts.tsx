@@ -20,6 +20,7 @@ import {
 import produitService, { Produit, CreateProduitDto } from '../../services/produitService';
 import adminService, { Vendeur } from '../../services/adminService';
 import categorieService, { Categorie } from '../../services/categorieService';
+import ImageUpload from '../common/ImageUpload';
 
 const AdminProducts = () => {
   const [produits, setProduits] = useState<Produit[]>([]);
@@ -611,47 +612,30 @@ const AdminProducts = () => {
 
                   {/* Image principale */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Image principale *</label>
-                    <input
-                      type="url"
+                    <ImageUpload
+                      label="Image principale"
                       value={productForm.imageUrl}
-                      onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      required
-                      placeholder="https://..."
+                      onChange={(url) => setProductForm({ ...productForm, imageUrl: url })}
+                      required={true}
                     />
-                    {productForm.imageUrl && (
-                      <div className="mt-2">
-                        <img
-                          src={productForm.imageUrl}
-                          alt="Aperçu"
-                          className="w-32 h-32 rounded-lg object-cover border border-gray-200"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
                   </div>
 
                   {/* Images supplémentaires */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Images supplémentaires</label>
-                    <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Images supplémentaires</label>
+                    <div className="space-y-4">
                       {imageInputs.map((img, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <input
-                            type="url"
+                        <div key={index} className="relative">
+                          <ImageUpload
                             value={img}
-                            onChange={(e) => updateImageInput(index, e.target.value)}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                            placeholder="https://..."
+                            onChange={(url) => updateImageInput(index, url)}
+                            required={false}
                           />
                           {imageInputs.length > 1 && (
                             <button
                               type="button"
                               onClick={() => removeImageInput(index)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -661,27 +645,12 @@ const AdminProducts = () => {
                       <button
                         type="button"
                         onClick={addImageInput}
-                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="flex items-center space-x-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition-colors w-full justify-center"
                       >
-                        <Plus className="h-4 w-4" />
-                        <span>Ajouter une image</span>
+                        <Plus className="h-5 w-5" />
+                        <span className="font-medium">Ajouter une image supplémentaire</span>
                       </button>
                     </div>
-                    {imageInputs.filter(img => img.trim()).length > 0 && (
-                      <div className="mt-3 grid grid-cols-4 gap-2">
-                        {imageInputs.filter(img => img.trim()).map((img, index) => (
-                          <img
-                            key={index}
-                            src={img}
-                            alt={`Aperçu ${index + 1}`}
-                            className="w-full h-20 rounded object-cover border border-gray-200"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
                   </div>
 
                   {/* Caractéristiques optionnelles */}
