@@ -395,3 +395,4 @@ const VendorCard: React.FC<VendorCardProps> = ({ vendor, onVerify, detailed }) =
 );
 
 export default AdminDashboardNew;
+

@@ -344,3 +344,4 @@ Questions ? Consultez :
 **Happy Coding! 🚀**
 
 *Système développé pour Afrizar - Octobre 2025*
+
