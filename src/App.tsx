@@ -12,7 +12,7 @@ import Checkout from './components/Checkout';
 import SurMesure from './components/SurMesure';
 import VendorDashboard from './components/VendorDashboard';
 import AdminDashboard from './components/AdminDashboardNew';
-import SupportDashboard from './components/SupportDashboardNew';
+import SupportDashboard from './components/SupportDashboardComplete';
 import ClientDashboard from './components/ClientDashboardNew';
 import Auth from './components/Auth';
 import OrderTracking from './components/OrderTracking';
@@ -28,6 +28,7 @@ import VetementsPage from './components/Vetements';
 import VendeursPage from './components/Vendeurs';
 import VendorProfilePage from './components/VendorProfilePage';
 import TendancesPage from './components/TendancesPage';
+import ContactPage from './components/ContactPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');

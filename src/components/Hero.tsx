@@ -820,10 +820,14 @@
 
 
 
-import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, ChevronLeft, ChevronRight, ArrowRight, Sparkles, Star, MapPin, Users, Package, Shield, Zap, Clock, TrendingUp, Gift, Tag, Bell, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ShoppingBag, Heart, ChevronLeft, ChevronRight, ArrowRight, Sparkles, Star, MapPin, Users, Package, Shield, Zap, Clock, TrendingUp, Gift, Tag, Bell, X, MessageSquare, Phone, Mail } from 'lucide-react';
 
-const AfrizarHomepage = () => {
+interface AfrizarHomepageProps {
+  onNavigate?: (page: string) => void;
+}
+
+const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showNewsletter, setShowNewsletter] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
@@ -900,7 +904,10 @@ const AfrizarHomepage = () => {
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-  const getBadgeColor = (color) => ({ green: 'bg-green-500', red: 'bg-red-500', orange: 'bg-orange-500' }[color] || 'bg-gray-500');
+  const getBadgeColor = (color: string) => {
+    const colors: { [key: string]: string } = { green: 'bg-green-500', red: 'bg-red-500', orange: 'bg-orange-500' };
+    return colors[color] || 'bg-gray-500';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1044,7 +1051,10 @@ const AfrizarHomepage = () => {
               <h2 className="text-3xl font-black text-gray-900 mb-2">Produits à la Une</h2>
               <p className="text-gray-600">Nos meilleures ventes</p>
             </div>
-            <button className="text-orange-600 hover:text-orange-700 font-bold flex items-center group">
+            <button 
+              onClick={() => onNavigate?.('vetements')}
+              className="text-orange-600 hover:text-orange-700 font-bold flex items-center group cursor-pointer"
+            >
               Voir tout<ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -1085,7 +1095,10 @@ const AfrizarHomepage = () => {
               <h2 className="text-3xl font-black text-gray-900 mb-2">Vêtements</h2>
               <p className="text-gray-600">Nos catégories de vêtements</p>
             </div>
-            <button className="text-orange-600 hover:text-orange-700 font-bold flex items-center group">
+            <button 
+              onClick={() => onNavigate?.('vetements')}
+              className="text-orange-600 hover:text-orange-700 font-bold flex items-center group cursor-pointer"
+            >
               Tout voir<ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -1112,7 +1125,10 @@ const AfrizarHomepage = () => {
               <h2 className="text-3xl font-black text-gray-900 mb-2">Accessoires</h2>
               <p className="text-gray-600">Complétez votre style</p>
             </div>
-            <button className="text-orange-600 hover:text-orange-700 font-bold flex items-center group">
+            <button 
+              onClick={() => onNavigate?.('accessoires')}
+              className="text-orange-600 hover:text-orange-700 font-bold flex items-center group cursor-pointer"
+            >
               Voir plus<ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -1147,7 +1163,10 @@ const AfrizarHomepage = () => {
               <h2 className="text-3xl font-black text-gray-900 mb-2">Nos Vendeurs</h2>
               <p className="text-gray-600">Découvrez nos artisans talentueux</p>
             </div>
-            <button className="text-orange-600 hover:text-orange-700 font-bold flex items-center group">
+            <button 
+              onClick={() => onNavigate?.('vendeurs')}
+              className="text-orange-600 hover:text-orange-700 font-bold flex items-center group cursor-pointer"
+            >
               Tous les vendeurs<ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -1175,6 +1194,80 @@ const AfrizarHomepage = () => {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust & Contact Section */}
+      <section className="py-4 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border-y border-orange-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+            <div className="flex flex-col items-center justify-center p-3">
+              <Shield className="h-8 w-8 text-orange-600 mb-2" />
+              <h3 className="font-black text-gray-900 text-sm mb-1">PAIEMENT SÉCURISÉ</h3>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <Clock className="h-8 w-8 text-orange-600 mb-2" />
+              <h3 className="font-black text-gray-900 text-sm mb-1">24/7 SERVICE CLIENT</h3>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <TrendingUp className="h-8 w-8 text-orange-600 mb-2" />
+              <h3 className="font-black text-gray-900 text-sm mb-1">IMPACT BUSINESS</h3>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <Zap className="h-8 w-8 text-orange-600 mb-2" />
+              <h3 className="font-black text-gray-900 text-sm mb-1">LIVRAISON RAPIDE</h3>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <Gift className="h-8 w-8 text-orange-600 mb-2" />
+              <h3 className="font-black text-gray-900 text-sm mb-1">15 JOURS POUR RETOUR</h3>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Information Section */}
+      <section className="py-12 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Service Client */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <MessageSquare className="h-7 w-7 text-white" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">SERVICE CLIENT</h3>
+              <p className="text-gray-600 font-medium">7j/7j de 8H à 20H</p>
+            </div>
+
+            {/* Contacter Nous */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <Phone className="h-7 w-7 text-white" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">CONTACTER NOUS</h3>
+              <p className="text-gray-600 font-medium">+221 77 XXX XX XX</p>
+              <p className="text-sm text-gray-500">(WhatsApp)</p>
+            </div>
+
+            {/* Nous Écrire */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <Mail className="h-7 w-7 text-white" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">NOUS ÉCRIRE</h3>
+              <a href="mailto:contact@afrizar.sn" className="text-orange-600 hover:text-orange-700 font-medium transition-colors">
+                contact@afrizar.sn
+              </a>
+            </div>
+
+            {/* Nos Adresses */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <MapPin className="h-7 w-7 text-white" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">NOS ADRESSES</h3>
+              <p className="text-gray-600 font-medium">Dakar, Paris et Tunis</p>
+            </div>
           </div>
         </div>
       </section>
