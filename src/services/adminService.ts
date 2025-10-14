@@ -370,6 +370,42 @@ class AdminService {
       throw error;
     }
   }
+
+  async publierVendeur(vendeurId: number): Promise<Vendeur> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vendeurs/${vendeurId}/publier`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la publication du vendeur');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur publierVendeur:', error);
+      throw error;
+    }
+  }
+
+  async depublierVendeur(vendeurId: number): Promise<Vendeur> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vendeurs/${vendeurId}/depublier`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la dépublication du vendeur');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur depublierVendeur:', error);
+      throw error;
+    }
+  }
 }
 
 export const adminService = new AdminService();

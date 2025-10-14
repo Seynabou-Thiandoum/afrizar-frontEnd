@@ -1,129 +1,92 @@
-import React, { useState } from 'react';
-import { Star, MapPin, Package, Users, Heart, Search, Filter, Grid, List, Award, ShoppingBag } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, MapPin, Package, Users, Search, Filter, Grid, List, Award, ShoppingBag } from 'lucide-react';
+import publicVendeurService, { PublicVendeur } from '../services/publicVendeurService';
+import { API_CONFIG } from '../config/api';
+import VendorProfilePage from './VendorProfilePage';
 
-const VendeursPage = ({ onNavigate }) => {
+// Helper pour construire l'URL complète de l'image (temporairement commenté pour debug)
+// const getImageUrl = (photoUrl: string | undefined): string | undefined => {
+//   if (!photoUrl) return undefined;
+//   if (photoUrl.startsWith('http')) return photoUrl;
+//   return `${API_CONFIG.BASE_URL}${photoUrl}`;
+// };
+
+interface VendeursPageProps {
+  onNavigate?: (page: string, data?: any) => void;
+}
+
+const VendeursPage = ({ onNavigate }: VendeursPageProps) => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
+  const [vendors, setVendors] = useState<PublicVendeur[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedVendorId, setSelectedVendorId] = useState<number | null>(null);
 
-  // Données des vendeurs avec plus de détails
-  const vendors = [
-    {
-      id: 1,
-      name: "Atelier Fatou",
-      specialty: "Boubous Femmes",
-      description: "Spécialiste des tenues traditionnelles féminines avec broderies artisanales",
-      image: "https://images.unsplash.com/photo-1494790108755-2616c64c6e1e?w=300&h=300&fit=crop",
-      location: "Dakar, Plateau",
-      rating: 4.9,
-      reviews: 127,
-      products: 45,
-      yearsExperience: 8,
-      specialties: ["Boubous", "Robes", "Broderie"],
-      priceRange: "25,000 - 85,000 FCFA",
-      isVerified: true,
-      sales: 234
-    },
-    {
-      id: 2,
-      name: "Maison Moussa",
-      specialty: "Costumes Hommes",
-      description: "Création de costumes traditionnels et modernes pour hommes",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop",
-      location: "Thiès Centre",
-      rating: 4.8,
-      reviews: 89,
-      products: 62,
-      yearsExperience: 12,
-      specialties: ["Grands Boubous", "Costumes", "Chemises"],
-      priceRange: "35,000 - 120,000 FCFA",
-      isVerified: true,
-      sales: 189
-    },
-    {
-      id: 3,
-      name: "Bijoux Aminata",
-      specialty: "Bijoux & Accessoires",
-      description: "Créatrice de bijoux traditionnels en or et argent",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop",
-      location: "Saint-Louis",
-      rating: 4.7,
-      reviews: 156,
-      products: 78,
-      yearsExperience: 6,
-      specialties: ["Bijoux", "Sacs", "Accessoires"],
-      priceRange: "8,000 - 45,000 FCFA",
-      isVerified: true,
-      sales: 312
-    },
-    {
-      id: 4,
-      name: "Couture Khadija",
-      specialty: "Mode Enfant",
-      description: "Vêtements colorés et confortables pour enfants",
-      image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=300&h=300&fit=crop",
-      location: "Kaolack",
-      rating: 4.6,
-      reviews: 73,
-      products: 34,
-      yearsExperience: 4,
-      specialties: ["Enfants", "Bébés", "Accessoires"],
-      priceRange: "12,000 - 35,000 FCFA",
-      isVerified: false,
-      sales: 98
-    },
-    {
-      id: 5,
-      name: "Atelier Babacar",
-      specialty: "Maroquinerie",
-      description: "Sacs et accessoires en cuir fait main",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop",
-      location: "Ziguinchor",
-      rating: 4.5,
-      reviews: 45,
-      products: 28,
-      yearsExperience: 7,
-      specialties: ["Sacs", "Ceintures", "Chaussures"],
-      priceRange: "15,000 - 65,000 FCFA",
-      isVerified: true,
-      sales: 67
-    },
-    {
-      id: 6,
-      name: "Créations Rama",
-      specialty: "Wax Moderne",
-      description: "Designs modernes avec tissus wax authentiques",
-      image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&h=300&fit=crop",
-      location: "Dakar, Almadies",
-      rating: 4.8,
-      reviews: 92,
-      products: 51,
-      yearsExperience: 5,
-      specialties: ["Wax", "Robes", "Ensembles"],
-      priceRange: "20,000 - 75,000 FCFA",
-      isVerified: true,
-      sales: 145
+  useEffect(() => {
+    loadVendors();
+  }, []);
+
+  const loadVendors = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await publicVendeurService.getPublishedVendeurs();
+      setVendors(data);
+    } catch (err) {
+      setError('Erreur lors du chargement des vendeurs');
+      console.error('Erreur chargement vendeurs:', err);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const specialties = ["all", "Boubous", "Bijoux", "Sacs", "Enfants", "Wax", "Costumes"];
+  // Extraire toutes les spécialités uniques des vendeurs
+  const getAllSpecialties = () => {
+    const specialtiesSet = new Set<string>();
+    vendors.forEach(vendor => {
+      if (vendor.specialites) {
+        vendor.specialites.split(',').forEach(spec => {
+          specialtiesSet.add(spec.trim());
+        });
+      }
+    });
+    return Array.from(specialtiesSet);
+  };
+
+  const specialties = ["all", ...getAllSpecialties()];
 
   const filteredVendors = vendors.filter(vendor => {
-    const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = vendor.nomBoutique.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (vendor.nom + ' ' + vendor.prenom).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (vendor.adresseBoutique || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (vendor.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesSpecialty = selectedSpecialty === 'all' || 
-                            vendor.specialties.some(spec => spec.toLowerCase().includes(selectedSpecialty.toLowerCase()));
+                            (vendor.specialites && vendor.specialites.toLowerCase().includes(selectedSpecialty.toLowerCase()));
     
     return matchesSearch && matchesSpecialty;
   });
 
-  const handleVendorClick = (vendorId) => {
-    if (onNavigate) {
-      onNavigate('vendor-profile', { id: vendorId });
-    }
+  const handleVendorClick = (vendorId: number) => {
+    setSelectedVendorId(vendorId);
   };
+
+  const handleBackToList = () => {
+    setSelectedVendorId(null);
+  };
+
+  // Si un vendeur est sélectionné, afficher sa page de profil
+  if (selectedVendorId) {
+    return (
+      <VendorProfilePage
+        vendorId={selectedVendorId}
+        onBack={handleBackToList}
+        onNavigate={onNavigate}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -187,61 +150,86 @@ const VendeursPage = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
-                <Users className="h-6 w-6 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">50+</p>
-                <p className="text-sm text-gray-600">Vendeurs actifs</p>
-              </div>
-            </div>
+        {/* Message d'erreur */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6">
+            {error}
           </div>
-          
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                <Package className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">500+</p>
-                <p className="text-sm text-gray-600">Produits disponibles</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                <Star className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">4.8</p>
-                <p className="text-sm text-gray-600">Note moyenne</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-                <ShoppingBag className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">1000+</p>
-                <p className="text-sm text-gray-600">Commandes livrées</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
-        {/* Liste des vendeurs */}
-        <div className="mb-4">
-          <p className="text-gray-600">{filteredVendors.length} vendeur(s) trouvé(s)</p>
-        </div>
+        {/* Indicateur de chargement */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          </div>
+        )}
+
+        {/* Statistiques */}
+        {!loading && !error && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <Users className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">{vendors.length}</p>
+                    <p className="text-sm text-gray-600">Vendeurs actifs</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <Package className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">-</p>
+                    <p className="text-sm text-gray-600">Produits disponibles</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <Star className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {vendors.length > 0 
+                        ? (vendors.reduce((acc, v) => acc + Number(v.rating || 0), 0) / vendors.length).toFixed(1)
+                        : '-'
+                      }
+                    </p>
+                    <p className="text-sm text-gray-600">Note moyenne</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <ShoppingBag className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {vendors.reduce((acc, v) => acc + (v.nombreEvaluations || 0), 0)}
+                    </p>
+                    <p className="text-sm text-gray-600">Évaluations</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Liste des vendeurs */}
+            <div className="mb-4">
+              <p className="text-gray-600">{filteredVendors.length} vendeur(s) trouvé(s)</p>
+            </div>
+          </>
+        )}
 
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -252,54 +240,61 @@ const VendeursPage = ({ onNavigate }) => {
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 cursor-pointer group"
               >
                 <div className="relative mb-4">
+                  {/* Forcer l'affichage de l'image connue pour debug */}
                   <img
-                    src={vendor.image}
-                    alt={vendor.name}
+                    src="http://localhost:8080/api/files/2decb2a5-f52a-4b75-875f-718e7e45be44.png"
+                    alt={vendor.nomBoutique}
                     className="w-20 h-20 rounded-full object-cover mx-auto border-4 border-orange-100"
+                    onLoad={() => {
+                      console.log('✅ Image forcée chargée dans la liste des vendeurs');
+                    }}
+                    onError={() => {
+                      console.error('❌ Erreur même avec l\'image forcée dans la liste');
+                    }}
                   />
-                  {vendor.isVerified && (
+                  {vendor.verifie && (
                     <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                       <Award className="h-3 w-3 text-white" />
                     </div>
                   )}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
 
                 <div className="text-center mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">{vendor.name}</h3>
-                  <p className="text-orange-600 font-semibold mb-2">{vendor.specialty}</p>
-                  <p className="text-gray-600 text-sm mb-3">{vendor.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">{vendor.nomBoutique}</h3>
+                  <p className="text-orange-600 font-semibold mb-2">{vendor.prenom} {vendor.nom}</p>
+                  {vendor.description && (
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{vendor.description}</p>
+                  )}
                   
-                  <div className="flex items-center justify-center text-gray-600 mb-2">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{vendor.location}</span>
-                  </div>
+                  {vendor.adresseBoutique && (
+                    <div className="flex items-center justify-center text-gray-600 mb-2">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{vendor.adresseBoutique}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3 mb-4">
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-center text-sm">
                     <div className="flex items-center">
                       <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
-                      <span className="font-semibold">{vendor.rating}</span>
-                      <span className="text-gray-500 ml-1">({vendor.reviews})</span>
+                      <span className="font-semibold">{Number(vendor.rating || 0).toFixed(1)}</span>
+                      <span className="text-gray-500 ml-1">({vendor.nombreEvaluations || 0})</span>
                     </div>
-                    <div className="text-gray-600">{vendor.products} produits</div>
                   </div>
                   
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">Prix: </span>{vendor.priceRange}
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {vendor.specialties.slice(0, 3).map((spec, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium"
-                      >
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
+                  {vendor.specialites && (
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {vendor.specialites.split(',').slice(0, 3).map((spec, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium"
+                        >
+                          {spec.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 transition-colors">
@@ -318,12 +313,19 @@ const VendeursPage = ({ onNavigate }) => {
               >
                 <div className="flex items-start space-x-6">
                   <div className="relative">
+                    {/* Forcer l'affichage de l'image connue pour debug - Vue liste */}
                     <img
-                      src={vendor.image}
-                      alt={vendor.name}
+                      src="http://localhost:8080/api/files/2decb2a5-f52a-4b75-875f-718e7e45be44.png"
+                      alt={vendor.nomBoutique}
                       className="w-16 h-16 rounded-full object-cover border-3 border-orange-100"
+                      onLoad={() => {
+                        console.log('✅ Image forcée chargée dans la vue liste des vendeurs');
+                      }}
+                      onError={() => {
+                        console.error('❌ Erreur même avec l\'image forcée dans la vue liste');
+                      }}
                     />
-                    {vendor.isVerified && (
+                    {vendor.verifie && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                         <Award className="h-2.5 w-2.5 text-white" />
                       </div>
@@ -334,38 +336,41 @@ const VendeursPage = ({ onNavigate }) => {
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors mb-1">
-                          {vendor.name}
+                          {vendor.nomBoutique}
                         </h3>
-                        <p className="text-orange-600 font-semibold mb-2">{vendor.specialty}</p>
-                        <p className="text-gray-600 mb-3">{vendor.description}</p>
+                        <p className="text-orange-600 font-semibold mb-2">{vendor.prenom} {vendor.nom}</p>
+                        {vendor.description && (
+                          <p className="text-gray-600 mb-3">{vendor.description}</p>
+                        )}
                         
-                        <div className="flex items-center text-gray-600 mb-2">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{vendor.location}</span>
-                          <span className="mx-2">•</span>
-                          <span className="text-sm">{vendor.yearsExperience} ans d'expérience</span>
-                        </div>
+                        {vendor.adresseBoutique && (
+                          <div className="flex items-center text-gray-600 mb-2">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            <span className="text-sm">{vendor.adresseBoutique}</span>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="text-right">
                         <div className="flex items-center mb-2">
                           <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
-                          <span className="font-semibold">{vendor.rating}</span>
-                          <span className="text-gray-500 ml-1 text-sm">({vendor.reviews})</span>
+                          <span className="font-semibold">{Number(vendor.rating || 0).toFixed(1)}</span>
+                          <span className="text-gray-500 ml-1 text-sm">({vendor.nombreEvaluations || 0})</span>
                         </div>
-                        <p className="text-sm text-gray-600">{vendor.products} produits</p>
-                        <p className="text-sm text-gray-600">{vendor.sales} ventes</p>
+                        {vendor.verifie && (
+                          <p className="text-sm text-green-600 font-medium">✓ Vérifié</p>
+                        )}
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between mt-4">
                       <div className="flex flex-wrap gap-2">
-                        {vendor.specialties.slice(0, 4).map((spec, index) => (
+                        {vendor.specialites && vendor.specialites.split(',').slice(0, 4).map((spec, index) => (
                           <span
                             key={index}
                             className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium"
                           >
-                            {spec}
+                            {spec.trim()}
                           </span>
                         ))}
                       </div>
@@ -381,11 +386,16 @@ const VendeursPage = ({ onNavigate }) => {
           </div>
         )}
 
-        {filteredVendors.length === 0 && (
+        {!loading && !error && filteredVendors.length === 0 && (
           <div className="text-center py-16">
             <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun vendeur trouvé</h3>
-            <p className="text-gray-600">Essayez de modifier vos critères de recherche</p>
+            <p className="text-gray-600">
+              {vendors.length === 0 
+                ? "Aucun vendeur n'est encore publié sur la plateforme"
+                : "Essayez de modifier vos critères de recherche"
+              }
+            </p>
           </div>
         )}
       </div>

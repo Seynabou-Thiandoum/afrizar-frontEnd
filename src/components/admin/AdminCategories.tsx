@@ -11,9 +11,11 @@ import {
   Save,
   X,
   AlertCircle,
-  Grid3x3
+  Grid3x3,
+  Users
 } from 'lucide-react';
 import categorieService, { Categorie } from '../../services/categorieService';
+import ImageUpload from '../common/ImageUpload';
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState<Categorie[]>([]);
@@ -143,6 +145,12 @@ const AdminCategories = () => {
     setShowModal(true);
   };
 
+  const openDetailModal = (categorie: Categorie) => {
+    setSelectedCategorie(categorie);
+    setShowModal(true);
+    setEditMode(false);
+  };
+
   const getTypeBadgeColor = (type: string) => {
     return type === 'VETEMENTS' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
   };
@@ -160,19 +168,22 @@ const AdminCategories = () => {
     }
   };
 
-  // Group categories by type and genre
-  const groupedCategories = categories.reduce((acc, cat) => {
-    const type = cat.type || 'AUTRE';
-    const genre = cat.genre || 'MIXTE';
-    if (!acc[type]) acc[type] = {};
-    if (!acc[type][genre]) acc[type][genre] = [];
-    acc[type][genre].push(cat);
-    return acc;
-  }, {} as Record<string, Record<string, Categorie[]>>);
+  // Group categories by type and genre, sorted by order
+  const groupedCategories = categories
+    .sort((a, b) => a.ordre - b.ordre) // Tri par ordre d'affichage
+    .reduce((acc, cat) => {
+      const type = cat.type || 'AUTRE';
+      const genre = cat.genre || 'MIXTE';
+      
+      if (!acc[type]) acc[type] = {};
+      if (!acc[type][genre]) acc[type][genre] = [];
+      acc[type][genre].push(cat);
+      return acc;
+    }, {} as Record<string, Record<string, Categorie[]>>);
 
-  const filteredCategories = categories.filter(cat =>
-    cat.nom.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredCategories = categories.filter(cat =>
+  //   cat.nom.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   return (
     <div className="space-y-6">
@@ -224,7 +235,7 @@ const AdminCategories = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -261,6 +272,24 @@ const AdminCategories = () => {
             <Tag className="h-8 w-8 text-blue-400" />
           </div>
         </div>
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Homme</p>
+              <p className="text-2xl font-bold text-blue-600">{categories.filter(c => c.genre === 'HOMME').length}</p>
+            </div>
+            <Users className="h-8 w-8 text-blue-400" />
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Femme</p>
+              <p className="text-2xl font-bold text-pink-600">{categories.filter(c => c.genre === 'FEMME').length}</p>
+            </div>
+            <Users className="h-8 w-8 text-pink-400" />
+          </div>
+        </div>
       </div>
 
       {/* Categories by Type and Genre */}
@@ -268,7 +297,7 @@ const AdminCategories = () => {
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
         </div>
-      ) : (
+      ) : Object.keys(groupedCategories).length > 0 ? (
         <div className="space-y-6">
           {Object.entries(groupedCategories).map(([type, genreGroups]) => (
             <div key={type} className="bg-white rounded-xl shadow-sm p-6">
@@ -293,7 +322,42 @@ const AdminCategories = () => {
                       <div key={cat.id} className="border border-gray-200 rounded-lg p-4 hover:border-red-300 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <h5 className="font-bold text-gray-900">{cat.nom}</h5>
+                            <div className="flex items-center space-x-3 mb-2">
+                              {cat.imageUrl ? (
+                                <img
+                                  src={cat.imageUrl.startsWith('http') ? cat.imageUrl : `http://localhost:8080${cat.imageUrl}`}
+                                  alt={cat.nom}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 cursor-pointer hover:border-purple-300 transition-colors"
+                                  onClick={() => openDetailModal(cat)}
+                                  onLoad={() => {
+                                    console.log('✅ Image de catégorie chargée:', cat.nom, cat.imageUrl);
+                                  }}
+                                  onError={(e) => {
+                                    console.error('❌ Erreur chargement image catégorie:', cat.nom, cat.imageUrl);
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center border border-gray-200">
+                                  <Tag className="h-6 w-6 text-white" />
+                                </div>
+                              )}
+                              <div>
+                                <h5 className="font-bold text-gray-900">{cat.nom}</h5>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs text-gray-500">Ordre: {cat.ordre}</span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    cat.ordre <= 3 ? 'bg-green-100 text-green-800' : 
+                                    cat.ordre <= 6 ? 'bg-yellow-100 text-yellow-800' : 
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {cat.ordre <= 3 ? 'Priorité haute' : 
+                                     cat.ordre <= 6 ? 'Priorité moyenne' : 
+                                     'Priorité basse'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                             {cat.description && (
                               <p className="text-sm text-gray-600 mt-1 line-clamp-2">{cat.description}</p>
                             )}
@@ -312,6 +376,13 @@ const AdminCategories = () => {
                         </div>
 
                         <div className="flex items-center space-x-2 pt-3 border-t border-gray-200">
+                          <button
+                            onClick={() => openDetailModal(cat)}
+                            className="flex-1 px-3 py-1.5 text-sm border border-purple-300 text-purple-700 rounded hover:bg-purple-50 transition-colors"
+                          >
+                            <Eye className="h-3 w-3 inline mr-1" />
+                            Détails
+                          </button>
                           <button
                             onClick={() => openEditModal(cat)}
                             className="flex-1 px-3 py-1.5 text-sm border border-blue-300 text-blue-700 rounded hover:bg-blue-50 transition-colors"
@@ -361,6 +432,97 @@ const AdminCategories = () => {
             </div>
           )}
         </div>
+      ) : (
+        // Affichage simple si pas de groupement (catégories sans type/genre)
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Toutes les catégories</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {categories.map((cat) => (
+              <div key={cat.id} className="border border-gray-200 rounded-lg p-4 hover:border-red-300 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      {cat.imageUrl ? (
+                        <img
+                          src={cat.imageUrl.startsWith('http') ? cat.imageUrl : `http://localhost:8080${cat.imageUrl}`}
+                          alt={cat.nom}
+                          className="w-12 h-12 rounded-lg object-cover border border-gray-200 cursor-pointer hover:border-purple-300 transition-colors"
+                          onClick={() => openDetailModal(cat)}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center border border-gray-200">
+                          <Tag className="h-6 w-6 text-white" />
+                        </div>
+                      )}
+                      <div>
+                        <h5 className="font-bold text-gray-900">{cat.nom}</h5>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500">Ordre: {cat.ordre}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            cat.ordre <= 3 ? 'bg-green-100 text-green-800' : 
+                            cat.ordre <= 6 ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {cat.ordre <= 3 ? 'Priorité haute' : 
+                             cat.ordre <= 6 ? 'Priorité moyenne' : 
+                             'Priorité basse'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {cat.description && (
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{cat.description}</p>
+                    )}
+                  </div>
+                  {cat.active ? (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      Inactive
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-2 pt-3 border-t border-gray-200">
+                  <button
+                    onClick={() => openDetailModal(cat)}
+                    className="flex-1 px-3 py-1.5 text-sm border border-purple-300 text-purple-700 rounded hover:bg-purple-50 transition-colors"
+                  >
+                    <Eye className="h-3 w-3 inline mr-1" />
+                    Détails
+                  </button>
+                  <button
+                    onClick={() => openEditModal(cat)}
+                    className="flex-1 px-3 py-1.5 text-sm border border-blue-300 text-blue-700 rounded hover:bg-blue-50 transition-colors"
+                  >
+                    <Edit className="h-3 w-3 inline mr-1" />
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => handleToggleActive(cat)}
+                    className={`flex-1 px-3 py-1.5 text-sm rounded transition-colors ${
+                      cat.active
+                        ? 'bg-orange-600 text-white hover:bg-orange-700'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
+                  >
+                    {cat.active ? 'Désactiver' : 'Activer'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCategorie(cat.id)}
+                    className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Create/Edit Modal */}
@@ -375,14 +537,83 @@ const AdminCategories = () => {
               <div className="bg-white">
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {editMode ? 'Modifier la catégorie' : 'Créer une nouvelle catégorie'}
+                    {editMode ? 'Modifier la catégorie' : selectedCategorie && !editMode ? 'Détails de la catégorie' : 'Créer une nouvelle catégorie'}
                   </h2>
                   <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                     <X className="h-6 w-6 text-gray-600" />
                   </button>
                 </div>
 
-                <form onSubmit={editMode ? handleUpdateCategorie : handleCreateCategorie} className="p-6 space-y-6">
+                {selectedCategorie && !editMode ? (
+                  // Modal de détails (lecture seule)
+                  <div className="p-6 space-y-6">
+                    <div className="flex items-center space-x-4">
+                      {selectedCategorie.imageUrl ? (
+                        <img
+                          src={selectedCategorie.imageUrl.startsWith('http') ? selectedCategorie.imageUrl : `http://localhost:8080${selectedCategorie.imageUrl}`}
+                          alt={selectedCategorie.nom}
+                          className="w-20 h-20 rounded-lg object-cover border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center border border-gray-200">
+                          <Tag className="h-8 w-8 text-white" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">{selectedCategorie.nom}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(selectedCategorie.type || 'VETEMENTS')}`}>
+                            {selectedCategorie.type === 'VETEMENTS' ? 'Vêtements' : 'Accessoires'}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getGenreBadgeColor(selectedCategorie.genre || 'HOMME')}`}>
+                            {selectedCategorie.genre === 'HOMME' ? 'Homme' : selectedCategorie.genre === 'FEMME' ? 'Femme' : 'Enfant'}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            selectedCategorie.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {selectedCategorie.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedCategorie.description && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-2">Description</h4>
+                        <p className="text-gray-700">{selectedCategorie.description}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-1">Ordre d'affichage</h4>
+                        <p className="text-gray-700">{selectedCategorie.ordre}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-1">Date de création</h4>
+                        <p className="text-gray-700">{new Date(selectedCategorie.dateCreation).toLocaleDateString('fr-FR')}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => setShowModal(false)}
+                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      >
+                        Fermer
+                      </button>
+                      <button
+                        onClick={() => openEditModal(selectedCategorie)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Edit className="h-4 w-4 inline mr-2" />
+                        Modifier
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Modal de création/édition
+                  <form onSubmit={editMode ? handleUpdateCategorie : handleCreateCategorie} className="p-6 space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nom de la catégorie *</label>
                     <input
@@ -434,14 +665,15 @@ const AdminCategories = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">URL de l'image</label>
-                    <input
-                      type="url"
+                    <ImageUpload
+                      label="Image de la catégorie"
                       value={categorieForm.imageUrl}
-                      onChange={(e) => setCategorieForm({ ...categorieForm, imageUrl: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="https://..."
+                      onChange={(url) => setCategorieForm({ ...categorieForm, imageUrl: url })}
+                      required={false}
                     />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Cette image sera affichée pour représenter la catégorie dans l'interface utilisateur
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -454,7 +686,9 @@ const AdminCategories = () => {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                         min="0"
                       />
-                      <p className="mt-1 text-sm text-gray-500">Plus le nombre est petit, plus la catégorie apparaît en premier</p>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Détermine l'ordre d'affichage des catégories (1 = premier, 2 = deuxième, etc.)
+                      </p>
                     </div>
 
                     <div>
@@ -509,6 +743,7 @@ const AdminCategories = () => {
                     </button>
                   </div>
                 </form>
+                )}
               </div>
             </div>
           </div>

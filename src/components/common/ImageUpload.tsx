@@ -63,8 +63,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploading(true);
     try {
       const response = await fileUploadService.uploadImage(file);
+      console.log('ImageUpload - Réponse upload:', response);
+      console.log('ImageUpload - URL finale:', response.url);
       onChange(response.url);
     } catch (err: any) {
+      console.error('ImageUpload - Erreur:', err);
       setError(err.message || 'Erreur lors de l\'upload');
     } finally {
       setUploading(false);

@@ -4,6 +4,7 @@ export interface UploadResponse {
   url: string;
   filename: string;
   originalFilename: string;
+  fullUrl?: string;
 }
 
 class FileUploadService {
@@ -38,10 +39,12 @@ class FileUploadService {
     }
 
     const data = await response.json();
-    // Construire l'URL complète
+    // Forcer l'URL complète
+    const fullUrl = data.fullUrl || `${API_CONFIG.BASE_URL}${data.url}`;
+    console.log('Image uploadée - URL complète:', fullUrl);
     return {
       ...data,
-      url: `${API_CONFIG.BASE_URL}${data.url}`
+      url: fullUrl
     };
   }
 

@@ -17,6 +17,14 @@ import {
 } from 'lucide-react';
 import adminService, { Vendeur, PageResponse } from '../../services/adminService';
 import ImageUpload from '../common/ImageUpload';
+import { API_CONFIG } from '../../config/api';
+
+// Helper pour construire l'URL complète de l'image
+const getImageUrl = (photoUrl: string | undefined): string | undefined => {
+  if (!photoUrl) return undefined;
+  if (photoUrl.startsWith('http')) return photoUrl;
+  return `${API_CONFIG.BASE_URL}${photoUrl}`;
+};
 
 const AdminVendors = () => {
   const [vendors, setVendors] = useState<Vendeur[]>([]);
@@ -41,7 +49,8 @@ const AdminVendors = () => {
     description: '',
     adresseBoutique: '',
     specialites: '',
-    photoUrl: ''
+    photoUrl: '',
+    publie: false
   });
 
   useEffect(() => {
@@ -89,7 +98,9 @@ const AdminVendors = () => {
           nomBoutique: vendorForm.nomBoutique,
           description: vendorForm.description,
           adresseBoutique: vendorForm.adresseBoutique,
-          specialites: vendorForm.specialites
+          specialites: vendorForm.specialites,
+          photoUrl: vendorForm.photoUrl,
+          publie: vendorForm.publie
         }),
       });
 
@@ -166,7 +177,8 @@ const AdminVendors = () => {
       description: '',
       adresseBoutique: '',
       specialites: '',
-      photoUrl: ''
+      photoUrl: '',
+      publie: false
     });
   };
 
@@ -182,10 +194,26 @@ const AdminVendors = () => {
       description: vendor.description || '',
       adresseBoutique: vendor.adresseBoutique || '',
       specialites: vendor.specialites || '',
-      photoUrl: (vendor as any).photoUrl || ''
+      photoUrl: (vendor as any).photoUrl || '',
+      publie: (vendor as any).publie || false
     });
     setEditMode(true);
     setShowModal(true);
+  };
+
+  const handleTogglePublish = async (vendor: Vendeur) => {
+    try {
+      if ((vendor as any).publie) {
+        await adminService.depublierVendeur(vendor.id);
+        setMessage({ type: 'success', text: 'Vendeur retiré de la page publique' });
+      } else {
+        await adminService.publierVendeur(vendor.id);
+        setMessage({ type: 'success', text: 'Vendeur publié sur la page publique' });
+      }
+      loadVendors();
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Erreur lors du changement de statut de publication' });
+    }
   };
 
   const filteredVendors = vendors.filter(vendor =>
@@ -300,9 +328,9 @@ const AdminVendors = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center overflow-hidden">
-                    {(vendor as any).photoUrl ? (
+                    {getImageUrl((vendor as any).photoUrl) ? (
                       <img
-                        src={(vendor as any).photoUrl}
+                        src={getImageUrl((vendor as any).photoUrl)}
                         alt={vendor.nomBoutique}
                         className="w-full h-full object-cover"
                       />
@@ -325,6 +353,15 @@ const AdminVendors = () => {
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                       <AlertCircle className="h-3 w-3 mr-1" />
                       Non vérifié
+                    </span>
+                  )}
+                  {(vendor as any).publie ? (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      👁️ Publié
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                      🔒 Non publié
                     </span>
                   )}
                 </div>
@@ -391,6 +428,16 @@ const AdminVendors = () => {
                     Vérifier
                   </button>
                 )}
+                <button
+                  onClick={() => handleTogglePublish(vendor)}
+                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                    (vendor as any).publie
+                      ? 'bg-gray-600 text-white hover:bg-gray-700'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {(vendor as any).publie ? '🔒 Retirer' : '👁️ Publier'}
+                </button>
                 <button
                   onClick={() => handleToggleActive(vendor)}
                   className={`px-3 py-2 text-sm rounded-lg transition-colors ${
@@ -576,6 +623,19 @@ const AdminVendors = () => {
                     />
                   </div>
 
+                  <div className="flex items-center space-x-2 p-4 bg-blue-50 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="publier"
+                      checked={vendorForm.publie}
+                      onChange={(e) => setVendorForm({ ...vendorForm, publie: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="publier" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      👁️ Publier ce vendeur sur la page publique (le vendeur doit être vérifié et actif)
+                    </label>
+                  </div>
+
                   <div className="flex justify-end space-x-3 pt-4 border-t">
                     <button
                       type="button"
@@ -633,9 +693,9 @@ const AdminVendors = () => {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center overflow-hidden">
-                      {(selectedVendor as any).photoUrl ? (
+                      {getImageUrl((selectedVendor as any).photoUrl) ? (
                         <img
-                          src={(selectedVendor as any).photoUrl}
+                          src={getImageUrl((selectedVendor as any).photoUrl)}
                           alt={selectedVendor.nomBoutique}
                           className="w-full h-full object-cover"
                         />
