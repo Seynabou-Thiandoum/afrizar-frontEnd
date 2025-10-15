@@ -5,6 +5,8 @@ export interface UploadResponse {
   filename: string;
   originalFilename: string;
   fullUrl?: string;
+  type?: string;
+  subFolder?: string;
 }
 
 class FileUploadService {
@@ -15,9 +17,15 @@ class FileUploadService {
     };
   }
 
-  async uploadImage(file: File): Promise<UploadResponse> {
+  /**
+   * Upload une image avec organisation par type
+   * @param file - Le fichier à uploader
+   * @param type - Type de fichier (vendeur, produit, categorie, client, general)
+   */
+  async uploadImage(file: File, type: string = 'general'): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('type', type);
 
     // Note: Ne pas inclure Content-Type dans les headers pour FormData
     // Le navigateur le fera automatiquement avec le boundary
@@ -41,7 +49,7 @@ class FileUploadService {
     const data = await response.json();
     // Forcer l'URL complète
     const fullUrl = data.fullUrl || `${API_CONFIG.BASE_URL}${data.url}`;
-    console.log('Image uploadée - URL complète:', fullUrl);
+    console.log(`📁 Image uploadée dans "${data.subFolder}" - URL complète:`, fullUrl);
     return {
       ...data,
       url: fullUrl

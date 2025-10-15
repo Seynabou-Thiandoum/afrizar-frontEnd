@@ -21,6 +21,23 @@ import produitService, { Produit, CreateProduitDto } from '../../services/produi
 import adminService, { Vendeur } from '../../services/adminService';
 import categorieService, { Categorie } from '../../services/categorieService';
 import ImageUpload from '../common/ImageUpload';
+import { API_CONFIG } from '../../config/api';
+
+// Helper pour construire l'URL complète de l'image
+const getImageUrl = (imageUrl: string | undefined): string | undefined => {
+  console.log('🔍 getImageUrl - Input imageUrl:', imageUrl);
+  if (!imageUrl) {
+    console.log('❌ imageUrl est vide ou undefined');
+    return undefined;
+  }
+  if (imageUrl.startsWith('http')) {
+    console.log('✅ URL complète détectée:', imageUrl);
+    return imageUrl;
+  }
+  const fullUrl = `${API_CONFIG.BASE_URL}${imageUrl}`;
+  console.log('🔗 URL construite:', fullUrl);
+  return fullUrl;
+};
 
 const AdminProducts = () => {
   const [produits, setProduits] = useState<Produit[]>([]);
@@ -56,6 +73,32 @@ const AdminProducts = () => {
 
   useEffect(() => {
     loadData();
+    
+    // Vérifier si un vendeur a été pré-sélectionné depuis AdminVendors
+    const selectedVendeurId = localStorage.getItem('selectedVendeurId');
+    const selectedVendeurNom = localStorage.getItem('selectedVendeurNom');
+    
+    if (selectedVendeurId && selectedVendeurNom) {
+      // Pré-sélectionner le vendeur
+      setProductForm(prev => ({
+        ...prev,
+        vendeurId: parseInt(selectedVendeurId)
+      }));
+      
+      // Ouvrir le modal de création
+      setShowModal(true);
+      setEditMode(false);
+      
+      // Afficher un message
+      setMessage({ 
+        type: 'success', 
+        text: `Ajout de produit pour le vendeur: ${selectedVendeurNom}` 
+      });
+      
+      // Nettoyer le localStorage
+      localStorage.removeItem('selectedVendeurId');
+      localStorage.removeItem('selectedVendeurNom');
+    }
   }, []);
 
   const loadData = async () => {
@@ -404,11 +447,13 @@ const AdminProducts = () => {
             <div key={produit.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               {/* Image */}
               <div className="relative h-48 bg-gray-100">
-                {produit.imageUrl ? (
+                {getImageUrl(produit.imageUrl) ? (
                   <img
-                    src={produit.imageUrl}
+                    src={getImageUrl(produit.imageUrl)}
                     alt={produit.nom}
                     className="w-full h-full object-cover"
+                    onLoad={() => console.log('✅ Image produit chargée:', produit.nom)}
+                    onError={() => console.error('❌ Erreur chargement image:', produit.nom, getImageUrl(produit.imageUrl))}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -433,6 +478,34 @@ const AdminProducts = () => {
                 <div className="flex items-center space-x-2 mb-3">
                   <Tag className="h-4 w-4 text-gray-400" />
                   <span className="text-sm text-gray-600">{produit.categorieNom}</span>
+                </div>
+
+                {/* Détails du produit */}
+                <div className="space-y-1 mb-3">
+                  {produit.taille && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Taille:</span>
+                      <span className="text-xs font-medium text-gray-700">{produit.taille}</span>
+                    </div>
+                  )}
+                  {produit.couleur && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Couleur:</span>
+                      <span className="text-xs font-medium text-gray-700">{produit.couleur}</span>
+                    </div>
+                  )}
+                  {produit.matiere && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Matière:</span>
+                      <span className="text-xs font-medium text-gray-700">{produit.matiere}</span>
+                    </div>
+                  )}
+                  {produit.poids && produit.poids > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Poids:</span>
+                      <span className="text-xs font-medium text-gray-700">{produit.poids} kg</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between mb-3">
@@ -617,6 +690,7 @@ const AdminProducts = () => {
                       value={productForm.imageUrl}
                       onChange={(url) => setProductForm({ ...productForm, imageUrl: url })}
                       required={true}
+                      type="produit"
                     />
                   </div>
 
@@ -630,6 +704,7 @@ const AdminProducts = () => {
                             value={img}
                             onChange={(url) => updateImageInput(index, url)}
                             required={false}
+                            type="produit"
                           />
                           {imageInputs.length > 1 && (
                             <button

@@ -306,6 +306,38 @@ class AdminService {
     }
   }
 
+  async updateVendeur(vendeurId: number, vendeurData: Partial<Vendeur>): Promise<Vendeur> {
+    try {
+      console.log('📤 Envoi mise à jour vendeur:', vendeurData);
+      const response = await fetch(`${this.baseUrl}/vendeurs/${vendeurId}`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(vendeurData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('🔒 Erreur 401 - Token:', localStorage.getItem('token'));
+          console.error('🔒 Headers envoyés:', this.getHeaders());
+          // Redirection commentée temporairement pour debug
+          // localStorage.removeItem('token');
+          // localStorage.removeItem('user');
+          // window.location.hash = '#';
+          // window.location.reload();
+        }
+        const error = await response.json().catch(() => ({ message: 'Erreur lors de la mise à jour' }));
+        throw new Error(error.message || 'Erreur lors de la mise à jour du vendeur');
+      }
+
+      const result = await response.json();
+      console.log('📥 Réponse mise à jour vendeur:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Erreur updateVendeur:', error);
+      throw error;
+    }
+  }
+
   // ===================== GESTION DES UTILISATEURS =====================
 
   async getTousLesUtilisateurs(

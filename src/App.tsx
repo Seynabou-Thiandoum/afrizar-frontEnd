@@ -40,21 +40,48 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [pageParams, setPageParams] = useState(null);
 
-  // Redirection automatique après connexion
+  // Sauvegarder la page actuelle dans localStorage
   React.useEffect(() => {
+    localStorage.setItem('currentPage', currentPage);
+  }, [currentPage]);
+
+  // Restaurer la page au chargement
+  React.useEffect(() => {
+    const savedPage = localStorage.getItem('currentPage');
     const hash = window.location.hash.substring(1);
-    if (hash && hash !== currentPage && hash !== 'home') {
+    
+    if (hash && hash !== 'home') {
       setCurrentPage(hash);
-      // Nettoyer le hash après redirection
-      setTimeout(() => {
-        window.history.replaceState(null, '', window.location.pathname);
-      }, 100);
+    } else if (savedPage && savedPage !== 'home') {
+      setCurrentPage(savedPage);
+      // Mettre à jour l'URL
+      window.history.replaceState({ page: savedPage }, '', `#${savedPage}`);
     }
   }, []);
+
+  // Gestion du rafraîchissement de page
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash.substring(1);
+      if (hash && hash !== currentPage) {
+        setCurrentPage(hash);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [currentPage]);
   const handleNavigation = (page, params = null) => {
-  setCurrentPage(page);
-  setPageParams(params); // Stocker les paramètres
-};
+    setCurrentPage(page);
+    setPageParams(params); // Stocker les paramètres
+    
+    // Mettre à jour l'URL pour permettre le rafraîchissement
+    if (page !== 'home') {
+      window.history.pushState({ page }, '', `#${page}`);
+    } else {
+      window.history.pushState({ page }, '', window.location.pathname);
+    }
+  };
 
   const renderPage = () => {
     switch (currentPage) {

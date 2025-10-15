@@ -8,6 +8,7 @@ interface ImageUploadProps {
   label?: string;
   required?: boolean;
   maxSize?: number;
+  type?: string; // Type de fichier pour l'organisation (vendeur, produit, categorie, etc.)
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ 
@@ -15,7 +16,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   onChange, 
   label = 'Image',
   required = false,
-  maxSize = 5
+  maxSize = 5,
+  type = 'general'
 }) => {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -62,12 +64,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     // Upload
     setUploading(true);
     try {
-      const response = await fileUploadService.uploadImage(file);
-      console.log('ImageUpload - Réponse upload:', response);
-      console.log('ImageUpload - URL finale:', response.url);
+      const response = await fileUploadService.uploadImage(file, type);
+      console.log(`📁 ImageUpload [${type}] - Réponse upload:`, response);
+      console.log(`📸 ImageUpload [${type}] - URL finale:`, response.url);
+      console.log(`📂 ImageUpload [${type}] - Sous-dossier:`, response.subFolder);
       onChange(response.url);
     } catch (err: any) {
-      console.error('ImageUpload - Erreur:', err);
+      console.error(`❌ ImageUpload [${type}] - Erreur:`, err);
       setError(err.message || 'Erreur lors de l\'upload');
     } finally {
       setUploading(false);

@@ -670,6 +670,7 @@ const AdminCategories = () => {
                       value={categorieForm.imageUrl}
                       onChange={(url) => setCategorieForm({ ...categorieForm, imageUrl: url })}
                       required={false}
+                      type="categorie"
                     />
                     <p className="text-sm text-gray-500 mt-1">
                       Cette image sera affichée pour représenter la catégorie dans l'interface utilisateur
