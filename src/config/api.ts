@@ -1,9 +1,48 @@
+import axios from 'axios';
+
 // Configuration de l'API
 export const API_CONFIG = {
   BASE_URL: 'http://localhost:8080',
   TIMEOUT: 10000, // 10 secondes
   RETRY_ATTEMPTS: 3,
 };
+
+// Instance axios configurée
+export const api = axios.create({
+  baseURL: `${API_CONFIG.BASE_URL}/api`,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
+// Intercepteur pour ajouter le token automatiquement
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('afrizar_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Intercepteur pour gérer les erreurs
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expiré ou invalide
+      localStorage.removeItem('afrizar_token');
+      window.location.href = '/connexion';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // URLs complètes pour les endpoints
 export const API_ENDPOINTS = {

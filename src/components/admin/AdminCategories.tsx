@@ -1,758 +1,538 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Tag,
-  Plus,
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  EyeOff, 
   Search,
-  Eye,
-  Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  Save,
-  X,
-  AlertCircle,
-  Grid3x3,
-  Users
+  Tag,
+  Image as ImageIcon,
+  Check,
+  X
 } from 'lucide-react';
-import categorieService, { Categorie } from '../../services/categorieService';
-import ImageUpload from '../common/ImageUpload';
+import { typeCategorieService, TypeCategorie, TypeCategorieFormData } from '../../services/typeCategorieService';
+import { genreCategorieService } from '../../services/genreCategorieService';
+import { categorieCombinaisonService } from '../../services/categorieCombinaisonService';
 
-const AdminCategories = () => {
-  const [categories, setCategories] = useState<Categorie[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+const AdminCategories: React.FC = () => {
+  const [types, setTypes] = useState<TypeCategorie[]>([]);
+  const [typesFiltres, setTypesFiltres] = useState<TypeCategorie[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedCategorie, setSelectedCategorie] = useState<Categorie | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const [categorieForm, setCategorieForm] = useState({
+  const [selectedType, setSelectedType] = useState<TypeCategorie | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<'VETEMENTS' | 'ACCESSOIRES' | 'TOUS'>('TOUS');
+  const [loading, setLoading] = useState(false);
+  
+  const [typeForm, setTypeForm] = useState({
     nom: '',
     description: '',
-    imageUrl: '',
     type: 'VETEMENTS' as 'VETEMENTS' | 'ACCESSOIRES',
-    genre: 'HOMME' as 'HOMME' | 'FEMME' | 'ENFANT',
+    imageUrl: '',
     ordre: 0,
-    active: true
+    active: true,
+    genres: [] as string[] // Homme, Femme, Enfant
   });
 
+  // Genres fixes
+  const genresDisponibles = ['HOMME', 'FEMME', 'ENFANT'];
+
   useEffect(() => {
-    loadCategories();
+    chargerTypes();
   }, []);
 
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      const data = await categorieService.getAllCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error('Erreur chargement catégories:', error);
-      setMessage({ type: 'error', text: 'Erreur lors du chargement des catégories' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    filtrerTypes();
+  }, [searchTerm, filterType, types]);
 
-  const handleCreateCategorie = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const chargerTypes = async () => {
     setLoading(true);
-    setMessage(null);
-
     try {
-      await categorieService.createCategorie(categorieForm);
-      setMessage({ type: 'success', text: 'Catégorie créée avec succès !' });
-      setShowModal(false);
-      resetForm();
-      loadCategories();
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Erreur lors de la création de la catégorie' });
+      const typesData = await typeCategorieService.obtenirTousLesTypes();
+      setTypes(typesData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des types:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateCategorie = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCategorie) return;
-
-    setLoading(true);
-    setMessage(null);
-
-    try {
-      await categorieService.updateCategorie(selectedCategorie.id, categorieForm);
-      setMessage({ type: 'success', text: 'Catégorie mise à jour avec succès !' });
-      setShowModal(false);
-      setEditMode(false);
-      loadCategories();
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Erreur lors de la mise à jour de la catégorie' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteCategorie = async (id: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
-
-    try {
-      await categorieService.deleteCategorie(id);
-      setMessage({ type: 'success', text: 'Catégorie supprimée avec succès' });
-      loadCategories();
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur lors de la suppression de la catégorie' });
-    }
-  };
-
-  const handleToggleActive = async (categorie: Categorie) => {
-    try {
-      if (categorie.active) {
-        await categorieService.desactiverCategorie(categorie.id);
-        setMessage({ type: 'success', text: 'Catégorie désactivée avec succès' });
-      } else {
-        await categorieService.activerCategorie(categorie.id);
-        setMessage({ type: 'success', text: 'Catégorie activée avec succès' });
-      }
-      loadCategories();
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur lors de la modification de la catégorie' });
-    }
+  const filtrerTypes = () => {
+    const terme = searchTerm.toLowerCase();
+    let typesFiltres = types.filter(type => {
+      const correspondNom = type.nom.toLowerCase().includes(terme);
+      const correspondType = filterType === 'TOUS' || type.type === filterType;
+      return correspondNom && correspondType;
+    });
+    setTypesFiltres(typesFiltres);
   };
 
   const resetForm = () => {
-    setCategorieForm({
+    setTypeForm({
       nom: '',
       description: '',
-      imageUrl: '',
       type: 'VETEMENTS',
-      genre: 'HOMME',
+      imageUrl: '',
       ordre: 0,
-      active: true
+      active: true,
+      genres: []
     });
-  };
-
-  const openEditModal = (categorie: Categorie) => {
-    setSelectedCategorie(categorie);
-    setCategorieForm({
-      nom: categorie.nom,
-      description: categorie.description || '',
-      imageUrl: categorie.imageUrl || '',
-      type: categorie.type || 'VETEMENTS',
-      genre: categorie.genre || 'HOMME',
-      ordre: categorie.ordre,
-      active: categorie.active
-    });
-    setEditMode(true);
-    setShowModal(true);
-  };
-
-  const openDetailModal = (categorie: Categorie) => {
-    setSelectedCategorie(categorie);
-    setShowModal(true);
     setEditMode(false);
+    setSelectedType(null);
   };
 
-  const getTypeBadgeColor = (type: string) => {
-    return type === 'VETEMENTS' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
+  const openModal = (type?: TypeCategorie) => {
+    if (type) {
+      setTypeForm({
+        nom: type.nom,
+        description: type.description || '',
+        type: type.type,
+        imageUrl: type.imageUrl || '',
+        ordre: type.ordre,
+        active: type.active,
+        genres: [] // On récupérera les genres associés si besoin
+      });
+      setEditMode(true);
+      setSelectedType(type);
+    } else {
+      resetForm();
+    }
+    setShowModal(true);
   };
 
-  const getGenreBadgeColor = (genre: string) => {
-    switch (genre) {
-      case 'HOMME':
-        return 'bg-blue-100 text-blue-800';
-      case 'FEMME':
-        return 'bg-pink-100 text-pink-800';
-      case 'ENFANT':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      // Créer ou mettre à jour le type
+      const typeData: TypeCategorieFormData = {
+        nom: typeForm.nom,
+        description: typeForm.description,
+        type: typeForm.type,
+        imageUrl: typeForm.imageUrl,
+        ordre: typeForm.ordre,
+        active: typeForm.active
+      };
+
+      let typeId: number;
+      if (editMode && selectedType) {
+        const result = await typeCategorieService.mettreAJourType(selectedType.id, typeData);
+        typeId = result.id;
+      } else {
+        const result = await typeCategorieService.creerType(typeData);
+        typeId = result.id;
+      }
+
+      // Créer les associations avec les genres sélectionnés
+      if (!editMode && typeForm.genres.length > 0) {
+        // Récupérer tous les genres
+        const allGenres = await genreCategorieService.obtenirTousLesGenres();
+        
+        // Filtrer les genres sélectionnés
+        const genresSelectionnes = allGenres.filter(g => 
+          typeForm.genres.includes(g.nom.toUpperCase()) && g.type === typeForm.type
+        );
+
+        // Créer les associations
+        for (const genre of genresSelectionnes) {
+          try {
+            await categorieCombinaisonService.creerAssociation(genre.id, typeId);
+          } catch (error) {
+            console.error(`Erreur lors de l'association avec ${genre.nom}:`, error);
+          }
+        }
+      }
+      
+      await chargerTypes();
+      setShowModal(false);
+      resetForm();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde. Vérifiez que le nom n\'existe pas déjà.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Group categories by type and genre, sorted by order
-  const groupedCategories = categories
-    .sort((a, b) => a.ordre - b.ordre) // Tri par ordre d'affichage
-    .reduce((acc, cat) => {
-      const type = cat.type || 'AUTRE';
-      const genre = cat.genre || 'MIXTE';
-      
-      if (!acc[type]) acc[type] = {};
-      if (!acc[type][genre]) acc[type][genre] = [];
-      acc[type][genre].push(cat);
-      return acc;
-    }, {} as Record<string, Record<string, Categorie[]>>);
+  const toggleActive = async (type: TypeCategorie) => {
+    try {
+      if (type.active) {
+        await typeCategorieService.desactiverType(type.id);
+      } else {
+        await typeCategorieService.activerType(type.id);
+      }
+      await chargerTypes();
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
 
-  // const filteredCategories = categories.filter(cat =>
-  //   cat.nom.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
+  const deleteType = async (type: TypeCategorie) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer "${type.nom}" ?`)) {
+      try {
+        await typeCategorieService.supprimerType(type.id);
+        await chargerTypes();
+      } catch (error) {
+        console.error('Erreur:', error);
+        alert('Impossible de supprimer ce type. Il est peut-être utilisé par des produits.');
+      }
+    }
+  };
+
+  const toggleGenre = (genre: string) => {
+    setTypeForm(prev => ({
+      ...prev,
+      genres: prev.genres.includes(genre)
+        ? prev.genres.filter(g => g !== genre)
+        : [...prev.genres, genre]
+    }));
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Message d'alerte */}
-      {message && (
-        <div className={`rounded-lg p-4 flex items-center justify-between ${
-          message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-        }`}>
-          <div className="flex items-center space-x-3">
-            {message.type === 'success' ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-red-600" />
-            )}
-            <span className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
-              {message.text}
-            </span>
-          </div>
-          <button onClick={() => setMessage(null)}>
-            <X className="h-4 w-4 text-gray-400" />
-          </button>
-        </div>
-      )}
-
-      {/* Actions Bar */}
-      <div className="flex items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher une catégorie..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          />
-        </div>
-
-        <button
-          onClick={() => {
-            resetForm();
-            setEditMode(false);
-            setShowModal(true);
-          }}
-          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-        >
-          <Plus className="h-5 w-5" />
-          <span>Nouvelle catégorie</span>
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-4">
+    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* En-tête moderne */}
+        <div className="mb-8 bg-white rounded-2xl shadow-lg p-8">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                <Tag className="w-10 h-10 text-red-600" />
+                Gestion des Catégories
+              </h1>
+              <p className="text-gray-600 text-lg">
+                Gérez les types de produits (Boubous, Costumes, Robes...)
+              </p>
             </div>
-            <Tag className="h-8 w-8 text-gray-400" />
+            <button
+              onClick={() => openModal()}
+              className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold"
+            >
+              <Plus className="w-5 h-5" />
+              Nouvelle Catégorie
+            </button>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Actives</p>
-              <p className="text-2xl font-bold text-green-600">{categories.filter(c => c.active).length}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-400" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Vêtements</p>
-              <p className="text-2xl font-bold text-purple-600">{categories.filter(c => c.type === 'VETEMENTS').length}</p>
-            </div>
-            <Grid3x3 className="h-8 w-8 text-purple-400" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Accessoires</p>
-              <p className="text-2xl font-bold text-blue-600">{categories.filter(c => c.type === 'ACCESSOIRES').length}</p>
-            </div>
-            <Tag className="h-8 w-8 text-blue-400" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Homme</p>
-              <p className="text-2xl font-bold text-blue-600">{categories.filter(c => c.genre === 'HOMME').length}</p>
-            </div>
-            <Users className="h-8 w-8 text-blue-400" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Femme</p>
-              <p className="text-2xl font-bold text-pink-600">{categories.filter(c => c.genre === 'FEMME').length}</p>
-            </div>
-            <Users className="h-8 w-8 text-pink-400" />
-          </div>
-        </div>
-      </div>
 
-      {/* Categories by Type and Genre */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        {/* Barre de recherche et filtres */}
+        <div className="mb-6 bg-white rounded-xl shadow-md p-4 flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Rechercher une catégorie..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as any)}
+            className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all font-medium"
+          >
+            <option value="TOUS">📦 Tous les types</option>
+            <option value="VETEMENTS">👔 Vêtements</option>
+            <option value="ACCESSOIRES">💎 Accessoires</option>
+          </select>
         </div>
-      ) : Object.keys(groupedCategories).length > 0 ? (
-        <div className="space-y-6">
-          {Object.entries(groupedCategories).map(([type, genreGroups]) => (
-            <div key={type} className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getTypeBadgeColor(type)}`}>
-                  {type === 'VETEMENTS' ? 'Vêtements' : 'Accessoires'}
-                </span>
-                <span className="text-gray-400">({Object.values(genreGroups).flat().length})</span>
-              </h3>
 
-              {Object.entries(genreGroups).map(([genre, cats]) => (
-                <div key={genre} className="mb-6 last:mb-0">
-                  <h4 className="text-md font-semibold text-gray-700 mb-3 flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getGenreBadgeColor(genre)}`}>
-                      {genre === 'HOMME' ? 'Homme' : genre === 'FEMME' ? 'Femme' : 'Enfant'}
-                    </span>
-                    <span className="text-gray-400 text-sm">({cats.length})</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {cats.map((cat) => (
-                      <div key={cat.id} className="border border-gray-200 rounded-lg p-4 hover:border-red-300 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              {cat.imageUrl ? (
-                                <img
-                                  src={cat.imageUrl.startsWith('http') ? cat.imageUrl : `http://localhost:8080${cat.imageUrl}`}
-                                  alt={cat.nom}
-                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 cursor-pointer hover:border-purple-300 transition-colors"
-                                  onClick={() => openDetailModal(cat)}
-                                  onLoad={() => {
-                                    console.log('✅ Image de catégorie chargée:', cat.nom, cat.imageUrl);
-                                  }}
-                                  onError={(e) => {
-                                    console.error('❌ Erreur chargement image catégorie:', cat.nom, cat.imageUrl);
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center border border-gray-200">
-                                  <Tag className="h-6 w-6 text-white" />
-                                </div>
-                              )}
-                              <div>
-                                <h5 className="font-bold text-gray-900">{cat.nom}</h5>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs text-gray-500">Ordre: {cat.ordre}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    cat.ordre <= 3 ? 'bg-green-100 text-green-800' : 
-                                    cat.ordre <= 6 ? 'bg-yellow-100 text-yellow-800' : 
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {cat.ordre <= 3 ? 'Priorité haute' : 
-                                     cat.ordre <= 6 ? 'Priorité moyenne' : 
-                                     'Priorité basse'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            {cat.description && (
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{cat.description}</p>
-                            )}
-                          </div>
-                          {cat.active ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Active
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Inactive
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center space-x-2 pt-3 border-t border-gray-200">
-                          <button
-                            onClick={() => openDetailModal(cat)}
-                            className="flex-1 px-3 py-1.5 text-sm border border-purple-300 text-purple-700 rounded hover:bg-purple-50 transition-colors"
-                          >
-                            <Eye className="h-3 w-3 inline mr-1" />
-                            Détails
-                          </button>
-                          <button
-                            onClick={() => openEditModal(cat)}
-                            className="flex-1 px-3 py-1.5 text-sm border border-blue-300 text-blue-700 rounded hover:bg-blue-50 transition-colors"
-                          >
-                            <Edit className="h-3 w-3 inline mr-1" />
-                            Modifier
-                          </button>
-                          <button
-                            onClick={() => handleToggleActive(cat)}
-                            className={`flex-1 px-3 py-1.5 text-sm rounded transition-colors ${
-                              cat.active
-                                ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                : 'bg-green-600 text-white hover:bg-green-700'
-                            }`}
-                          >
-                            {cat.active ? 'Désactiver' : 'Activer'}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCategorie(cat.id)}
-                            className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium mb-1">Total</p>
+                <p className="text-3xl font-bold">{types.length}</p>
+              </div>
+              <Tag className="w-12 h-12 text-blue-200" />
             </div>
-          ))}
-
-          {categories.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-xl">
-              <Tag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Aucune catégorie trouvée</p>
-              <button
-                onClick={() => {
-                  resetForm();
-                  setEditMode(false);
-                  setShowModal(true);
-                }}
-                className="mt-4 text-red-600 hover:text-red-700 font-medium"
-              >
-                Créer votre première catégorie
-              </button>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium mb-1">Actives</p>
+                <p className="text-3xl font-bold">{types.filter(t => t.active).length}</p>
+              </div>
+              <Eye className="w-12 h-12 text-green-200" />
             </div>
-          )}
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium mb-1">Vêtements</p>
+                <p className="text-3xl font-bold">{types.filter(t => t.type === 'VETEMENTS').length}</p>
+              </div>
+              <Tag className="w-12 h-12 text-purple-200" />
+            </div>
+          </div>
         </div>
-      ) : (
-        // Affichage simple si pas de groupement (catégories sans type/genre)
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Toutes les catégories</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map((cat) => (
-              <div key={cat.id} className="border border-gray-200 rounded-lg p-4 hover:border-red-300 transition-colors">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      {cat.imageUrl ? (
-                        <img
-                          src={cat.imageUrl.startsWith('http') ? cat.imageUrl : `http://localhost:8080${cat.imageUrl}`}
-                          alt={cat.nom}
-                          className="w-12 h-12 rounded-lg object-cover border border-gray-200 cursor-pointer hover:border-purple-300 transition-colors"
-                          onClick={() => openDetailModal(cat)}
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center border border-gray-200">
-                          <Tag className="h-6 w-6 text-white" />
-                        </div>
-                      )}
-                      <div>
-                        <h5 className="font-bold text-gray-900">{cat.nom}</h5>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500">Ordre: {cat.ordre}</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            cat.ordre <= 3 ? 'bg-green-100 text-green-800' : 
-                            cat.ordre <= 6 ? 'bg-yellow-100 text-yellow-800' : 
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {cat.ordre <= 3 ? 'Priorité haute' : 
-                             cat.ordre <= 6 ? 'Priorité moyenne' : 
-                             'Priorité basse'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    {cat.description && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{cat.description}</p>
-                    )}
-                  </div>
-                  {cat.active ? (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Active
-                    </span>
+
+        {/* Liste des catégories */}
+        {loading && types.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-600"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {typesFiltres.map((type) => (
+              <div key={type.id} className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden group">
+                {/* Image */}
+                <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                  {type.imageUrl ? (
+                    <img 
+                      src={type.imageUrl} 
+                      alt={type.nom}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
                   ) : (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      <XCircle className="h-3 w-3 mr-1" />
-                      Inactive
-                    </span>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon className="w-20 h-20 text-gray-300" />
+                    </div>
                   )}
+                  
+                  {/* Badge statut */}
+                  <div className="absolute top-4 right-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
+                      type.active 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-500 text-white'
+                    }`}>
+                      {type.active ? '✓ Actif' : '✗ Inactif'}
+                    </span>
+                  </div>
+
+                  {/* Badge type */}
+                  <div className="absolute top-4 left-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
+                      type.type === 'VETEMENTS' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-purple-500 text-white'
+                    }`}>
+                      {type.type === 'VETEMENTS' ? '👔 Vêtements' : '💎 Accessoires'}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2 pt-3 border-t border-gray-200">
-                  <button
-                    onClick={() => openDetailModal(cat)}
-                    className="flex-1 px-3 py-1.5 text-sm border border-purple-300 text-purple-700 rounded hover:bg-purple-50 transition-colors"
-                  >
-                    <Eye className="h-3 w-3 inline mr-1" />
-                    Détails
-                  </button>
-                  <button
-                    onClick={() => openEditModal(cat)}
-                    className="flex-1 px-3 py-1.5 text-sm border border-blue-300 text-blue-700 rounded hover:bg-blue-50 transition-colors"
-                  >
-                    <Edit className="h-3 w-3 inline mr-1" />
-                    Modifier
-                  </button>
-                  <button
-                    onClick={() => handleToggleActive(cat)}
-                    className={`flex-1 px-3 py-1.5 text-sm rounded transition-colors ${
-                      cat.active
-                        ? 'bg-orange-600 text-white hover:bg-orange-700'
-                        : 'bg-green-600 text-white hover:bg-green-700'
-                    }`}
-                  >
-                    {cat.active ? 'Désactiver' : 'Activer'}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCategorie(cat.id)}
-                    className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                {/* Contenu */}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">
+                    {type.nom}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {type.description || 'Aucune description'}
+                  </p>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                    <span>Ordre: {type.ordre}</span>
+                    <span>Genres: {type.nombreGenres || 0}</span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openModal(type)}
+                      className="flex-1 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 font-medium"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Modifier
+                    </button>
+                    <button
+                      onClick={() => toggleActive(type)}
+                      className={`px-4 py-2 rounded-lg transition-colors flex items-center justify-center ${
+                        type.active
+                          ? 'bg-orange-50 text-orange-700 hover:bg-orange-100'
+                          : 'bg-green-50 text-green-700 hover:bg-green-100'
+                      }`}
+                    >
+                      {type.active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => deleteType(type)}
+                      className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Create/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" onClick={() => setShowModal(false)}>
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-            </div>
+        {/* Message si aucune catégorie */}
+        {!loading && typesFiltres.length === 0 && (
+          <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            <Tag className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune catégorie trouvée</h3>
+            <p className="text-gray-600 mb-6">
+              {searchTerm ? 'Essayez avec d\'autres mots-clés' : 'Commencez par créer votre première catégorie'}
+            </p>
+            {!searchTerm && (
+              <button
+                onClick={() => openModal()}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Créer une catégorie
+              </button>
+            )}
+          </div>
+        )}
 
-            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-              <div className="bg-white">
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {editMode ? 'Modifier la catégorie' : selectedCategorie && !editMode ? 'Détails de la catégorie' : 'Créer une nouvelle catégorie'}
-                  </h2>
-                  <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <X className="h-6 w-6 text-gray-600" />
-                  </button>
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 rounded-t-2xl">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {editMode ? '✏️ Modifier la catégorie' : '➕ Nouvelle catégorie'}
+                </h2>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Nom de la catégorie *
+                  </label>
+                  <input
+                    type="text"
+                    value={typeForm.nom}
+                    onChange={(e) => setTypeForm({ ...typeForm, nom: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    placeholder="Ex: Boubous, Costumes, Robes..."
+                    required
+                  />
                 </div>
 
-                {selectedCategorie && !editMode ? (
-                  // Modal de détails (lecture seule)
-                  <div className="p-6 space-y-6">
-                    <div className="flex items-center space-x-4">
-                      {selectedCategorie.imageUrl ? (
-                        <img
-                          src={selectedCategorie.imageUrl.startsWith('http') ? selectedCategorie.imageUrl : `http://localhost:8080${selectedCategorie.imageUrl}`}
-                          alt={selectedCategorie.nom}
-                          className="w-20 h-20 rounded-lg object-cover border border-gray-200"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center border border-gray-200">
-                          <Tag className="h-8 w-8 text-white" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900">{selectedCategorie.nom}</h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(selectedCategorie.type || 'VETEMENTS')}`}>
-                            {selectedCategorie.type === 'VETEMENTS' ? 'Vêtements' : 'Accessoires'}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getGenreBadgeColor(selectedCategorie.genre || 'HOMME')}`}>
-                            {selectedCategorie.genre === 'HOMME' ? 'Homme' : selectedCategorie.genre === 'FEMME' ? 'Femme' : 'Enfant'}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            selectedCategorie.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {selectedCategorie.active ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={typeForm.description}
+                    onChange={(e) => setTypeForm({ ...typeForm, description: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    rows={3}
+                    placeholder="Description de la catégorie..."
+                  />
+                </div>
 
-                    {selectedCategorie.description && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">Description</h4>
-                        <p className="text-gray-700">{selectedCategorie.description}</p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-1">Ordre d'affichage</h4>
-                        <p className="text-gray-700">{selectedCategorie.ordre}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-1">Date de création</h4>
-                        <p className="text-gray-700">{new Date(selectedCategorie.dateCreation).toLocaleDateString('fr-FR')}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                      <button
-                        onClick={() => setShowModal(false)}
-                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        Fermer
-                      </button>
-                      <button
-                        onClick={() => openEditModal(selectedCategorie)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        <Edit className="h-4 w-4 inline mr-2" />
-                        Modifier
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  // Modal de création/édition
-                  <form onSubmit={editMode ? handleUpdateCategorie : handleCreateCategorie} className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nom de la catégorie *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Type *
+                    </label>
+                    <select
+                      value={typeForm.type}
+                      onChange={(e) => setTypeForm({ ...typeForm, type: e.target.value as any })}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    >
+                      <option value="VETEMENTS">👔 Vêtements</option>
+                      <option value="ACCESSOIRES">💎 Accessoires</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Ordre d'affichage
+                    </label>
                     <input
-                      type="text"
-                      value={categorieForm.nom}
-                      onChange={(e) => setCategorieForm({ ...categorieForm, nom: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      required
-                      placeholder="Ex: Boubous, Chemises, Bijoux..."
+                      type="number"
+                      value={typeForm.ordre}
+                      onChange={(e) => setTypeForm({ ...typeForm, ordre: parseInt(e.target.value) || 0 })}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                      min="0"
                     />
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                      <select
-                        value={categorieForm.type}
-                        onChange={(e) => setCategorieForm({ ...categorieForm, type: e.target.value as 'VETEMENTS' | 'ACCESSOIRES' })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      >
-                        <option value="VETEMENTS">Vêtements</option>
-                        <option value="ACCESSOIRES">Accessoires</option>
-                      </select>
-                    </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    URL de l'image
+                  </label>
+                  <input
+                    type="url"
+                    value={typeForm.imageUrl}
+                    onChange={(e) => setTypeForm({ ...typeForm, imageUrl: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    placeholder="https://exemple.com/image.jpg"
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Genre *</label>
-                      <select
-                        value={categorieForm.genre}
-                        onChange={(e) => setCategorieForm({ ...categorieForm, genre: e.target.value as 'HOMME' | 'FEMME' | 'ENFANT' })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      >
-                        <option value="HOMME">Homme</option>
-                        <option value="FEMME">Femme</option>
-                        <option value="ENFANT">Enfant</option>
-                      </select>
-                    </div>
-                  </div>
-
+                {!editMode && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                      value={categorieForm.description}
-                      onChange={(e) => setCategorieForm({ ...categorieForm, description: e.target.value })}
-                      rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="Description de la catégorie..."
-                    />
-                  </div>
-
-                  <div>
-                    <ImageUpload
-                      label="Image de la catégorie"
-                      value={categorieForm.imageUrl}
-                      onChange={(url) => setCategorieForm({ ...categorieForm, imageUrl: url })}
-                      required={false}
-                      type="categorie"
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      Cette image sera affichée pour représenter la catégorie dans l'interface utilisateur
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Disponible pour *
+                    </label>
+                    <div className="flex gap-3">
+                      {genresDisponibles.map(genre => (
+                        <button
+                          key={genre}
+                          type="button"
+                          onClick={() => toggleGenre(genre)}
+                          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all font-medium ${
+                            typeForm.genres.includes(genre)
+                              ? 'bg-red-50 border-red-500 text-red-700'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          {typeForm.genres.includes(genre) && <Check className="w-4 h-4 inline mr-2" />}
+                          {genre === 'HOMME' ? '👨 Homme' : genre === 'FEMME' ? '👩 Femme' : '👶 Enfant'}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Sélectionnez les genres pour lesquels cette catégorie sera disponible
                     </p>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Ordre d'affichage</label>
-                      <input
-                        type="number"
-                        value={categorieForm.ordre}
-                        onChange={(e) => setCategorieForm({ ...categorieForm, ordre: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        min="0"
-                      />
-                      <p className="mt-1 text-sm text-gray-500">
-                        Détermine l'ordre d'affichage des catégories (1 = premier, 2 = deuxième, etc.)
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                      <div className="flex items-center space-x-4 pt-2">
-                        <label className="flex items-center space-x-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            checked={categorieForm.active}
-                            onChange={() => setCategorieForm({ ...categorieForm, active: true })}
-                            className="w-4 h-4 text-red-600"
-                          />
-                          <span className="text-sm text-gray-700">Active</span>
-                        </label>
-                        <label className="flex items-center space-x-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            checked={!categorieForm.active}
-                            onChange={() => setCategorieForm({ ...categorieForm, active: false })}
-                            className="w-4 h-4 text-red-600"
-                          />
-                          <span className="text-sm text-gray-700">Inactive</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 pt-4 border-t">
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(false)}
-                      className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex items-center space-x-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                          <span>{editMode ? 'Modification...' : 'Création...'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-5 w-5" />
-                          <span>{editMode ? 'Modifier' : 'Créer la catégorie'}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
                 )}
-              </div>
+
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="active"
+                    checked={typeForm.active}
+                    onChange={(e) => setTypeForm({ ...typeForm, active: e.target.checked })}
+                    className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                  />
+                  <label htmlFor="active" className="text-sm font-medium text-gray-900">
+                    Catégorie active (visible sur le site)
+                  </label>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  >
+                    <X className="w-5 h-5 inline mr-2" />
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all font-medium disabled:opacity-50 shadow-lg"
+                  >
+                    {loading ? (
+                      <>⏳ Sauvegarde...</>
+                    ) : (
+                      <>
+                        <Check className="w-5 h-5 inline mr-2" />
+                        {editMode ? 'Mettre à jour' : 'Créer'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
 export default AdminCategories;
-

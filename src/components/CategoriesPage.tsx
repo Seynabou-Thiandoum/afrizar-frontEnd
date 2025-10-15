@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Crown, 
@@ -15,9 +15,14 @@ import {
   Grid3X3,
   List,
   Users,
-  Baby
+  Baby,
+  ArrowRight,
+  MessageSquare
 } from 'lucide-react';
 import ProductModal from './ProductModal';
+import { genreCategorieService } from '../services/genreCategorieService';
+import { typeCategorieService } from '../services/typeCategorieService';
+import { categorieCombinaisonService } from '../services/categorieCombinaisonService';
 
 const CategoriesPage = ({ onBack }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -25,8 +30,83 @@ const CategoriesPage = ({ onBack }) => {
   const [wishlist, setWishlist] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = [
+  // Charger les catégories depuis l'API
+  useEffect(() => {
+    chargerCategories();
+  }, []);
+
+  const chargerCategories = async () => {
+    try {
+      setLoading(true);
+      
+      // Récupérer les genres et types
+      const [genres, types] = await Promise.all([
+        genreCategorieService.obtenirTousLesGenres(),
+        typeCategorieService.obtenirTousLesTypes()
+      ]);
+
+      // Grouper par type de catégorie (VETEMENTS, ACCESSOIRES)
+      const categoriesGroupees = [
+        {
+          id: 'vetements',
+          name: 'Vêtements',
+          description: 'Hommes, Femmes, Enfants',
+          icon: Shirt,
+          image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
+          color: 'from-blue-500 to-indigo-600',
+          productCount: 120,
+          subcategories: []
+        },
+        {
+          id: 'accessoires',
+          name: 'Accessoires',
+          description: 'Bonnets/Chapeaux, Chaussures, Sacs, Bijoux',
+          icon: Gem,
+          image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
+          color: 'from-purple-500 to-violet-600',
+          productCount: 85,
+          subcategories: []
+        }
+      ];
+
+      // Pour chaque catégorie, récupérer ses genres et types
+      for (const categorie of categoriesGroupees) {
+        const typeCategorie = categorie.id === 'vetements' ? 'VETEMENTS' : 'ACCESSOIRES';
+        
+        // Récupérer les genres pour ce type
+        const genresDuType = genres.filter(g => g.type === typeCategorie);
+        
+        // Pour chaque genre, récupérer ses types associés
+        for (const genre of genresDuType) {
+          const typesAssocies = await categorieCombinaisonService.obtenirTypesParGenre(genre.id);
+          
+          categorie.subcategories.push({
+            id: genre.id,
+            name: genre.nom,
+            description: typesAssocies.map(t => t.nom).join(', '),
+            icon: genre.nom === 'Homme' ? Users : genre.nom === 'Femme' ? Crown : Baby,
+            image: genre.imageUrl || 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
+            productCount: 0,
+            types: typesAssocies
+          });
+        }
+      }
+
+      setCategories(categoriesGroupees);
+    } catch (error) {
+      console.error('Erreur lors du chargement des catégories:', error);
+      // En cas d'erreur, utiliser les données par défaut
+      setCategories(categoriesParDefaut);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Données par défaut en cas d'erreur
+  const categoriesParDefaut = [
     {
       id: 'vetements',
       name: 'Vêtements',
@@ -620,8 +700,14 @@ const CategoriesPage = ({ onBack }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-          {categories.map((category) => {
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            <span className="ml-3 text-gray-600">Chargement des catégories...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+            {categories.map((category) => {
             const IconComponent = category.icon;
             return (
               <div
@@ -697,7 +783,8 @@ const CategoriesPage = ({ onBack }) => {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
