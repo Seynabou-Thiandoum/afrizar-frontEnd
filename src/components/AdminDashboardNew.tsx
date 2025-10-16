@@ -24,7 +24,7 @@ import adminService from '../services/adminService';
 import AdminProfile from './admin/AdminProfile';
 import AdminUsers from './admin/AdminUsers';
 import AdminVendors from './admin/AdminVendors';
-import AdminCategories from './admin/AdminCategories';
+import AdminCategoriesNew from './admin/AdminCategoriesNew';
 import AdminProducts from './admin/AdminProducts';
 import AdminCommissions from './admin/AdminCommissions';
 import AdminOrders from './admin/AdminOrders';
@@ -434,7 +434,7 @@ const AdminDashboardNew = () => {
           {activeView === 'users' && <AdminUsers />}
           {activeView === 'vendors' && <AdminVendors />}
           {activeView === 'products' && <AdminProducts />}
-          {activeView === 'categories' && <AdminCategories />}
+          {activeView === 'categories' && <AdminCategoriesNew />}
           {activeView === 'commissions' && <AdminCommissions />}
           {activeView === 'orders' && <AdminOrders />}
         </div>

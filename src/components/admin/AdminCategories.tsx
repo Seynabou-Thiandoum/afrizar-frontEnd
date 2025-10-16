@@ -11,28 +11,29 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { typeCategorieService, TypeCategorie, TypeCategorieFormData } from '../../services/typeCategorieService';
-import { genreCategorieService } from '../../services/genreCategorieService';
-import { categorieCombinaisonService } from '../../services/categorieCombinaisonService';
+import { categorieService, Categorie } from '../../services/categorieService';
+import ImageUpload from '../common/ImageUpload';
 
 const AdminCategories: React.FC = () => {
-  const [types, setTypes] = useState<TypeCategorie[]>([]);
-  const [typesFiltres, setTypesFiltres] = useState<TypeCategorie[]>([]);
+  const [categories, setCategories] = useState<Categorie[]>([]);
+  const [categoriesFiltres, setCategoriesFiltres] = useState<Categorie[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedType, setSelectedType] = useState<TypeCategorie | null>(null);
+  const [selectedCategorie, setSelectedCategorie] = useState<Categorie | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'VETEMENTS' | 'ACCESSOIRES' | 'TOUS'>('TOUS');
   const [loading, setLoading] = useState(false);
   
-  const [typeForm, setTypeForm] = useState({
+  const [categorieForm, setCategorieForm] = useState({
     nom: '',
+    slug: '',
     description: '',
     type: 'VETEMENTS' as 'VETEMENTS' | 'ACCESSOIRES',
+    genre: 'HOMME' as 'HOMME' | 'FEMME' | 'ENFANT',
     imageUrl: '',
     ordre: 0,
     active: true,
-    genres: [] as string[] // Homme, Femme, Enfant
+    parentId: null as number | null
   });
 
   // Genres fixes
@@ -44,15 +45,15 @@ const AdminCategories: React.FC = () => {
 
   useEffect(() => {
     filtrerTypes();
-  }, [searchTerm, filterType, types]);
+  }, [searchTerm, filterType, categories]);
 
   const chargerTypes = async () => {
     setLoading(true);
     try {
-      const typesData = await typeCategorieService.obtenirTousLesTypes();
-      setTypes(typesData);
+      const categoriesData = await categorieService.getHierarchieComplete();
+      setCategories(categoriesData);
     } catch (error) {
-      console.error('Erreur lors du chargement des types:', error);
+      console.error('Erreur lors du chargement des catégories:', error);
     } finally {
       setLoading(false);
     }
@@ -60,12 +61,12 @@ const AdminCategories: React.FC = () => {
 
   const filtrerTypes = () => {
     const terme = searchTerm.toLowerCase();
-    let typesFiltres = types.filter(type => {
-      const correspondNom = type.nom.toLowerCase().includes(terme);
-      const correspondType = filterType === 'TOUS' || type.type === filterType;
+    let categoriesFiltres = categories.filter(categorie => {
+      const correspondNom = categorie.nom.toLowerCase().includes(terme);
+      const correspondType = filterType === 'TOUS' || categorie.type === filterType;
       return correspondNom && correspondType;
     });
-    setTypesFiltres(typesFiltres);
+    setCategoriesFiltres(categoriesFiltres);
   };
 
   const resetForm = () => {
@@ -82,7 +83,7 @@ const AdminCategories: React.FC = () => {
     setSelectedType(null);
   };
 
-  const openModal = (type?: TypeCategorie) => {
+  const openModal = (type?: Categorie) => {
     if (type) {
       setTypeForm({
         nom: type.nom,
@@ -244,7 +245,7 @@ const AdminCategories: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium mb-1">Total</p>
-                <p className="text-3xl font-bold">{types.length}</p>
+                <p className="text-3xl font-bold">{categories.length}</p>
               </div>
               <Tag className="w-12 h-12 text-blue-200" />
             </div>
@@ -253,7 +254,7 @@ const AdminCategories: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium mb-1">Actives</p>
-                <p className="text-3xl font-bold">{types.filter(t => t.active).length}</p>
+                <p className="text-3xl font-bold">{categories.filter(t => t.active).length}</p>
               </div>
               <Eye className="w-12 h-12 text-green-200" />
             </div>
@@ -262,7 +263,7 @@ const AdminCategories: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium mb-1">Vêtements</p>
-                <p className="text-3xl font-bold">{types.filter(t => t.type === 'VETEMENTS').length}</p>
+                <p className="text-3xl font-bold">{categories.filter(t => t.type === 'VETEMENTS').length}</p>
               </div>
               <Tag className="w-12 h-12 text-purple-200" />
             </div>
@@ -270,13 +271,13 @@ const AdminCategories: React.FC = () => {
         </div>
 
         {/* Liste des catégories */}
-        {loading && types.length === 0 ? (
+        {loading && categories.length === 0 ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-600"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {typesFiltres.map((type) => (
+            {categoriesFiltres.map((type) => (
               <div key={type.id} className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden group">
                 {/* Image */}
                 <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
@@ -362,7 +363,7 @@ const AdminCategories: React.FC = () => {
         )}
 
         {/* Message si aucune catégorie */}
-        {!loading && typesFiltres.length === 0 && (
+        {!loading && categoriesFiltres.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
             <Tag className="w-20 h-20 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune catégorie trouvée</h3>
@@ -450,14 +451,12 @@ const AdminCategories: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    URL de l'image
+                    Image de la catégorie
                   </label>
-                  <input
-                    type="url"
-                    value={typeForm.imageUrl}
-                    onChange={(e) => setTypeForm({ ...typeForm, imageUrl: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                    placeholder="https://exemple.com/image.jpg"
+                  <ImageUpload
+                    type="categorie"
+                    onImageUploaded={(url) => setTypeForm({ ...typeForm, imageUrl: url })}
+                    currentImageUrl={typeForm.imageUrl}
                   />
                 </div>
 

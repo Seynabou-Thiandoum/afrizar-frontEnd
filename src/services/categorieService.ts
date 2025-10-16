@@ -4,14 +4,19 @@ import authService from './authService';
 export interface Categorie {
   id: number;
   nom: string;
+  slug?: string;
   description?: string;
   imageUrl?: string;
+  icone?: string;
   active: boolean;
   ordre: number;
   genre?: 'HOMME' | 'FEMME' | 'ENFANT';
   type?: 'VETEMENTS' | 'ACCESSOIRES';
   parentId?: number;
-  dateCreation: string;
+  nomParent?: string;
+  sousCategories?: Categorie[];
+  nombreProduits?: number;
+  dateCreation?: string;
 }
 
 class CategorieService {
@@ -130,6 +135,79 @@ class CategorieService {
       }
     } catch (error) {
       console.error('Erreur desactiverCategorie:', error);
+      throw error;
+    }
+  }
+
+  // Nouvelles méthodes pour la hiérarchie
+  async getCategoriesRacines(): Promise<Categorie[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/racines`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des catégories racines');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getCategoriesRacines:', error);
+      throw error;
+    }
+  }
+
+  async getSousCategories(parentId: number): Promise<Categorie[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/${parentId}/sous-categories`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des sous-catégories');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getSousCategories:', error);
+      throw error;
+    }
+  }
+
+  async getHierarchieComplete(): Promise<Categorie[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/hierarchie`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération de la hiérarchie');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getHierarchieComplete:', error);
+      throw error;
+    }
+  }
+
+  async getCategorieBySlug(slug: string): Promise<Categorie> {
+    try {
+      const response = await fetch(`${this.baseUrl}/slug/${slug}`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération de la catégorie');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur getCategorieBySlug:', error);
       throw error;
     }
   }
