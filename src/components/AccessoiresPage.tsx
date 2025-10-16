@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, ArrowLeft, MessageCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
+import categorieService from '../services/categorieService';
+import produitService from '../services/produitService';
 
-const AccessoiresPage = ({ onNavigate }) => {
+const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   const { t } = useI18n();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Nouveau état pour les types
@@ -10,261 +12,93 @@ const AccessoiresPage = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState(null); // Pour les détails produit
+  const [selectedProduct, setSelectedProduct] = useState<any>(null); // Pour les détails produit
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221123456789"; // Format international sans le +
 
-  // Données des accessoires
-  const accessories = {
-    homme: [
-      {
-        id: 1,
-        name: "Chaussures Artisanales",
-        price: "45,000 FCFA",
-        originalPrice: "55,000 FCFA",
-        image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop",
-        category: "Chaussures",
-        subcategory: "homme",
-        rating: 4.8,
-        reviews: 23,
-        isNew: false,
-        discount: "-18%",
-        colors: ["Marron", "Noir"],
-        description: "Chaussures artisanales fabriquées avec du cuir de qualité supérieure. Confort et élégance pour toutes occasions.",
-        sizes: ["39", "40", "41", "42", "43", "44"],
-        gallery: [
-          "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&h=500&fit=crop",
-          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=500&h=500&fit=crop",
-          "https://images.unsplash.com/photo-1581553680321-4fffae59fccd?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 2,
-        name: "Chapeau Traditionnel",
-        price: "15,000 FCFA",
-        image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?w=300&h=300&fit=crop",
-        category: "Chapeaux",
-        subcategory: "homme",
-        rating: 4.6,
-        reviews: 15,
-        isNew: true,
-        colors: ["Blanc", "Beige"],
-        description: "Chapeau traditionnel sénégalais, parfait pour les cérémonies et occasions spéciales.",
-        sizes: ["S", "M", "L", "XL"],
-        gallery: [
-          "https://images.unsplash.com/photo-1521369909029-2afed882baee?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 3,
-        name: "Ceinture Cuir Tressé",
-        price: "25,000 FCFA",
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=300&fit=crop",
-        category: "Ceintures",
-        subcategory: "homme",
-        rating: 4.7,
-        reviews: 31,
-        colors: ["Marron", "Noir", "Tan"],
-        description: "Ceinture en cuir véritable tressé à la main par nos artisans locaux.",
-        sizes: ["85cm", "90cm", "95cm", "100cm", "105cm"],
-        gallery: [
-          "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 4,
-        name: "Sac Bandoulière",
-        price: "35,000 FCFA",
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=300&fit=crop",
-        category: "Sacs",
-        subcategory: "homme",
-        rating: 4.5,
-        reviews: 12,
-        colors: ["Marron", "Noir"],
-        description: "Sac bandoulière spacieux et pratique, idéal pour le travail ou les sorties.",
-        gallery: [
-          "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 5,
-        name: "Chaîne Traditionnelle",
-        price: "28,000 FCFA",
-        image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop",
-        category: "Bijoux",
-        subcategory: "homme",
-        rating: 4.9,
-        reviews: 8,
-        colors: ["Or", "Argent"],
-        description: "Chaîne traditionnelle en métal précieux, symbole de prestige et d'élégance.",
-        gallery: [
-          "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 6,
-        name: "Bracelet Artisanal",
-        price: "12,000 FCFA",
-        image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop",
-        category: "Bijoux",
-        subcategory: "homme",
-        rating: 4.4,
-        reviews: 19,
-        colors: ["Cuir", "Métal"],
-        description: "Bracelet artisanal fait main, alliant tradition et modernité.",
-        gallery: [
-          "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=500&h=500&fit=crop"
-        ]
-      }
-    ],
-    femme: [
-      {
-        id: 7,
-        name: "Chaussures Talons",
-        price: "38,000 FCFA",
-        image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=300&h=300&fit=crop",
-        category: "Chaussures",
-        subcategory: "femme",
-        rating: 4.7,
-        reviews: 45,
-        colors: ["Rouge", "Noir", "Beige"],
-        description: "Chaussures à talons élégantes, parfaites pour sublimer vos tenues traditionnelles.",
-        sizes: ["36", "37", "38", "39", "40", "41"],
-        gallery: [
-          "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 8,
-        name: "Foulard Wax",
-        price: "18,000 FCFA",
-        image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&h=300&fit=crop",
-        category: "Foulards",
-        subcategory: "femme",
-        rating: 4.8,
-        reviews: 67,
-        isNew: true,
-        colors: ["Multicolore"],
-        description: "Foulard en wax authentique aux motifs traditionnels africains.",
-        gallery: [
-          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 9,
-        name: "Boucles d'Oreilles",
-        price: "22,000 FCFA",
-        image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop",
-        category: "Bijoux",
-        subcategory: "femme",
-        rating: 4.9,
-        reviews: 34,
-        colors: ["Or", "Argent"],
-        description: "Boucles d'oreilles traditionnelles en métal précieux, finition soignée.",
-        gallery: [
-          "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 10,
-        name: "Sac à Main Tressé",
-        price: "42,000 FCFA",
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=300&fit=crop",
-        category: "Sacs",
-        subcategory: "femme",
-        rating: 4.6,
-        reviews: 28,
-        colors: ["Naturel", "Noir", "Rouge"],
-        description: "Sac à main tressé artisanalement, spacieux et résistant.",
-        gallery: [
-          "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 11,
-        name: "Collier Perles",
-        price: "35,000 FCFA",
-        originalPrice: "45,000 FCFA",
-        image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop",
-        category: "Bijoux",
-        subcategory: "femme",
-        rating: 4.8,
-        reviews: 52,
-        discount: "-22%",
-        colors: ["Blanc", "Rouge", "Noir"],
-        description: "Collier de perles traditionnel, symbole d'élégance et de féminité.",
-        gallery: [
-          "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=500&h=500&fit=crop"
-        ]
-      }
-    ],
-    enfant: [
-      {
-        id: 16,
-        name: "Chaussures Filles",
-        price: "25,000 FCFA",
-        image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=300&h=300&fit=crop",
-        category: "Chaussures",
-        subcategory: "enfant",
-        rating: 4.8,
-        reviews: 18,
-        colors: ["Rose", "Blanc", "Rouge"],
-        description: "Chaussures confortables et colorées pour petites princesses.",
-        sizes: ["24", "25", "26", "27", "28", "29", "30"],
-        gallery: [
-          "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 17,
-        name: "Casquette Enfant",
-        price: "12,000 FCFA",
-        image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?w=300&h=300&fit=crop",
-        category: "Chapeaux",
-        subcategory: "enfant",
-        rating: 4.5,
-        reviews: 9,
-        isNew: true,
-        colors: ["Bleu", "Rouge", "Vert"],
-        description: "Casquette colorée et amusante pour protéger du soleil.",
-        sizes: ["S", "M"],
-        gallery: [
-          "https://images.unsplash.com/photo-1521369909029-2afed882baee?w=500&h=500&fit=crop"
-        ]
-      },
-      {
-        id: 18,
-        name: "Sac École",
-        price: "18,000 FCFA",
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=300&fit=crop",
-        category: "Sacs",
-        subcategory: "enfant",
-        rating: 4.6,
-        reviews: 25,
-        colors: ["Bleu", "Rose", "Vert"],
-        description: "Sac d'école robuste et pratique avec compartiments multiples.",
-        gallery: [
-          "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop"
-        ]
-      }
-    ]
+  // Charger les données depuis l'API
+  useEffect(() => {
+    chargerDonnees();
+  }, []);
+
+  const chargerDonnees = async () => {
+    try {
+      setLoading(true);
+      
+      // Récupérer les catégories et produits en parallèle
+      const [categoriesData, produitsData] = await Promise.all([
+        categorieService.getAllCategories(),
+        produitService.getAllProduits(0, 1000)
+      ]);
+
+      // Filtrer seulement les catégories d'accessoires
+      const categoriesAccessoires = categoriesData.filter(cat => 
+        cat.active && cat.type === 'ACCESSOIRES'
+      );
+
+      // Filtrer seulement les produits d'accessoires
+      const produitsAccessoires = (produitsData.content || produitsData || []).filter((p: any) => 
+        categoriesAccessoires.some(cat => cat.id === p.categorieId)
+      );
+
+      setCategories(categoriesAccessoires);
+      setProducts(produitsAccessoires);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      // En cas d'erreur, utiliser des données par défaut
+      setCategories([]);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fusionner tous les accessoires
-  const allAccessories = [...accessories.homme, ...accessories.femme, ...accessories.enfant];
+  // Transformer les produits de l'API pour le format d'affichage
+  const transformerProduit = (produit: any) => {
+    const categorie = categories.find(cat => cat.id === produit.categorieId);
+    
+    return {
+      id: produit.id,
+      name: produit.nom,
+      price: `${new Intl.NumberFormat('fr-FR').format(produit.prix)} FCFA`,
+      originalPrice: produit.prixPromo ? `${new Intl.NumberFormat('fr-FR').format(produit.prixPromo)} FCFA` : null,
+      image: produit.imageUrl || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop',
+      category: categorie?.nom || 'Accessoire',
+      subcategory: categorie?.genre?.toLowerCase() || 'homme',
+      rating: 4.5, // Note par défaut
+      reviews: Math.floor(Math.random() * 50) + 5, // Nombre d'avis aléatoire
+      isNew: Math.random() > 0.7, // 30% de chance d'être nouveau
+      discount: produit.prixPromo ? `-${Math.round((1 - produit.prix / produit.prixPromo) * 100)}%` : null,
+      colors: produit.couleur ? [produit.couleur] : ['Blanc', 'Noir', 'Marron'],
+      description: produit.description || 'Accessoire artisanal de qualité supérieure.',
+      sizes: produit.taille ? [produit.taille] : ['S', 'M', 'L'],
+      gallery: [
+        produit.imageUrl || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&h=500&fit=crop',
+        ...(produit.imagesSupplementaires || [])
+      ]
+    };
+  };
 
-  const categories = [
+  // Transformer tous les produits
+  const allAccessories = products.map(transformerProduit);
+
+  // Créer les catégories dynamiquement
+  const categoriesList = [
     { id: 'all', name: 'Tous', count: allAccessories.length },
-    { id: 'homme', name: 'Homme', count: accessories.homme.length },
-    { id: 'femme', name: 'Femme', count: accessories.femme.length },
-    { id: 'enfant', name: 'Enfant', count: accessories.enfant.length }
+    { id: 'homme', name: 'Homme', count: allAccessories.filter(p => p.subcategory === 'homme').length },
+    { id: 'femme', name: 'Femme', count: allAccessories.filter(p => p.subcategory === 'femme').length },
+    { id: 'enfant', name: 'Enfant', count: allAccessories.filter(p => p.subcategory === 'enfant').length }
   ];
 
+  // Sous-catégories dynamiques basées sur les vraies catégories
   const subcategories = {
-    homme: ["Chaussures", "Chapeaux", "Ceintures", "Sacs", "Bijoux"],
-    femme: ["Chaussures", "Foulards", "Bijoux", "Sacs", "Ceintures"],
-    enfant: ["Chaussures", "Chapeaux", "Sacs", "Bijoux"]
+    homme: [...new Set(allAccessories.filter(p => p.subcategory === 'homme').map(p => p.category))],
+    femme: [...new Set(allAccessories.filter(p => p.subcategory === 'femme').map(p => p.category))],
+    enfant: [...new Set(allAccessories.filter(p => p.subcategory === 'enfant').map(p => p.category))]
   };
 
   // Fonction pour filtrer les accessoires
@@ -299,28 +133,28 @@ const AccessoiresPage = ({ onNavigate }) => {
   });
 
   // Fonction pour ouvrir WhatsApp avec message
-  const handleWhatsAppOrder = (product) => {
+  const handleWhatsAppOrder = (product: any) => {
     const message = `Bonjour, je suis intéressé(e) par le produit : ${product.name} au prix de ${product.price}. Pourriez-vous me donner plus d'informations ?`;
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   // Fonction pour afficher les détails d'un produit
-  const handleProductClick = (productId) => {
+  const handleProductClick = (productId: any) => {
     const product = allAccessories.find(item => item.id === productId);
     if (product) {
       setSelectedProduct(product);
     }
   };
 
-  const handleWishlistClick = (e, productId) => {
+  const handleWishlistClick = (e: any, productId: any) => {
     e.stopPropagation();
     // Logique wishlist
     console.log('Ajouté aux favoris:', productId);
   };
 
   // Composant pour les détails du produit
-  const ProductDetails = ({ product, onClose }) => {
+  const ProductDetails = ({ product, onClose }: { product: any, onClose: any }) => {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || '');
     const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '');
@@ -353,7 +187,7 @@ const AccessoiresPage = ({ onNavigate }) => {
                 </div>
                 {product.gallery && product.gallery.length > 1 && (
                   <div className="flex space-x-2">
-                    {product.gallery.map((img, index) => (
+                    {product.gallery.map((img: any, index: any) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImageIndex(index)}
@@ -410,7 +244,7 @@ const AccessoiresPage = ({ onNavigate }) => {
                   <div className="mb-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-2">Couleur</h3>
                     <div className="flex space-x-2">
-                      {product.colors.map((color) => (
+                      {product.colors.map((color: any) => (
                         <button
                           key={color}
                           onClick={() => setSelectedColor(color)}
@@ -432,7 +266,7 @@ const AccessoiresPage = ({ onNavigate }) => {
                   <div className="mb-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-2">Taille</h3>
                     <div className="flex flex-wrap gap-2">
-                      {product.sizes.map((size) => (
+                      {product.sizes.map((size: any) => (
                         <button
                           key={size}
                           onClick={() => setSelectedSize(size)}
@@ -478,6 +312,19 @@ const AccessoiresPage = ({ onNavigate }) => {
     return <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />;
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            <span className="ml-3 text-gray-600">Chargement des accessoires...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -513,7 +360,7 @@ const AccessoiresPage = ({ onNavigate }) => {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Catégories</h3>
                 <div className="space-y-2">
-                  {categories.map((cat) => (
+                  {categoriesList.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => {
@@ -534,7 +381,7 @@ const AccessoiresPage = ({ onNavigate }) => {
               </div>
 
               {/* Types/Sous-catégories */}
-              {selectedCategory !== 'all' && subcategories[selectedCategory] && (
+              {selectedCategory !== 'all' && (subcategories as any)[selectedCategory] && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Types</h3>
                   <div className="space-y-1">
@@ -548,7 +395,7 @@ const AccessoiresPage = ({ onNavigate }) => {
                     >
                       Tous les types
                     </button>
-                    {subcategories[selectedCategory].map((subcat) => (
+                    {(subcategories as any)[selectedCategory].map((subcat: any) => (
                       <button
                         key={subcat}
                         onClick={() => setSelectedType(subcat)}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Crown, 
@@ -8,9 +8,7 @@ import {
   Eye,
   ShoppingCart,
   Heart,
-  Clock,
   MapPin,
-  Filter,
   Search,
   Grid3X3,
   List,
@@ -20,86 +18,138 @@ import {
   MessageSquare
 } from 'lucide-react';
 import ProductModal from './ProductModal';
-import { genreCategorieService } from '../services/genreCategorieService';
-import { typeCategorieService } from '../services/typeCategorieService';
-import { categorieCombinaisonService } from '../services/categorieCombinaisonService';
+import categorieService from '../services/categorieService';
+import produitService from '../services/produitService';
 
-const CategoriesPage = ({ onBack }) => {
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [wishlist, setWishlist] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Charger les catégories depuis l'API
+  // Charger les données depuis l'API
   useEffect(() => {
-    chargerCategories();
+    chargerDonnees();
   }, []);
 
-  const chargerCategories = async () => {
+  const chargerDonnees = async () => {
     try {
       setLoading(true);
       
-      // Récupérer les genres et types
-      const [genres, types] = await Promise.all([
-        genreCategorieService.obtenirTousLesGenres(),
-        typeCategorieService.obtenirTousLesTypes()
+      // Récupérer les catégories et produits en parallèle
+      const [categoriesData, produitsData] = await Promise.all([
+        categorieService.getAllCategories(),
+        produitService.getAllProduits(0, 1000)
       ]);
 
-      // Grouper par type de catégorie (VETEMENTS, ACCESSOIRES)
-      const categoriesGroupees = [
-        {
+      // Grouper les catégories par type (VETEMENTS, ACCESSOIRES)
+      const categoriesVetements = categoriesData.filter(cat => 
+        cat.active && cat.type === 'VETEMENTS'
+      );
+      const categoriesAccessoires = categoriesData.filter(cat => 
+        cat.active && cat.type === 'ACCESSOIRES'
+      );
+
+      // Créer les catégories principales avec les vraies données
+      const categoriesGroupees: any[] = [];
+
+      // Vêtements
+      if (categoriesVetements.length > 0) {
+        const produitsVetements = (produitsData.content || produitsData || []).filter((p: any) => 
+          categoriesVetements.some(cat => cat.id === p.categorieId)
+        );
+
+        categoriesGroupees.push({
           id: 'vetements',
           name: 'Vêtements',
           description: 'Hommes, Femmes, Enfants',
           icon: Shirt,
           image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
           color: 'from-blue-500 to-indigo-600',
-          productCount: 120,
+          productCount: produitsVetements.length,
           subcategories: []
-        },
-        {
+        });
+
+        // Grouper les vêtements par genre
+        const genres = ['HOMME', 'FEMME', 'ENFANT'];
+        genres.forEach(genre => {
+          const categoriesDuGenre = categoriesVetements.filter(cat => cat.genre === genre);
+          if (categoriesDuGenre.length > 0) {
+            const icon = genre === 'HOMME' ? Users : genre === 'FEMME' ? Crown : Baby;
+            const nomGenre = genre === 'HOMME' ? 'Hommes' : genre === 'FEMME' ? 'Femmes' : 'Enfants';
+            
+            // Compter les produits pour ce genre
+            const produitsDuGenre = produitsVetements.filter((p: any) => 
+              categoriesDuGenre.some(cat => cat.id === p.categorieId)
+            );
+
+            categoriesGroupees[0].subcategories.push({
+              id: `vetements-${genre.toLowerCase()}`,
+              name: nomGenre,
+              description: categoriesDuGenre.map(cat => cat.nom).join(', '),
+              icon: icon,
+              image: categoriesDuGenre[0]?.imageUrl || 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
+              productCount: produitsDuGenre.length,
+              categories: categoriesDuGenre
+            });
+          }
+        });
+      }
+
+      // Accessoires
+      if (categoriesAccessoires.length > 0) {
+        const produitsAccessoires = (produitsData.content || produitsData || []).filter((p: any) => 
+          categoriesAccessoires.some(cat => cat.id === p.categorieId)
+        );
+
+        categoriesGroupees.push({
           id: 'accessoires',
           name: 'Accessoires',
           description: 'Bonnets/Chapeaux, Chaussures, Sacs, Bijoux',
           icon: Gem,
           image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
           color: 'from-purple-500 to-violet-600',
-          productCount: 85,
+          productCount: produitsAccessoires.length,
           subcategories: []
-        }
-      ];
+        });
 
-      // Pour chaque catégorie, récupérer ses genres et types
-      for (const categorie of categoriesGroupees) {
-        const typeCategorie = categorie.id === 'vetements' ? 'VETEMENTS' : 'ACCESSOIRES';
-        
-        // Récupérer les genres pour ce type
-        const genresDuType = genres.filter(g => g.type === typeCategorie);
-        
-        // Pour chaque genre, récupérer ses types associés
-        for (const genre of genresDuType) {
-          const typesAssocies = await categorieCombinaisonService.obtenirTypesParGenre(genre.id);
-          
-          categorie.subcategories.push({
-            id: genre.id,
-            name: genre.nom,
-            description: typesAssocies.map(t => t.nom).join(', '),
-            icon: genre.nom === 'Homme' ? Users : genre.nom === 'Femme' ? Crown : Baby,
-            image: genre.imageUrl || 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
-            productCount: 0,
-            types: typesAssocies
-          });
-        }
+        // Grouper les accessoires par genre
+        const genres = ['HOMME', 'FEMME', 'ENFANT'];
+        genres.forEach(genre => {
+          const categoriesDuGenre = categoriesAccessoires.filter(cat => cat.genre === genre);
+          if (categoriesDuGenre.length > 0) {
+            const icon = genre === 'HOMME' ? Users : genre === 'FEMME' ? Crown : Baby;
+            const nomGenre = genre === 'HOMME' ? 'Hommes' : genre === 'FEMME' ? 'Femmes' : 'Enfants';
+            
+            // Compter les produits pour ce genre
+            const produitsDuGenre = produitsAccessoires.filter((p: any) => 
+              categoriesDuGenre.some(cat => cat.id === p.categorieId)
+            );
+
+            categoriesGroupees[1].subcategories.push({
+              id: `accessoires-${genre.toLowerCase()}`,
+              name: nomGenre,
+              description: categoriesDuGenre.map(cat => cat.nom).join(', '),
+              icon: icon,
+              image: categoriesDuGenre[0]?.imageUrl || 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
+              productCount: produitsDuGenre.length,
+              categories: categoriesDuGenre
+            });
+          }
+        });
       }
 
       setCategories(categoriesGroupees);
+      setProducts(produitsData.content || produitsData || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des catégories:', error);
+      console.error('Erreur lors du chargement des données:', error);
       // En cas d'erreur, utiliser les données par défaut
       setCategories(categoriesParDefaut);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -114,33 +164,8 @@ const CategoriesPage = ({ onBack }) => {
       icon: Shirt,
       image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
       color: 'from-blue-500 to-indigo-600',
-      productCount: 120,
-      subcategories: [
-        {
-          id: 'hommes',
-          name: 'Hommes',
-          description: 'Grands boubous, costumes traditionnels, kaftans',
-          icon: Users,
-          image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
-          productCount: 45
-        },
-        {
-          id: 'femmes',
-          name: 'Femmes',
-          description: 'Boubous, robes, ensembles bazin, caftans',
-          icon: Crown,
-          image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
-          productCount: 65
-        },
-        {
-          id: 'enfants',
-          name: 'Enfants',
-          description: 'Tenues traditionnelles pour enfants',
-          icon: Baby,
-          image: 'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=400',
-          productCount: 10
-        }
-      ]
+      productCount: 0,
+      subcategories: []
     },
     {
       id: 'accessoires',
@@ -149,257 +174,71 @@ const CategoriesPage = ({ onBack }) => {
       icon: Gem,
       image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
       color: 'from-purple-500 to-violet-600',
-      productCount: 85,
-      subcategories: [
-        {
-          id: 'bonnets-chapeaux',
-          name: 'Bonnets/Chapeaux',
-          description: 'Couvre-chefs traditionnels et modernes',
-          icon: Crown,
-          image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=400',
-          productCount: 15
-        },
-        {
-          id: 'chaussures',
-          name: 'Chaussures',
-          description: 'Babouches, sandales, chaussures artisanales',
-          icon: Shirt,
-          image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=400',
-          productCount: 25
-        },
-        {
-          id: 'sacs',
-          name: 'Sacs',
-          description: 'Sacs à main, besaces, maroquinerie',
-          icon: Gem,
-          image: 'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=400',
-          productCount: 20
-        },
-        {
-          id: 'bijoux',
-          name: 'Bijoux',
-          description: 'Colliers, bracelets, boucles d\'oreilles',
-          icon: Star,
-          image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
-          productCount: 25
-        }
-      ]
+      productCount: 0,
+      subcategories: []
     }
   ];
 
-  const products = [
-    {
-      id: 1,
-      name: 'Grand Boubou Brodé Premium',
-      description: 'Magnifique grand boubou avec broderies dorées fait main. Tissu wax premium importé de Côte d\'Ivoire. Pièce unique créée selon les traditions ancestrales sénégalaises.',
-      price: 45000,
-      originalPrice: 55000,
+  // Transformer les produits de l'API pour le format d'affichage
+  const transformerProduit = (produit: any) => {
+    const categorie = categories.find(cat => 
+      cat.subcategories.some((sub: any) => 
+        sub.categories?.some((c: any) => c.id === produit.categorieId)
+      )
+    );
+    
+    const sousCategorie = categorie?.subcategories.find((sub: any) => 
+      sub.categories?.some((c: any) => c.id === produit.categorieId)
+    );
+
+    return {
+      id: produit.id,
+      name: produit.nom,
+      description: produit.description || 'Produit artisanal de qualité',
+      price: produit.prix,
+      originalPrice: produit.prixPromo ? produit.prix : null,
       currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
+      image: produit.imageUrl || 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=500',
       images: [
-        'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=800'
+        produit.imageUrl || 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=800',
+        ...(produit.imagesSupplementaires || [])
       ],
-      rating: 4.8,
-      reviews: 24,
-      status: 'En stock',
-      category: 'Vêtements',
-      subcategory: 'Femmes',
-      quality: 'Optimal',
-      colors: ['#FF6B35', '#004E89', '#F7C52D'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      weight: '0.8 kg',
-      dimensions: 'L: 150cm, l: 120cm',
-      vendor: 'Atelier Fatou',
+      rating: 4.5, // Note par défaut
+      reviews: Math.floor(Math.random() * 50) + 5, // Nombre d'avis aléatoire
+      status: produit.statut === 'ACTIF' ? 'En stock' : 'Indisponible',
+      category: categorie?.name || 'Vêtements',
+      subcategory: sousCategorie?.name || 'Général',
+      quality: produit.prix > 30000 ? 'Optimal' : 'Normale',
+      colors: produit.couleur ? [produit.couleur] : ['#FF6B35', '#004E89', '#F7C52D'],
+      sizes: produit.taille ? [produit.taille] : ['S', 'M', 'L', 'XL'],
+      weight: produit.poids ? `${produit.poids} kg` : '0.5 kg',
+      dimensions: 'Dimensions variables',
+      vendor: produit.vendeurNom || produit.vendeurBoutique || 'Artisan Local',
       delivery: {
         express: '2-5 jours',
         normal: '5-20 jours'
       },
-      location: 'Dakar, Sénégal',
+      location: 'Sénégal',
       customizable: true,
-      history: 'Le grand boubou est un vêtement traditionnel sénégalais porté lors des grandes occasions. Cette pièce perpétue un savoir-faire ancestral transmis de génération en génération.'
-    },
-    {
-      id: 2,
-      name: 'Kaftan Homme Traditionnel',
-      description: 'Kaftan élégant pour homme avec broderies sophistiquées et finitions premium. Coupe traditionnelle adaptée aux morphologies modernes.',
-      price: 38000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=500',
-      images: [
-        'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      rating: 4.6,
-      reviews: 15,
-      status: 'En stock',
-      category: 'Vêtements',
-      subcategory: 'Hommes',
-      quality: 'Normale',
-      colors: ['#8B4513', '#000080', '#228B22'],
-      sizes: ['M', 'L', 'XL', 'XXL'],
-      weight: '0.7 kg',
-      dimensions: 'L: 140cm, l: 110cm',
-      vendor: 'Maître Ibrahima',
-      delivery: {
-        express: '3-5 jours',
-        normal: '7-15 jours'
-      },
-      location: 'Kaolack, Sénégal',
-      customizable: true,
-      history: 'Le kaftan masculin est une tenue d\'apparat portée lors des cérémonies importantes. Sa coupe ample offre confort et élégance.'
-    },
-    {
-      id: 3,
-      name: 'Ensemble Enfant Coloré',
-      description: 'Adorable ensemble traditionnel pour enfant en tissu wax coloré. Parfait pour les fêtes et cérémonies familiales.',
-      price: 18000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=500',
-      images: [
-        'https://images.pexels.com/photos/3671083/pexels-photo-3671083.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      rating: 4.9,
-      reviews: 12,
-      status: 'En stock',
-      category: 'Vêtements',
-      subcategory: 'Enfants',
-      quality: 'Normale',
-      colors: ['#FF6B35', '#32CD32', '#4169E1'],
-      sizes: ['2-4 ans', '4-6 ans', '6-8 ans', '8-10 ans'],
-      weight: '0.3 kg',
-      dimensions: 'Selon âge',
-      vendor: 'Couture Enfantine',
-      delivery: {
-        express: '2-4 jours',
-        normal: '5-12 jours'
-      },
-      location: 'Dakar, Sénégal',
-      customizable: false,
-      history: 'Les tenues traditionnelles pour enfants initient les plus jeunes à la richesse culturelle sénégalaise dès le plus jeune âge.'
-    },
-    {
-      id: 4,
-      name: 'Bonnet Traditionnel Brodé',
-      description: 'Bonnet traditionnel sénégalais avec broderies dorées. Accessoire indispensable pour compléter une tenue traditionnelle masculine.',
-      price: 8000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=500',
-      images: [
-        'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      rating: 4.5,
-      reviews: 28,
-      status: 'En stock',
-      category: 'Accessoires',
-      subcategory: 'Bonnets/Chapeaux',
-      quality: 'Normale',
-      colors: ['#000000', '#8B4513', '#FF6B35'],
-      sizes: ['S', 'M', 'L'],
-      weight: '0.1 kg',
-      dimensions: 'Tour de tête: 54-60cm',
-      vendor: 'Accessoires Traditionnels',
-      delivery: {
-        express: '1-3 jours',
-        normal: '3-10 jours'
-      },
-      location: 'Saint-Louis, Sénégal',
-      customizable: true,
-      history: 'Le bonnet traditionnel, appelé "calotte", est un symbole de respect et de tradition dans la culture sénégalaise.'
-    },
-    {
-      id: 5,
-      name: 'Babouches Cuir Artisanales',
-      description: 'Babouches traditionnelles en cuir véritable, confectionnées selon les méthodes ancestrales. Confort et élégance pour tous les jours.',
-      price: 15000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=500',
-      images: [
-        'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      rating: 4.3,
-      reviews: 19,
-      status: 'En stock',
-      category: 'Accessoires',
-      subcategory: 'Chaussures',
-      quality: 'Normale',
-      colors: ['#8B4513', '#000000', '#FF6B35'],
-      sizes: ['36', '37', '38', '39', '40', '41', '42', '43'],
-      weight: '0.6 kg',
-      dimensions: 'Pointures européennes',
-      vendor: 'Cordonnerie Traditionnelle',
-      delivery: {
-        express: '2-4 jours',
-        normal: '5-15 jours'
-      },
-      location: 'Touba, Sénégal',
-      customizable: false,
-      history: 'Les babouches sont des chaussures traditionnelles d\'Afrique du Nord adoptées et adaptées par l\'artisanat sénégalais.'
-    },
-    {
-      id: 6,
-      name: 'Sac à Main Cuir Artisanal',
-      description: 'Sac à main en cuir véritable avec motifs traditionnels gravés à la main. Maroquinerie de qualité supérieure alliant tradition et modernité.',
-      price: 25000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=500',
-      images: [
-        'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      rating: 4.5,
-      reviews: 28,
-      status: 'Stock limité',
-      category: 'Accessoires',
-      subcategory: 'Sacs',
-      quality: 'Optimal',
-      colors: ['#8B4513', '#000000', '#800000'],
-      sizes: ['Unique'],
-      weight: '0.5 kg',
-      dimensions: 'L: 30cm, H: 25cm, P: 12cm',
-      vendor: 'Maroquinerie Salam',
-      delivery: {
-        express: '2-5 jours',
-        normal: '5-15 jours'
-      },
-      location: 'Mbour, Sénégal',
-      customizable: false,
-      history: 'La maroquinerie sénégalaise puise ses techniques dans l\'artisanat traditionnel du travail du cuir, perfectionnées au fil des générations.'
-    },
-    {
-      id: 7,
-      name: 'Collier Perles Traditionnelles',
-      description: 'Collier artisanal en perles de verre colorées selon la tradition sénégalaise. Chaque perle est sélectionnée et assemblée à la main par nos artisans bijoutiers.',
-      price: 12000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=500',
-      images: [
-        'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ],
-      rating: 4.7,
-      reviews: 32,
-      status: 'En stock',
-      category: 'Accessoires',
-      subcategory: 'Bijoux',
-      quality: 'Normale',
-      colors: ['#FF4500', '#32CD32', '#4169E1'],
-      sizes: ['Unique'],
-      weight: '0.1 kg',
-      dimensions: 'Longueur: 45cm',
-      vendor: 'Bijoux Khadija',
-      delivery: {
-        express: '1-3 jours',
-        normal: '2-10 jours'
-      },
-      location: 'Saint-Louis, Sénégal',
-      customizable: true,
-      history: 'Les perles de verre sont un art ancestral au Sénégal, utilisées dans les parures traditionnelles depuis des siècles.'
-    }
-  ];
+      history: 'Produit artisanal créé selon les traditions sénégalaises, perpétuant un savoir-faire ancestral transmis de génération en génération.'
+    };
+  };
 
   const filteredProducts = selectedCategory 
-    ? products.filter(product => product.category === selectedCategory.name)
+    ? products
+        .filter((product: any) => {
+          // Trouver la catégorie du produit
+          const categorieProduit = categories.find(cat => 
+            cat.subcategories.some((sub: any) => 
+              sub.categories?.some((c: any) => c.id === product.categorieId)
+            )
+          );
+          return categorieProduit?.id === selectedCategory.id;
+        })
+        .map(transformerProduit)
     : [];
 
-  const toggleWishlist = (productId) => {
+  const toggleWishlist = (productId: number) => {
     const newWishlist = new Set(wishlist);
     if (newWishlist.has(productId)) {
       newWishlist.delete(productId);
@@ -409,17 +248,17 @@ const CategoriesPage = ({ onBack }) => {
     setWishlist(newWishlist);
   };
 
-  const formatPrice = (price, currency) => {
+  const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' ' + currency;
   };
 
-  const handleOrderWhatsApp = (product) => {
+  const handleOrderWhatsApp = (product: any) => {
     const message = `Bonjour, je suis intéressé(e) par le produit: ${product.name} - Prix: ${formatPrice(product.price, product.currency)}`;
     const whatsappUrl = `https://wa.me/221771234567?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
-  const handleOrderForm = (product) => {
+  const handleOrderForm = (product: any) => {
     console.log('Commande via formulaire:', product);
     // Redirection vers formulaire de commande
   };
@@ -486,7 +325,7 @@ const CategoriesPage = ({ onBack }) => {
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Sous-catégories</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {selectedCategory.subcategories.map((sub, index) => {
+              {selectedCategory.subcategories.map((sub: any, index: number) => {
                 const IconComponent = sub.icon;
                 return (
                   <div
@@ -515,7 +354,7 @@ const CategoriesPage = ({ onBack }) => {
               ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
               : 'space-y-6'
           }>
-            {filteredProducts.map((product) => (
+            {filteredProducts.map((product: any) => (
               <div
                 key={product.id}
                 className={`bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group ${
@@ -707,7 +546,7 @@ const CategoriesPage = ({ onBack }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-            {categories.map((category) => {
+            {categories.map((category: any) => {
             const IconComponent = category.icon;
             return (
               <div
@@ -753,7 +592,7 @@ const CategoriesPage = ({ onBack }) => {
                   
                   {/* Subcategories Preview */}
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {category.subcategories.slice(0, 3).map((sub, index) => (
+                    {category.subcategories.slice(0, 3).map((sub: any, index: number) => (
                       <span
                         key={index}
                         className="px-3 py-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 rounded-full text-sm font-medium border border-orange-200"

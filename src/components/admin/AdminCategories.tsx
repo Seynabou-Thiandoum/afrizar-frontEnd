@@ -11,7 +11,7 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { categorieService, Categorie } from '../../services/categorieService';
+import categorieService, { Categorie } from '../../services/categorieService';
 import ImageUpload from '../common/ImageUpload';
 
 const AdminCategories: React.FC = () => {
@@ -22,6 +22,7 @@ const AdminCategories: React.FC = () => {
   const [selectedCategorie, setSelectedCategorie] = useState<Categorie | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'VETEMENTS' | 'ACCESSOIRES' | 'TOUS'>('TOUS');
+  const [filterGenre, setFilterGenre] = useState<'HOMME' | 'FEMME' | 'ENFANT' | 'TOUS'>('TOUS');
   const [loading, setLoading] = useState(false);
   
   const [categorieForm, setCategorieForm] = useState({
@@ -32,25 +33,21 @@ const AdminCategories: React.FC = () => {
     genre: 'HOMME' as 'HOMME' | 'FEMME' | 'ENFANT',
     imageUrl: '',
     ordre: 0,
-    active: true,
-    parentId: null as number | null
+    active: true
   });
 
-  // Genres fixes
-  const genresDisponibles = ['HOMME', 'FEMME', 'ENFANT'];
-
   useEffect(() => {
-    chargerTypes();
+    chargerCategories();
   }, []);
 
   useEffect(() => {
-    filtrerTypes();
-  }, [searchTerm, filterType, categories]);
+    filtrerCategories();
+  }, [searchTerm, filterType, filterGenre, categories]);
 
-  const chargerTypes = async () => {
+  const chargerCategories = async () => {
     setLoading(true);
     try {
-      const categoriesData = await categorieService.getHierarchieComplete();
+      const categoriesData = await categorieService.getAllCategories();
       setCategories(categoriesData);
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
@@ -59,43 +56,46 @@ const AdminCategories: React.FC = () => {
     }
   };
 
-  const filtrerTypes = () => {
+  const filtrerCategories = () => {
     const terme = searchTerm.toLowerCase();
-    let categoriesFiltres = categories.filter(categorie => {
+    let categoriesFiltrees = categories.filter(categorie => {
       const correspondNom = categorie.nom.toLowerCase().includes(terme);
       const correspondType = filterType === 'TOUS' || categorie.type === filterType;
-      return correspondNom && correspondType;
+      const correspondGenre = filterGenre === 'TOUS' || categorie.genre === filterGenre;
+      return correspondNom && correspondType && correspondGenre;
     });
-    setCategoriesFiltres(categoriesFiltres);
+    setCategoriesFiltres(categoriesFiltrees);
   };
 
   const resetForm = () => {
-    setTypeForm({
+    setCategorieForm({
       nom: '',
+      slug: '',
       description: '',
       type: 'VETEMENTS',
+      genre: 'HOMME',
       imageUrl: '',
       ordre: 0,
-      active: true,
-      genres: []
+      active: true
     });
     setEditMode(false);
-    setSelectedType(null);
+    setSelectedCategorie(null);
   };
 
-  const openModal = (type?: Categorie) => {
-    if (type) {
-      setTypeForm({
-        nom: type.nom,
-        description: type.description || '',
-        type: type.type,
-        imageUrl: type.imageUrl || '',
-        ordre: type.ordre,
-        active: type.active,
-        genres: [] // On récupérera les genres associés si besoin
+  const openModal = (categorie?: Categorie) => {
+    if (categorie) {
+      setCategorieForm({
+        nom: categorie.nom,
+        slug: categorie.slug || '',
+        description: categorie.description || '',
+        type: categorie.type,
+        genre: categorie.genre,
+        imageUrl: categorie.imageUrl || '',
+        ordre: categorie.ordre,
+        active: categorie.active
       });
       setEditMode(true);
-      setSelectedType(type);
+      setSelectedCategorie(categorie);
     } else {
       resetForm();
     }
@@ -107,46 +107,25 @@ const AdminCategories: React.FC = () => {
     setLoading(true);
     
     try {
-      // Créer ou mettre à jour le type
-      const typeData: TypeCategorieFormData = {
-        nom: typeForm.nom,
-        description: typeForm.description,
-        type: typeForm.type,
-        imageUrl: typeForm.imageUrl,
-        ordre: typeForm.ordre,
-        active: typeForm.active
+      const categorieData = {
+        nom: categorieForm.nom,
+        slug: categorieForm.slug || categorieForm.nom.toLowerCase().replace(/\s+/g, '-'),
+        description: categorieForm.description,
+        type: categorieForm.type,
+        genre: categorieForm.genre,
+        imageUrl: categorieForm.imageUrl,
+        ordre: categorieForm.ordre,
+        active: categorieForm.active,
+        parentId: null // Pas de catégorie parente
       };
 
-      let typeId: number;
-      if (editMode && selectedType) {
-        const result = await typeCategorieService.mettreAJourType(selectedType.id, typeData);
-        typeId = result.id;
+      if (editMode && selectedCategorie) {
+        await categorieService.updateCategorie(selectedCategorie.id, categorieData);
       } else {
-        const result = await typeCategorieService.creerType(typeData);
-        typeId = result.id;
-      }
-
-      // Créer les associations avec les genres sélectionnés
-      if (!editMode && typeForm.genres.length > 0) {
-        // Récupérer tous les genres
-        const allGenres = await genreCategorieService.obtenirTousLesGenres();
-        
-        // Filtrer les genres sélectionnés
-        const genresSelectionnes = allGenres.filter(g => 
-          typeForm.genres.includes(g.nom.toUpperCase()) && g.type === typeForm.type
-        );
-
-        // Créer les associations
-        for (const genre of genresSelectionnes) {
-          try {
-            await categorieCombinaisonService.creerAssociation(genre.id, typeId);
-          } catch (error) {
-            console.error(`Erreur lors de l'association avec ${genre.nom}:`, error);
-          }
-        }
+        await categorieService.createCategorie(categorieData);
       }
       
-      await chargerTypes();
+      await chargerCategories();
       setShowModal(false);
       resetForm();
     } catch (error) {
@@ -157,38 +136,28 @@ const AdminCategories: React.FC = () => {
     }
   };
 
-  const toggleActive = async (type: TypeCategorie) => {
+  const toggleActive = async (categorie: Categorie) => {
     try {
-      if (type.active) {
-        await typeCategorieService.desactiverType(type.id);
-      } else {
-        await typeCategorieService.activerType(type.id);
-      }
-      await chargerTypes();
+      await categorieService.updateCategorie(categorie.id, {
+        ...categorie,
+        active: !categorie.active
+      });
+      await chargerCategories();
     } catch (error) {
       console.error('Erreur:', error);
     }
   };
 
-  const deleteType = async (type: TypeCategorie) => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer "${type.nom}" ?`)) {
+  const deleteCategorie = async (categorie: Categorie) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer "${categorie.nom}" ?`)) {
       try {
-        await typeCategorieService.supprimerType(type.id);
-        await chargerTypes();
+        await categorieService.deleteCategorie(categorie.id);
+        await chargerCategories();
       } catch (error) {
         console.error('Erreur:', error);
-        alert('Impossible de supprimer ce type. Il est peut-être utilisé par des produits.');
+        alert('Impossible de supprimer cette catégorie. Elle est peut-être utilisée par des produits.');
       }
     }
-  };
-
-  const toggleGenre = (genre: string) => {
-    setTypeForm(prev => ({
-      ...prev,
-      genres: prev.genres.includes(genre)
-        ? prev.genres.filter(g => g !== genre)
-        : [...prev.genres, genre]
-    }));
   };
 
   return (
@@ -203,7 +172,7 @@ const AdminCategories: React.FC = () => {
                 Gestion des Catégories
               </h1>
               <p className="text-gray-600 text-lg">
-                Gérez les types de produits (Boubous, Costumes, Robes...)
+                Gérez les catégories de produits par type et genre
               </p>
             </div>
             <button
@@ -237,10 +206,20 @@ const AdminCategories: React.FC = () => {
             <option value="VETEMENTS">👔 Vêtements</option>
             <option value="ACCESSOIRES">💎 Accessoires</option>
           </select>
+          <select
+            value={filterGenre}
+            onChange={(e) => setFilterGenre(e.target.value as any)}
+            className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all font-medium"
+          >
+            <option value="TOUS">👥 Tous les genres</option>
+            <option value="HOMME">👨 Homme</option>
+            <option value="FEMME">👩 Femme</option>
+            <option value="ENFANT">👶 Enfant</option>
+          </select>
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -268,6 +247,15 @@ const AdminCategories: React.FC = () => {
               <Tag className="w-12 h-12 text-purple-200" />
             </div>
           </div>
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium mb-1">Accessoires</p>
+                <p className="text-3xl font-bold">{categories.filter(t => t.type === 'ACCESSOIRES').length}</p>
+              </div>
+              <Tag className="w-12 h-12 text-orange-200" />
+            </div>
+          </div>
         </div>
 
         {/* Liste des catégories */}
@@ -277,14 +265,14 @@ const AdminCategories: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categoriesFiltres.map((type) => (
-              <div key={type.id} className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden group">
+            {categoriesFiltres.map((categorie) => (
+              <div key={categorie.id} className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden group">
                 {/* Image */}
                 <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                  {type.imageUrl ? (
+                  {categorie.imageUrl ? (
                     <img 
-                      src={type.imageUrl} 
-                      alt={type.nom}
+                      src={categorie.imageUrl} 
+                      alt={categorie.nom}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                   ) : (
@@ -296,22 +284,31 @@ const AdminCategories: React.FC = () => {
                   {/* Badge statut */}
                   <div className="absolute top-4 right-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
-                      type.active 
+                      categorie.active 
                         ? 'bg-green-500 text-white' 
                         : 'bg-gray-500 text-white'
                     }`}>
-                      {type.active ? '✓ Actif' : '✗ Inactif'}
+                      {categorie.active ? '✓ Actif' : '✗ Inactif'}
                     </span>
                   </div>
 
                   {/* Badge type */}
                   <div className="absolute top-4 left-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
-                      type.type === 'VETEMENTS' 
+                      categorie.type === 'VETEMENTS' 
                         ? 'bg-blue-500 text-white' 
                         : 'bg-purple-500 text-white'
                     }`}>
-                      {type.type === 'VETEMENTS' ? '👔 Vêtements' : '💎 Accessoires'}
+                      {categorie.type === 'VETEMENTS' ? '👔 Vêtements' : '💎 Accessoires'}
+                    </span>
+                  </div>
+
+                  {/* Badge genre */}
+                  <div className="absolute bottom-4 left-4">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold shadow-lg bg-white text-gray-900">
+                      {categorie.genre === 'HOMME' && '👨 Homme'}
+                      {categorie.genre === 'FEMME' && '👩 Femme'}
+                      {categorie.genre === 'ENFANT' && '👶 Enfant'}
                     </span>
                   </div>
                 </div>
@@ -319,38 +316,38 @@ const AdminCategories: React.FC = () => {
                 {/* Contenu */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">
-                    {type.nom}
+                    {categorie.nom}
                   </h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {type.description || 'Aucune description'}
+                    {categorie.description || 'Aucune description'}
                   </p>
                   
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <span>Ordre: {type.ordre}</span>
-                    <span>Genres: {type.nombreGenres || 0}</span>
+                    <span>Ordre: {categorie.ordre}</span>
+                    <span>ID: {categorie.id}</span>
                   </div>
 
                   {/* Actions */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => openModal(type)}
+                      onClick={() => openModal(categorie)}
                       className="flex-1 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 font-medium"
                     >
                       <Edit className="w-4 h-4" />
                       Modifier
                     </button>
                     <button
-                      onClick={() => toggleActive(type)}
+                      onClick={() => toggleActive(categorie)}
                       className={`px-4 py-2 rounded-lg transition-colors flex items-center justify-center ${
-                        type.active
+                        categorie.active
                           ? 'bg-orange-50 text-orange-700 hover:bg-orange-100'
                           : 'bg-green-50 text-green-700 hover:bg-green-100'
                       }`}
                     >
-                      {type.active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {categorie.active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                     <button
-                      onClick={() => deleteType(type)}
+                      onClick={() => deleteCategorie(categorie)}
                       className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -399,8 +396,8 @@ const AdminCategories: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={typeForm.nom}
-                    onChange={(e) => setTypeForm({ ...typeForm, nom: e.target.value })}
+                    value={categorieForm.nom}
+                    onChange={(e) => setCategorieForm({ ...categorieForm, nom: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                     placeholder="Ex: Boubous, Costumes, Robes..."
                     required
@@ -412,8 +409,8 @@ const AdminCategories: React.FC = () => {
                     Description
                   </label>
                   <textarea
-                    value={typeForm.description}
-                    onChange={(e) => setTypeForm({ ...typeForm, description: e.target.value })}
+                    value={categorieForm.description}
+                    onChange={(e) => setCategorieForm({ ...categorieForm, description: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                     rows={3}
                     placeholder="Description de la catégorie..."
@@ -426,8 +423,8 @@ const AdminCategories: React.FC = () => {
                       Type *
                     </label>
                     <select
-                      value={typeForm.type}
-                      onChange={(e) => setTypeForm({ ...typeForm, type: e.target.value as any })}
+                      value={categorieForm.type}
+                      onChange={(e) => setCategorieForm({ ...categorieForm, type: e.target.value as any })}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                     >
                       <option value="VETEMENTS">👔 Vêtements</option>
@@ -437,16 +434,31 @@ const AdminCategories: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Ordre d'affichage
+                      Genre *
                     </label>
-                    <input
-                      type="number"
-                      value={typeForm.ordre}
-                      onChange={(e) => setTypeForm({ ...typeForm, ordre: parseInt(e.target.value) || 0 })}
+                    <select
+                      value={categorieForm.genre}
+                      onChange={(e) => setCategorieForm({ ...categorieForm, genre: e.target.value as any })}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                      min="0"
-                    />
+                    >
+                      <option value="HOMME">👨 Homme</option>
+                      <option value="FEMME">👩 Femme</option>
+                      <option value="ENFANT">👶 Enfant</option>
+                    </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Ordre d'affichage
+                  </label>
+                  <input
+                    type="number"
+                    value={categorieForm.ordre}
+                    onChange={(e) => setCategorieForm({ ...categorieForm, ordre: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    min="0"
+                  />
                 </div>
 
                 <div>
@@ -454,46 +466,18 @@ const AdminCategories: React.FC = () => {
                     Image de la catégorie
                   </label>
                   <ImageUpload
-                    type="categorie"
-                    onImageUploaded={(url) => setTypeForm({ ...typeForm, imageUrl: url })}
-                    currentImageUrl={typeForm.imageUrl}
+                    type="general"
+                    onImageUploaded={(url) => setCategorieForm({ ...categorieForm, imageUrl: url })}
+                    currentImageUrl={categorieForm.imageUrl}
                   />
                 </div>
-
-                {!editMode && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Disponible pour *
-                    </label>
-                    <div className="flex gap-3">
-                      {genresDisponibles.map(genre => (
-                        <button
-                          key={genre}
-                          type="button"
-                          onClick={() => toggleGenre(genre)}
-                          className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all font-medium ${
-                            typeForm.genres.includes(genre)
-                              ? 'bg-red-50 border-red-500 text-red-700'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                          }`}
-                        >
-                          {typeForm.genres.includes(genre) && <Check className="w-4 h-4 inline mr-2" />}
-                          {genre === 'HOMME' ? '👨 Homme' : genre === 'FEMME' ? '👩 Femme' : '👶 Enfant'}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Sélectionnez les genres pour lesquels cette catégorie sera disponible
-                    </p>
-                  </div>
-                )}
 
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                   <input
                     type="checkbox"
                     id="active"
-                    checked={typeForm.active}
-                    onChange={(e) => setTypeForm({ ...typeForm, active: e.target.checked })}
+                    checked={categorieForm.active}
+                    onChange={(e) => setCategorieForm({ ...categorieForm, active: e.target.checked })}
                     className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
                   />
                   <label htmlFor="active" className="text-sm font-medium text-gray-900">

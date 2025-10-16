@@ -3,7 +3,6 @@ import {
   Package,
   Plus,
   Search,
-  Eye,
   Edit,
   Trash2,
   CheckCircle,
@@ -13,9 +12,7 @@ import {
   AlertCircle,
   Image as ImageIcon,
   Tag,
-  DollarSign,
-  Store,
-  Filter
+  Store
 } from 'lucide-react';
 import produitService, { Produit, CreateProduitDto } from '../../services/produitService';
 import adminService, { Vendeur } from '../../services/adminService';
@@ -127,6 +124,20 @@ const AdminProducts = () => {
     setMessage(null);
 
     try {
+      // Validation du vendeur
+      if (productForm.vendeurId === 0) {
+        setMessage({ type: 'error', text: 'Veuillez sélectionner un vendeur' });
+        setLoading(false);
+        return;
+      }
+
+      // Validation de la catégorie
+      if (productForm.categorieId === 0) {
+        setMessage({ type: 'error', text: 'Veuillez sélectionner une catégorie' });
+        setLoading(false);
+        return;
+      }
+
       // Filtrer les images supplémentaires vides
       const imagesSupp = imageInputs.filter(img => img.trim() !== '');
       
@@ -585,36 +596,52 @@ const AdminProducts = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Vendeur */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Vendeur *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <Store className="h-4 w-4 text-red-600" />
+                        Vendeur *
+                      </label>
                       <select
                         value={productForm.vendeurId}
                         onChange={(e) => setProductForm({ ...productForm, vendeurId: Number(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent ${
+                          productForm.vendeurId === 0 ? 'border-orange-400 bg-orange-50' : 'border-gray-300'
+                        }`}
                         required
                       >
-                        <option value={0}>Sélectionner un vendeur</option>
+                        <option value={0}>⚠️ Sélectionner un vendeur</option>
                         {vendeurs.map(v => (
                           <option key={v.id} value={v.id}>{v.nomBoutique} ({v.prenom} {v.nom})</option>
                         ))}
                       </select>
+                      {productForm.vendeurId === 0 && (
+                        <p className="mt-1 text-xs text-orange-600">⚠️ Ce champ est obligatoire</p>
+                      )}
                     </div>
 
                     {/* Catégorie */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-red-600" />
+                        Catégorie *
+                      </label>
                       <select
                         value={productForm.categorieId}
                         onChange={(e) => setProductForm({ ...productForm, categorieId: Number(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent ${
+                          productForm.categorieId === 0 ? 'border-orange-400 bg-orange-50' : 'border-gray-300'
+                        }`}
                         required
                       >
-                        <option value={0}>Sélectionner une catégorie</option>
+                        <option value={0}>⚠️ Sélectionner une catégorie</option>
                         {categories.map(c => (
                           <option key={c.id} value={c.id}>
                             {c.nom} ({c.type} - {c.genre})
                           </option>
                         ))}
                       </select>
+                      {productForm.categorieId === 0 && (
+                        <p className="mt-1 text-xs text-orange-600">⚠️ Ce champ est obligatoire</p>
+                      )}
                     </div>
                   </div>
 

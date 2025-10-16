@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
+import categorieService from '../services/categorieService';
+import produitService from '../services/produitService';
 
 const VetementsPage = ({ onNavigate }) => {
   const { t } = useI18n();
@@ -13,239 +15,92 @@ const VetementsPage = ({ onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [wishlistItems, setWishlistItems] = useState(new Set());
   const [selectedProduct, setSelectedProduct] = useState(null); // Pour les détails produit
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221770450099"; // Format international sans le +
 
-  // Données des vêtements organisées selon le schéma
-  const vetements = {
-    homme: [
-      {
-        id: 1,
-        name: "Boubou Grand Modèle",
-        price: "65,000 FCFA",
-        originalPrice: "80,000 FCFA",
-        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop",
-        category: "Boubous",
-        subcategory: "homme",
-        rating: 4.8,
-        reviews: 34,
-        isNew: false,
-        discount: "-19%",
-        sizes: ["L", "XL", "XXL"],
-        colors: ["Blanc", "Bleu", "Beige"],
-        description: "Boubou traditionnel brodé main avec finitions de qualité supérieure. Parfait pour les cérémonies et occasions spéciales.",
-        gallery: [
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop",
-          "https://images.unsplash.com/photo-1564463836146-4e30522c2984?w=500&h=600&fit=crop",
-          "https://images.unsplash.com/photo-1581803118522-7b72a50f7e9f?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 2,
-        name: "Ensemble Costume Africain",
-        price: "85,000 FCFA",
-        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop",
-        category: "Costumes",
-        subcategory: "homme",
-        rating: 4.9,
-        reviews: 28,
-        sizes: ["M", "L", "XL"],
-        colors: ["Noir", "Marine", "Gris"],
-        description: "Costume moderne avec motifs traditionnels, coupe ajustée et tissus de qualité.",
-        gallery: [
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 3,
-        name: "Pantalon Traditionnel",
-        price: "35,000 FCFA",
-        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop",
-        category: "Pantalons",
-        subcategory: "homme",
-        rating: 4.6,
-        reviews: 19,
-        sizes: ["M", "L", "XL", "XXL"],
-        colors: ["Blanc", "Beige", "Kaki"],
-        isNew: true,
-        description: "Pantalon coupe droite en coton, confortable et élégant.",
-        gallery: [
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 4,
-        name: "Chemise Brodée",
-        price: "28,000 FCFA",
-        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop",
-        category: "Chemises",
-        subcategory: "homme",
-        rating: 4.5,
-        reviews: 42,
-        sizes: ["S", "M", "L", "XL"],
-        colors: ["Blanc", "Bleu clair", "Beige"],
-        description: "Chemise avec broderies artisanales, parfaite pour un look raffiné.",
-        gallery: [
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop"
-        ]
-      }
-    ],
-    femme: [
-      {
-        id: 5,
-        name: "Robe Wax Élégante",
-        price: "45,000 FCFA",
-        image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&h=500&fit=crop",
-        category: "Robes",
-        subcategory: "femme",
-        rating: 4.7,
-        reviews: 56,
-        sizes: ["S", "M", "L", "XL"],
-        colors: ["Multicolore", "Rouge", "Bleu"],
-        description: "Robe en tissu wax authentique, coupe moderne et confortable.",
-        gallery: [
-          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 6,
-        name: "Boubou Femme Brodé",
-        price: "58,000 FCFA",
-        originalPrice: "70,000 FCFA",
-        image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&h=500&fit=crop",
-        category: "Boubous",
-        subcategory: "femme",
-        rating: 4.8,
-        reviews: 73,
-        discount: "-17%",
-        sizes: ["M", "L", "XL", "XXL"],
-        colors: ["Blanc", "Rose", "Violet"],
-        description: "Boubou avec broderies dorées, élégance et tradition.",
-        gallery: [
-          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 7,
-        name: "Ensemble Jupe-Haut",
-        price: "42,000 FCFA",
-        image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&h=500&fit=crop",
-        category: "Ensembles",
-        subcategory: "femme",
-        rating: 4.6,
-        reviews: 31,
-        isNew: true,
-        sizes: ["S", "M", "L"],
-        colors: ["Wax multicolore", "Rouge", "Vert"],
-        description: "Ensemble coordonné moderne, style africain contemporain.",
-        gallery: [
-          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 8,
-        name: "Robe de Cérémonie",
-        price: "75,000 FCFA",
-        image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&h=500&fit=crop",
-        category: "Robes",
-        subcategory: "femme",
-        rating: 4.9,
-        reviews: 22,
-        sizes: ["S", "M", "L", "XL"],
-        colors: ["Or", "Bordeaux", "Marine"],
-        description: "Robe élégante pour occasions spéciales, finitions luxueuses.",
-        gallery: [
-          "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&h=600&fit=crop"
-        ]
-      }
-    ],
-    enfant: [
-      {
-        id: 9,
-        name: "Ensemble Garçon Traditionnel",
-        price: "32,000 FCFA",
-        image: "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=400&h=500&fit=crop",
-        category: "Garçons",
-        subcategory: "enfant",
-        rating: 4.7,
-        reviews: 25,
-        sizes: ["2 ans", "4 ans", "6 ans", "8 ans"],
-        colors: ["Bleu", "Vert", "Rouge"],
-        description: "Ensemble traditionnel pour garçon, confort et style.",
-        gallery: [
-          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 10,
-        name: "Robe Fille Wax",
-        price: "28,000 FCFA",
-        image: "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=400&h=500&fit=crop",
-        category: "Filles",
-        subcategory: "enfant",
-        rating: 4.6,
-        reviews: 33,
-        isNew: true,
-        sizes: ["2 ans", "4 ans", "6 ans", "8 ans", "10 ans"],
-        colors: ["Rose", "Multicolore", "Violet"],
-        description: "Robe colorée en wax pour fillette, douce et confortable.",
-        gallery: [
-          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 11,
-        name: "Costume Garçon Cérémonie",
-        price: "45,000 FCFA",
-        image: "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=400&h=500&fit=crop",
-        category: "Garçons",
-        subcategory: "enfant",
-        rating: 4.8,
-        reviews: 18,
-        sizes: ["4 ans", "6 ans", "8 ans", "10 ans"],
-        colors: ["Marine", "Noir", "Gris"],
-        description: "Costume élégant pour garçon, parfait pour les cérémonies.",
-        gallery: [
-          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
-        ]
-      },
-      {
-        id: 12,
-        name: "Ensemble Fille Brodé",
-        price: "38,000 FCFA",
-        originalPrice: "45,000 FCFA",
-        image: "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=400&h=500&fit=crop",
-        category: "Filles",
-        subcategory: "enfant",
-        rating: 4.5,
-        reviews: 27,
-        discount: "-16%",
-        sizes: ["3 ans", "5 ans", "7 ans", "9 ans"],
-        colors: ["Rose", "Blanc", "Lilas"],
-        description: "Ensemble avec broderies délicates, douceur et élégance.",
-        gallery: [
-          "https://images.unsplash.com/photo-1503944168730-28e2a3ba9b19?w=500&h=600&fit=crop"
-        ]
-      }
-    ]
+  // Charger les données depuis l'API
+  useEffect(() => {
+    chargerDonnees();
+  }, []);
+
+  const chargerDonnees = async () => {
+    try {
+      setLoading(true);
+      
+      // Récupérer les catégories et produits en parallèle
+      const [categoriesData, produitsData] = await Promise.all([
+        categorieService.getAllCategories(),
+        produitService.getAllProduits(0, 1000)
+      ]);
+
+      // Filtrer seulement les catégories de vêtements
+      const categoriesVetements = categoriesData.filter(cat => 
+        cat.active && cat.type === 'VETEMENTS'
+      );
+
+      // Filtrer seulement les produits de vêtements
+      const produitsVetements = (produitsData.content || produitsData || []).filter((p: any) => 
+        categoriesVetements.some(cat => cat.id === p.categorieId)
+      );
+
+      setCategories(categoriesVetements);
+      setProducts(produitsVetements);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      // En cas d'erreur, utiliser des données par défaut
+      setCategories([]);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fusionner tous les vêtements
-  const allVetements = [...vetements.homme, ...vetements.femme, ...vetements.enfant];
+  // Transformer les produits de l'API pour le format d'affichage
+  const transformerProduit = (produit: any) => {
+    const categorie = categories.find(cat => cat.id === produit.categorieId);
+    
+    return {
+      id: produit.id,
+      name: produit.nom,
+      price: `${new Intl.NumberFormat('fr-FR').format(produit.prix)} FCFA`,
+      originalPrice: produit.prixPromo ? `${new Intl.NumberFormat('fr-FR').format(produit.prixPromo)} FCFA` : null,
+      image: produit.imageUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop',
+      category: categorie?.nom || 'Vêtement',
+      subcategory: categorie?.genre?.toLowerCase() || 'homme',
+      rating: 4.5, // Note par défaut
+      reviews: Math.floor(Math.random() * 50) + 5, // Nombre d'avis aléatoire
+      isNew: Math.random() > 0.7, // 30% de chance d'être nouveau
+      discount: produit.prixPromo ? `-${Math.round((1 - produit.prix / produit.prixPromo) * 100)}%` : null,
+      sizes: produit.taille ? [produit.taille] : ['S', 'M', 'L', 'XL'],
+      colors: produit.couleur ? [produit.couleur] : ['Blanc', 'Noir', 'Bleu'],
+      description: produit.description || 'Produit artisanal de qualité supérieure.',
+      gallery: [
+        produit.imageUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop',
+        ...(produit.imagesSupplementaires || [])
+      ]
+    };
+  };
 
-  const categories = [
+  // Transformer tous les produits
+  const allVetements = products.map(transformerProduit);
+
+  // Créer les catégories dynamiquement
+  const categoriesList = [
     { id: 'all', name: 'Tous', count: allVetements.length },
-    { id: 'homme', name: 'Homme', count: vetements.homme.length },
-    { id: 'femme', name: 'Femme', count: vetements.femme.length },
-    { id: 'enfant', name: 'Enfant', count: vetements.enfant.length }
+    { id: 'homme', name: 'Homme', count: allVetements.filter(p => p.subcategory === 'homme').length },
+    { id: 'femme', name: 'Femme', count: allVetements.filter(p => p.subcategory === 'femme').length },
+    { id: 'enfant', name: 'Enfant', count: allVetements.filter(p => p.subcategory === 'enfant').length }
   ];
 
-  // Sous-catégories selon le schéma
+  // Sous-catégories dynamiques basées sur les vraies catégories
   const subcategories = {
-    homme: ["Boubous", "Costumes", "Pantalons", "Chemises"],
-    femme: ["Robes", "Boubous", "Ensembles"],
-    enfant: ["Garçons", "Filles"]
+    homme: [...new Set(allVetements.filter(p => p.subcategory === 'homme').map(p => p.category))],
+    femme: [...new Set(allVetements.filter(p => p.subcategory === 'femme').map(p => p.category))],
+    enfant: [...new Set(allVetements.filter(p => p.subcategory === 'enfant').map(p => p.category))]
   };
 
   const filteredVetements = allVetements.filter(item => {
@@ -490,6 +345,19 @@ const VetementsPage = ({ onNavigate }) => {
     return <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />;
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            <span className="ml-3 text-gray-600">Chargement des vêtements...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -525,7 +393,7 @@ const VetementsPage = ({ onNavigate }) => {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('categories')}</h3>
                 <div className="space-y-2">
-                  {categories.map((cat) => (
+                  {categoriesList.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => {
@@ -634,7 +502,7 @@ const VetementsPage = ({ onNavigate }) => {
               <div className="mb-4 sm:mb-0">
                 <p className="text-gray-600">
                   <span className="font-semibold">{sortedVetements.length}</span> {t('clothes.found')}
-                  {selectedCategory !== 'all' && <span> dans <span className="text-[#F99834] font-medium">{categories.find(c => c.id === selectedCategory)?.name}</span></span>}
+                  {selectedCategory !== 'all' && <span> dans <span className="text-[#F99834] font-medium">{categoriesList.find(c => c.id === selectedCategory)?.name}</span></span>}
                   {selectedType !== 'all' && <span> - <span className="text-[#F99834] font-medium">{selectedType}</span></span>}
                 </p>
               </div>
