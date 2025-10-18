@@ -21,17 +21,32 @@ import ImageUpload from '../common/ImageUpload';
 import { API_CONFIG } from '../../config/api';
 
 // Helper pour construire l'URL complète de l'image
-const getImageUrl = (imageUrl: string | undefined): string | undefined => {
-  console.log('🔍 getImageUrl - Input imageUrl:', imageUrl);
-  if (!imageUrl) {
+const getImageUrl = (imageUrlOrPhotos: string | string[] | undefined): string | undefined => {
+  console.log('🔍 getImageUrl - Input:', imageUrlOrPhotos);
+  
+  // Si c'est un tableau (photos), prendre la première photo
+  if (Array.isArray(imageUrlOrPhotos)) {
+    if (imageUrlOrPhotos.length === 0) {
+      console.log('❌ Tableau de photos vide');
+      return undefined;
+    }
+    const firstPhoto = imageUrlOrPhotos[0];
+    console.log('📸 Première photo du tableau:', firstPhoto);
+    return getImageUrl(firstPhoto); // Appel récursif avec la première photo
+  }
+  
+  // Si c'est une chaîne
+  if (!imageUrlOrPhotos || typeof imageUrlOrPhotos !== 'string') {
     console.log('❌ imageUrl est vide ou undefined');
     return undefined;
   }
-  if (imageUrl.startsWith('http')) {
-    console.log('✅ URL complète détectée:', imageUrl);
-    return imageUrl;
+  
+  if (imageUrlOrPhotos.startsWith('http')) {
+    console.log('✅ URL complète détectée:', imageUrlOrPhotos);
+    return imageUrlOrPhotos;
   }
-  const fullUrl = `${API_CONFIG.BASE_URL}${imageUrl}`;
+  
+  const fullUrl = `${API_CONFIG.BASE_URL}${imageUrlOrPhotos}`;
   console.log('🔗 URL construite:', fullUrl);
   return fullUrl;
 };
@@ -141,9 +156,21 @@ const AdminProducts = () => {
       // Filtrer les images supplémentaires vides
       const imagesSupp = imageInputs.filter(img => img.trim() !== '');
       
+      // Préparer les photos pour le backend (liste)
+      const photos = [];
+      if (productForm.imageUrl) {
+        photos.push(productForm.imageUrl);
+      }
+      if (imagesSupp.length > 0) {
+        photos.push(...imagesSupp);
+      }
+
+      console.log('📸 Création produit (AdminProducts) - Photos envoyées:', photos);
+      
       await produitService.createProduit({
         ...productForm,
-        imagesSupplementaires: imagesSupp
+        photos: photos, // Envoyer la liste des photos
+        imagesSupplementaires: imagesSupp // Garder pour compatibilité
       });
       
       setMessage({ type: 'success', text: 'Produit créé avec succès !' });
@@ -167,9 +194,21 @@ const AdminProducts = () => {
     try {
       const imagesSupp = imageInputs.filter(img => img.trim() !== '');
       
+      // Préparer les photos pour le backend (liste)
+      const photos = [];
+      if (productForm.imageUrl) {
+        photos.push(productForm.imageUrl);
+      }
+      if (imagesSupp.length > 0) {
+        photos.push(...imagesSupp);
+      }
+
+      console.log('📸 Modification produit (AdminProducts) - Photos envoyées:', photos);
+      
       await produitService.updateProduit(selectedProduit.id, {
         ...productForm,
-        imagesSupplementaires: imagesSupp
+        photos: photos, // Envoyer la liste des photos
+        imagesSupplementaires: imagesSupp // Garder pour compatibilité
       });
       
       setMessage({ type: 'success', text: 'Produit mis à jour avec succès !' });
@@ -458,13 +497,13 @@ const AdminProducts = () => {
             <div key={produit.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               {/* Image */}
               <div className="relative h-48 bg-gray-100">
-                {getImageUrl(produit.imageUrl) ? (
+                {getImageUrl(produit.photos || produit.imageUrl) ? (
                   <img
-                    src={getImageUrl(produit.imageUrl)}
+                    src={getImageUrl(produit.photos || produit.imageUrl)}
                     alt={produit.nom}
                     className="w-full h-full object-cover"
                     onLoad={() => console.log('✅ Image produit chargée:', produit.nom)}
-                    onError={() => console.error('❌ Erreur chargement image:', produit.nom, getImageUrl(produit.imageUrl))}
+                    onError={() => console.error('❌ Erreur chargement image:', produit.nom, getImageUrl(produit.photos || produit.imageUrl))}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

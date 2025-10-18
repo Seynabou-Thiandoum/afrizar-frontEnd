@@ -302,7 +302,7 @@ const ContactPage = ({ onNavigate }) => {
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Puis-je échanger un article ?</h3>
                 <p className="text-gray-600">
-                  Oui, vous avez 14 jours pour échanger un article non porté avec ses étiquettes d'origine.
+                  Oui, vous avez 7 jours pour échanger un article non porté avec ses étiquettes d'origine.
                 </p>
               </div>
             </div>
@@ -336,7 +336,7 @@ const ContactPage = ({ onNavigate }) => {
         <div className="mt-16 bg-gradient-to-r from-[#F99834] to-[#E5861A] rounded-2xl p-8 text-white text-center">
           <h2 className="text-3xl font-bold mb-4">Une question ? Nous sommes là !</h2>
           <p className="text-lg mb-6 opacity-90">
-            Notre équipe est disponible pour vous accompagner dans votre expérience Afizar
+            Notre équipe est disponible pour vous accompagner dans votre expérience Afrizar
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button

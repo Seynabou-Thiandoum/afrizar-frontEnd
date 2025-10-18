@@ -18,7 +18,7 @@ export interface CalculCommissionResponse {
 
 class CommissionService {
   private getAuthHeaders() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afrizar_token');
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : '',

@@ -9,8 +9,9 @@ export interface Produit {
   prixPromo?: number;
   categorieId: number;
   categorieNom?: string;
-  imageUrl?: string;
+  imageUrl?: string; // Garde pour compatibilité
   imagesSupplementaires?: string[];
+  photos?: string[]; // Nouveau champ du backend
   stock: number;
   statut: 'EN_ATTENTE' | 'ACTIF' | 'REFUSE' | 'BROUILLON';
   vendeurId: number;
@@ -30,8 +31,9 @@ export interface CreateProduitDto {
   prix: number;
   prixPromo?: number;
   categorieId: number;
-  imageUrl?: string;
+  imageUrl?: string; // Garde pour compatibilité
   imagesSupplementaires?: string[];
+  photos?: string[]; // Nouveau champ attendu par le backend
   stock: number;
   vendeurId: number;
   taille?: string;

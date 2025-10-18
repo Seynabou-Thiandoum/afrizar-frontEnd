@@ -328,8 +328,20 @@ const AdminVendors = () => {
 
     setLoading(true);
     try {
+      // Préparer les photos pour le backend (liste)
+      const photos = [];
+      if (productForm.imageUrl) {
+        photos.push(productForm.imageUrl);
+      }
+      if (productForm.imagesSupplementaires && productForm.imagesSupplementaires.length > 0) {
+        photos.push(...productForm.imagesSupplementaires);
+      }
+
+      console.log('📸 Création produit - Photos envoyées:', photos);
+
       await produitService.createProduit({
         ...productForm,
+        photos: photos, // Envoyer la liste des photos
         vendeurId: selectedVendor.id
       });
       
@@ -388,8 +400,20 @@ const AdminVendors = () => {
 
     setLoading(true);
     try {
+      // Préparer les photos pour le backend (liste)
+      const photos = [];
+      if (productForm.imageUrl) {
+        photos.push(productForm.imageUrl);
+      }
+      if (productForm.imagesSupplementaires && productForm.imagesSupplementaires.length > 0) {
+        photos.push(...productForm.imagesSupplementaires);
+      }
+
+      console.log('📸 Modification produit - Photos envoyées:', photos);
+
       await produitService.updateProduit(editingProduct.id, {
         ...productForm,
+        photos: photos, // Envoyer la liste des photos
         vendeurId: selectedVendor.id
       });
       

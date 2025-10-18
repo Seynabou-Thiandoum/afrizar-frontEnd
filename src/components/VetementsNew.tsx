@@ -1,119 +1,110 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
-import categorieService from '../services/categorieService';
-import produitService from '../services/produitService';
+import publicProduitService, { PublicProduit } from '../services/publicProduitService';
 
 const VetementsPage = ({ onNavigate }) => {
   const { t } = useI18n();
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedType, setSelectedType] = useState('all'); // Changé de selectedSubcategory
+  const [selectedType, setSelectedType] = useState('all');
   const [selectedSize, setSelectedSize] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [wishlistItems, setWishlistItems] = useState(new Set());
-  const [selectedProduct, setSelectedProduct] = useState(null); // Pour les détails produit
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [produits, setProduits] = useState<PublicProduit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
 
-  // Numéro WhatsApp (remplace par le vrai numéro)
-  const whatsappNumber = "221770450099"; // Format international sans le +
+  // Numéro WhatsApp
+  const whatsappNumber = "221770450099";
 
-  // Charger les données depuis l'API
+  // Charger les produits et catégories
   useEffect(() => {
-    chargerDonnees();
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        console.log('🔄 Chargement des produits publics...');
+        
+        const [produitsData, categoriesData] = await Promise.all([
+          publicProduitService.getPublishedProduits({
+            page: 0,
+            size: 100
+          }),
+          publicProduitService.getCategories()
+        ]);
+        
+        console.log('✅ Produits chargés:', produitsData);
+        console.log('✅ Catégories chargées:', categoriesData);
+        
+        setProduits(produitsData.content);
+        setCategories(categoriesData);
+        setError(null);
+      } catch (err: any) {
+        console.error('❌ Erreur chargement données:', err);
+        setError(err.message || 'Erreur lors du chargement des données');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
-
-  const chargerDonnees = async () => {
-    try {
-      setLoading(true);
-      
-      // Récupérer les catégories et produits en parallèle
-      const [categoriesData, produitsData] = await Promise.all([
-        categorieService.getAllCategories(),
-        produitService.getAllProduits(0, 1000)
-      ]);
-
-      // Filtrer seulement les catégories de vêtements
-      const categoriesVetements = categoriesData.filter(cat => 
-        cat.active && cat.type === 'VETEMENTS'
-      );
-
-      // Filtrer seulement les produits de vêtements
-      const produitsVetements = (produitsData.content || produitsData || []).filter((p: any) => 
-        categoriesVetements.some(cat => cat.id === p.categorieId)
-      );
-
-      setCategories(categoriesVetements);
-      setProducts(produitsVetements);
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      // En cas d'erreur, utiliser des données par défaut
-      setCategories([]);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Fonction pour obtenir l'URL complète de l'image
   const getImageUrl = (imageUrl?: string) => {
-    if (!imageUrl) return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop';
+    if (!imageUrl) return '/placeholder-product.jpg';
     if (imageUrl.startsWith('http')) return imageUrl;
     return `http://localhost:8080${imageUrl}`;
   };
 
-  // Transformer les produits de l'API pour le format d'affichage
-  const transformerProduit = (produit: any) => {
-    const categorie = categories.find(cat => cat.id === produit.categorieId);
-    
-    // Récupérer la première photo de la liste des photos
-    const mainPhoto = produit.photos && produit.photos.length > 0 
-      ? produit.photos[0] 
-      : (produit.imageUrl || null);
-    
-    console.log('📸 Produit:', produit.nom, '- Photos:', produit.photos, '- MainPhoto:', mainPhoto);
-    
-    return {
-      id: produit.id,
-      name: produit.nom,
-      price: `${new Intl.NumberFormat('fr-FR').format(produit.prix)} FCFA`,
-      originalPrice: produit.prixPromo ? `${new Intl.NumberFormat('fr-FR').format(produit.prixPromo)} FCFA` : null,
-      image: getImageUrl(mainPhoto),
-      category: categorie?.nom || 'Vêtement',
-      subcategory: categorie?.genre?.toLowerCase() || 'homme',
-      rating: 4.5, // Note par défaut
-      reviews: Math.floor(Math.random() * 50) + 5, // Nombre d'avis aléatoire
-      isNew: Math.random() > 0.7, // 30% de chance d'être nouveau
-      discount: produit.prixPromo ? `-${Math.round((1 - produit.prix / produit.prixPromo) * 100)}%` : null,
-      sizes: produit.taille ? [produit.taille] : ['S', 'M', 'L', 'XL'],
-      colors: produit.couleur ? [produit.couleur] : ['Blanc', 'Noir', 'Bleu'],
-      description: produit.description || 'Produit artisanal de qualité supérieure.',
-      gallery: produit.photos && produit.photos.length > 0
-        ? produit.photos.map(photo => getImageUrl(photo))
-        : [getImageUrl(mainPhoto)]
-    };
+  // Transformer les produits en format compatible avec l'interface existante
+  const transformedProduits = produits.map(produit => ({
+    id: produit.id,
+    name: produit.nom,
+    price: `${produit.prix.toLocaleString()} FCFA`,
+    originalPrice: produit.prixPromotionnel ? `${produit.prixPromotionnel.toLocaleString()} FCFA` : undefined,
+    image: getImageUrl(produit.imageUrl),
+    category: produit.categorie.nom,
+    subcategory: produit.categorie.genre.toLowerCase(),
+    rating: 4.5, // Note par défaut
+    reviews: Math.floor(Math.random() * 50) + 10, // Nombre d'avis aléatoire
+    isNew: new Date(produit.dateCreation).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000,
+    discount: produit.prixPromotionnel ? `-${Math.round((1 - produit.prix / produit.prixPromotionnel) * 100)}%` : undefined,
+    sizes: produit.taille ? [produit.taille] : ['M', 'L', 'XL'],
+    colors: produit.couleur ? [produit.couleur] : ['Multicolore'],
+    description: produit.description,
+    gallery: [getImageUrl(produit.imageUrl)],
+    vendeur: produit.vendeur,
+    stock: produit.stock,
+    matiere: produit.matiere
+  }));
+
+  // Organiser les produits par genre
+  const vetements = {
+    homme: transformedProduits.filter(p => p.subcategory === 'homme'),
+    femme: transformedProduits.filter(p => p.subcategory === 'femme'),
+    enfant: transformedProduits.filter(p => p.subcategory === 'enfant')
   };
 
-  // Transformer tous les produits
-  const allVetements = products.map(transformerProduit);
+  // Fusionner tous les vêtements
+  const allVetements = [...vetements.homme, ...vetements.femme, ...vetements.enfant];
 
-  // Créer les catégories dynamiquement
-  const categoriesList = [
+  const categoryOptions = [
     { id: 'all', name: 'Tous', count: allVetements.length },
-    { id: 'homme', name: 'Homme', count: allVetements.filter(p => p.subcategory === 'homme').length },
-    { id: 'femme', name: 'Femme', count: allVetements.filter(p => p.subcategory === 'femme').length },
-    { id: 'enfant', name: 'Enfant', count: allVetements.filter(p => p.subcategory === 'enfant').length }
+    { id: 'homme', name: 'Homme', count: vetements.homme.length },
+    { id: 'femme', name: 'Femme', count: vetements.femme.length },
+    { id: 'enfant', name: 'Enfant', count: vetements.enfant.length }
   ];
 
-  // Sous-catégories dynamiques basées sur les vraies catégories
+  // Sous-catégories selon le schéma
   const subcategories = {
-    homme: [...new Set(allVetements.filter(p => p.subcategory === 'homme').map(p => p.category))],
-    femme: [...new Set(allVetements.filter(p => p.subcategory === 'femme').map(p => p.category))],
-    enfant: [...new Set(allVetements.filter(p => p.subcategory === 'enfant').map(p => p.category))]
+    homme: ["Boubous", "Costumes", "Pantalons", "Chemises"],
+    femme: ["Robes", "Boubous", "Ensembles"],
+    enfant: ["Garçons", "Filles"]
   };
 
   const filteredVetements = allVetements.filter(item => {
@@ -214,7 +205,7 @@ const VetementsPage = ({ onNavigate }) => {
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="h-5 w-5" />
-              <span>{t('clothes.back')}</span>
+              <span>Retour</span>
             </button>
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             <div></div>
@@ -258,11 +249,11 @@ const VetementsPage = ({ onNavigate }) => {
                 <div className="flex items-center mb-4">
                   <div className="flex items-center">
                     <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                    <span className="text-sm text-gray-600 ml-1">{product.rating} ({product.reviews} {t('clothes.reviews')})</span>
+                    <span className="text-sm text-gray-600 ml-1">{product.rating} ({product.reviews} avis)</span>
                   </div>
                   {product.isNew && (
                     <span className="ml-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-                      {t('clothes.new_badge')}
+                      Nouveau
                     </span>
                   )}
                 </div>
@@ -342,7 +333,7 @@ const VetementsPage = ({ onNavigate }) => {
                     className="flex-1 bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
                   >
                     <MessageCircle className="h-5 w-5" />
-                    <span>{t('clothes.order_whatsapp')}</span>
+                    <span>Commander sur WhatsApp</span>
                   </button>
                 </div>
               </div>
@@ -353,22 +344,49 @@ const VetementsPage = ({ onNavigate }) => {
     );
   };
 
-  // Si un produit est sélectionné, afficher ses détails
-  if (selectedProduct) {
-    return <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />;
-  }
-
+  // Gestion du loading et des erreurs
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-            <span className="ml-3 text-gray-600">Chargement des vêtements...</span>
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F99834] mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement des vêtements...</p>
+            </div>
           </div>
         </div>
       </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-16">
+            <div className="bg-white rounded-xl shadow-sm p-12">
+              <div className="text-red-500 mb-4">
+                <Shirt className="h-24 w-24 mx-auto" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Erreur de chargement</h3>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors"
+              >
+                Réessayer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si un produit est sélectionné, afficher ses détails
+  if (selectedProduct) {
+    return <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />;
   }
 
   return (
@@ -377,8 +395,8 @@ const VetementsPage = ({ onNavigate }) => {
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-gray-900 mb-2">{t('clothes.page_title')}</h1>
-          <p className="text-gray-600">{t('clothes.discover')}</p>
+          <h1 className="text-4xl font-black text-gray-900 mb-2">Vêtements</h1>
+          <p className="text-gray-600">Découvrez notre collection de vêtements authentiques</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -389,12 +407,12 @@ const VetementsPage = ({ onNavigate }) => {
               
               {/* Recherche */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('search')}</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Recherche</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder={t('clothes.search_placeholder')}
+                    placeholder="Rechercher un vêtement..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
@@ -404,14 +422,14 @@ const VetementsPage = ({ onNavigate }) => {
 
               {/* Catégories */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('categories')}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Catégories</h3>
                 <div className="space-y-2">
-                  {categoriesList.map((cat) => (
+                  {categoryOptions.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => {
                         setSelectedCategory(cat.id);
-                        setSelectedType('all'); // Reset type filter when category changes
+                        setSelectedType('all');
                       }}
                       className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
                         selectedCategory === cat.id 
@@ -439,7 +457,7 @@ const VetementsPage = ({ onNavigate }) => {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      {t('clothes.all_types')}
+                      Tous les types
                     </button>
                     {subcategories[selectedCategory].map((subcat) => (
                       <button
@@ -460,13 +478,13 @@ const VetementsPage = ({ onNavigate }) => {
 
               {/* Tailles */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('clothes.all_sizes')}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Tailles</h3>
                 <select
                   value={selectedSize}
                   onChange={(e) => setSelectedSize(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
                 >
-                  <option value="all">{t('clothes.all_sizes')}</option>
+                  <option value="all">Toutes les tailles</option>
                   <optgroup label="Adultes">
                     <option value="XS">XS</option>
                     <option value="S">S</option>
@@ -491,16 +509,16 @@ const VetementsPage = ({ onNavigate }) => {
 
               {/* Prix */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('clothes.all_prices')}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Prix</h3>
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
                 >
-                  <option value="all">{t('clothes.all_prices')}</option>
-                  <option value="low">{t('clothes.under_30k')}</option>
-                  <option value="medium">{t('clothes.30k_60k')}</option>
-                  <option value="high">{t('clothes.over_100k')}</option>
+                  <option value="all">Tous les prix</option>
+                  <option value="low">Moins de 35 000 FCFA</option>
+                  <option value="medium">35 000 - 60 000 FCFA</option>
+                  <option value="high">Plus de 60 000 FCFA</option>
                 </select>
               </div>
 
@@ -514,8 +532,8 @@ const VetementsPage = ({ onNavigate }) => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-sm">
               <div className="mb-4 sm:mb-0">
                 <p className="text-gray-600">
-                  <span className="font-semibold">{sortedVetements.length}</span> {t('clothes.found')}
-                  {selectedCategory !== 'all' && <span> dans <span className="text-[#F99834] font-medium">{categoriesList.find(c => c.id === selectedCategory)?.name}</span></span>}
+                  <span className="font-semibold">{sortedVetements.length}</span> articles trouvés
+                  {selectedCategory !== 'all' && <span> dans <span className="text-[#F99834] font-medium">{categoryOptions.find(c => c.id === selectedCategory)?.name}</span></span>}
                   {selectedType !== 'all' && <span> - <span className="text-[#F99834] font-medium">{selectedType}</span></span>}
                 </p>
               </div>
@@ -526,10 +544,10 @@ const VetementsPage = ({ onNavigate }) => {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent"
                 >
-                  <option value="popular">{t('clothes.popular')}</option>
-                  <option value="price-low">{t('clothes.price_low')}</option>
-                  <option value="price-high">{t('clothes.price_high')}</option>
-                  <option value="rating">{t('clothes.rating')}</option>
+                  <option value="popular">Populaire</option>
+                  <option value="price-low">Prix croissant</option>
+                  <option value="price-high">Prix décroissant</option>
+                  <option value="rating">Mieux notés</option>
                   <option value="name">A-Z</option>
                 </select>
                 
@@ -568,7 +586,7 @@ const VetementsPage = ({ onNavigate }) => {
                       
                       {item.isNew && (
                         <span className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          {t('clothes.new_badge')}
+                          Nouveau
                         </span>
                       )}
                       
@@ -692,7 +710,7 @@ const VetementsPage = ({ onNavigate }) => {
                         />
                         {item.isNew && (
                           <span className="absolute -top-2 -right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                            {t('clothes.new_badge')}
+                            Nouveau
                           </span>
                         )}
                         {item.discount && !item.isNew && (
@@ -819,160 +837,6 @@ const VetementsPage = ({ onNavigate }) => {
             )}
 
           </div>
-        </div>
-
-        {/* Footer - Section Tendances */}
-        <div className="mt-16 bg-gradient-to-r from-[#F99834] to-[#E5861A] rounded-2xl p-8 text-white">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">Tendances du Moment</h2>
-              <p className="text-[#F99834] text-opacity-70">Les pièces les plus populaires de notre collection</p>
-            </div>
-            <div className="hidden md:block">
-              <div className="bg-white/20 rounded-full p-4">
-                <Star className="h-8 w-8 text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Articles tendance - sélection intelligente */}
-            {(() => {
-              // Tri par rating puis par nombre de reviews pour éviter les doublons
-              const topItems = allVetements
-                .filter(item => item.rating >= 4.6) // Critère plus large
-                .sort((a, b) => {
-                  if (b.rating === a.rating) {
-                    return b.reviews - a.reviews; // Si même rating, privilégier plus de reviews
-                  }
-                  return b.rating - a.rating;
-                })
-                .slice(0, 8); // Prendre plus d'options
-
-              // Assurer une diversité des catégories
-              const diverseItems = [];
-              const usedCategories = new Set();
-              
-              // D'abord, prendre un item de chaque catégorie principale
-              ['homme', 'femme', 'enfant'].forEach(category => {
-                const categoryItem = topItems.find(item => 
-                  item.subcategory === category && !diverseItems.includes(item)
-                );
-                if (categoryItem) {
-                  diverseItems.push(categoryItem);
-                  usedCategories.add(category);
-                }
-              });
-              
-              // Compléter avec les meilleurs items restants
-              topItems.forEach(item => {
-                if (diverseItems.length < 4 && !diverseItems.includes(item)) {
-                  diverseItems.push(item);
-                }
-              });
-              
-              // Garantir au minimum 4 items même si peu d'items de qualité
-              while (diverseItems.length < 4 && diverseItems.length < allVetements.length) {
-                const remainingItems = allVetements
-                  .filter(item => !diverseItems.includes(item))
-                  .sort((a, b) => b.rating - a.rating);
-                
-                if (remainingItems.length > 0) {
-                  diverseItems.push(remainingItems[0]);
-                } else {
-                  break;
-                }
-              }
-              
-              return diverseItems.slice(0, 4);
-            })().map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => handleProductClick(item.id)}
-                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer group relative"
-                >
-                  {/* Badge Tendance */}
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="bg-gradient-to-r from-pink-500 to-[#F99834] text-white px-3 py-1 rounded-full text-xs font-bold">
-                      🔥 TENDANCE
-                    </span>
-                  </div>
-                  
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    
-                    <button 
-                      onClick={(e) => handleWishlistClick(e, item.id)}
-                      className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Heart className={`h-4 w-4 transition-colors ${
-                        wishlistItems.has(item.id) 
-                          ? 'text-red-500 fill-current' 
-                          : 'text-gray-600 hover:text-red-500'
-                      }`} />
-                    </button>
-                    
-                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={(e) => handleWhatsAppOrder(e, item)}
-                        className="bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
-                        title="Commander sur WhatsApp"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4">
-                    <div className="text-xs text-[#F99834] font-semibold mb-1">{item.category}</div>
-                    <h3 className="font-bold text-gray-900 mb-2 group-hover:text-[#F99834] transition-colors line-clamp-1">
-                      {item.name}
-                    </h3>
-                    
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                        <span className="text-xs text-gray-600 ml-1">{item.rating}</span>
-                      </div>
-                      <div className="text-lg font-bold text-gray-900">{item.price}</div>
-                    </div>
-                    
-                    {/* Indicateur de popularité */}
-                    <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div 
-                        className="bg-gradient-to-r from-[#F99834] to-[#E5861A] h-1.5 rounded-full transition-all duration-500"
-                        style={{ width: `${(item.rating / 5) * 100}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{item.reviews} commandes cette semaine</p>
-                  </div>
-                </div>
-              ))}
-          </div>
-          
-          {/* Bouton voir plus de tendances si nécessaire */}
-          {allVetements.filter(item => item.rating >= 4.6).length > 4 && (
-            <div className="text-center mt-8">
-              <button 
-                onClick={() => {
-                  // Naviguer vers une page dédiée aux tendances
-                  if (onNavigate) {
-                    onNavigate('tendances', { 
-                    products: allVetements.filter(item => item.rating >= 4.6),
-                    type: 'vetements'
-                    });
-                  }
-                }}
-                className="px-6 py-3 bg-white text-[#F99834] rounded-lg hover:bg-gray-50 transition-colors font-semibold shadow-md"
-              >
-                Voir toutes les tendances ({allVetements.filter(item => item.rating >= 4.6).length} articles)
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
