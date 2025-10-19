@@ -17,7 +17,8 @@ import {
   Clock,
   Tag,
   TrendingUp,
-  ArrowLeft
+  ArrowLeft,
+  Truck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import adminService from '../services/adminService';
@@ -28,10 +29,11 @@ import AdminCategoriesNew from './admin/AdminCategoriesNew';
 import AdminProducts from './admin/AdminProducts';
 import AdminCommissions from './admin/AdminCommissions';
 import AdminOrders from './admin/AdminOrders';
+import AdminFraisLivraison from './admin/AdminFraisLivraison';
 
 const AdminDashboardNew = () => {
   const { user, logout } = useAuth();
-  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders' | 'frais-livraison'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -187,6 +189,18 @@ const AdminDashboardNew = () => {
           >
             <ShoppingBag className="h-5 w-5" />
             <span>Commandes</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('frais-livraison')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              activeView === 'frais-livraison'
+                ? 'bg-blue-50 text-blue-600 font-semibold'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Truck className="h-5 w-5" />
+            <span>Frais de Livraison</span>
           </button>
         </nav>
 
@@ -437,6 +451,7 @@ const AdminDashboardNew = () => {
           {activeView === 'categories' && <AdminCategoriesNew />}
           {activeView === 'commissions' && <AdminCommissions />}
           {activeView === 'orders' && <AdminOrders />}
+          {activeView === 'frais-livraison' && <AdminFraisLivraison />}
         </div>
       </div>
     </div>

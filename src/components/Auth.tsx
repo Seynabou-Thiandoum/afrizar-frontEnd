@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 const Auth = ({ onClose, initialMode = 'login' }) => {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const [mode, setMode] = useState(initialMode); // 'login', 'register', 'vendor-register'
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -123,15 +123,29 @@ const Auth = ({ onClose, initialMode = 'login' }) => {
           setLoginError(result.error || 'Email ou mot de passe incorrect');
         }
       } else if (mode === 'register') {
-        // Simulate registration
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Inscription client:', formData);
-        onClose();
+        // Inscription client
+        const result = await register(formData, 'client');
+        if (result.success) {
+          onClose();
+          // Optionnel: rediriger vers la page de connexion
+          setTimeout(() => {
+            setMode('login');
+          }, 100);
+        } else {
+          setLoginError(result.error || 'Erreur lors de l\'inscription');
+        }
       } else {
-        // Simulate vendor registration
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Inscription vendeur:', formData);
-        onClose();
+        // Inscription vendeur
+        const result = await register(formData, 'vendor');
+        if (result.success) {
+          onClose();
+          // Optionnel: rediriger vers la page de connexion
+          setTimeout(() => {
+            setMode('login');
+          }, 100);
+        } else {
+          setLoginError(result.error || 'Erreur lors de l\'inscription');
+        }
       }
     } catch (error) {
       setErrors({ submit: 'Une erreur est survenue. Veuillez réessayer.' });

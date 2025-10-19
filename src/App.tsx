@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { InternationalizationProvider } from './contexts/InternationalizationContext';
+import { PanierProvider } from './contexts/PanierContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
@@ -29,6 +30,8 @@ import VendeursPage from './components/Vendeurs';
 import VendorProfilePage from './components/VendorProfilePage';
 import TendancesPage from './components/TendancesPage';
 import ContactPage from './components/ContactPage';
+import PanierPage from './components/PanierPage';
+import CheckoutPage from './components/CheckoutPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -110,9 +113,11 @@ function App() {
       case 'sur-mesure':
         return <SurMesure onBack={() => setCurrentPage('home')} />;
       case 'cart':
-        return <Cart onClose={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
+        return <PanierPage onNavigate={setCurrentPage} />;
+      case 'panier':
+        return <PanierPage onNavigate={setCurrentPage} />;
       case 'checkout':
-        return <Checkout onBack={() => setCurrentPage('cart')} />;
+        return <CheckoutPage onNavigate={setCurrentPage} onShowAuth={() => setShowAuth(true)} />;
       case 'payment':
         return <Checkout onBack={() => setCurrentPage('cart')} />;
       case 'vendor-dashboard':
@@ -179,41 +184,43 @@ function App() {
   return (
     <InternationalizationProvider>
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
-          {!['cart', 'checkout', 'vendor-dashboard', 'client-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
-            <Header 
-              onNavigate={setCurrentPage}
-              onSearch={setGlobalSearchTerm}
-              onOpenAuth={openAuth}
-            />
-          )}
-          
-          <main>
-            {renderPage()}
-          </main>
-          
-          {/* {currentPage === 'home' && <Footer />}
-          {currentPage === 'vetements' && <Footer />} */}
-          <Footer onNavigate={handleNavigation} />
+        <PanierProvider>
+          <div className="min-h-screen bg-gray-50">
+            {!['cart', 'panier', 'checkout', 'vendor-dashboard', 'client-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
+              <Header 
+                onNavigate={setCurrentPage}
+                onSearch={setGlobalSearchTerm}
+                onOpenAuth={openAuth}
+              />
+            )}
+            
+            <main>
+              {renderPage()}
+            </main>
+            
+            {/* {currentPage === 'home' && <Footer />}
+            {currentPage === 'vetements' && <Footer />} */}
+            <Footer onNavigate={handleNavigation} />
 
-          {/* Auth Modal */}
-          {showAuth && (
-            <Auth 
-              onClose={() => setShowAuth(false)}
-              initialMode={authMode}
-            />
-          )}
+            {/* Auth Modal */}
+            {showAuth && (
+              <Auth 
+                onClose={() => setShowAuth(false)}
+                initialMode={authMode}
+              />
+            )}
 
-          {/* Deferred Order Modal */}
-          {showDeferredOrder && (
-            <DeferredOrder
-              product={selectedProduct}
-              onClose={() => setShowDeferredOrder(false)}
-              onAddToCart={handleAddToCart}
-            />
-          )}
+            {/* Deferred Order Modal */}
+            {showDeferredOrder && (
+              <DeferredOrder
+                product={selectedProduct}
+                onClose={() => setShowDeferredOrder(false)}
+                onAddToCart={handleAddToCart}
+              />
+            )}
 
-        </div>
+          </div>
+        </PanierProvider>
       </AuthProvider>
     </InternationalizationProvider>
   );

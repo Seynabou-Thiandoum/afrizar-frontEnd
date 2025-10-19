@@ -1,124 +1,127 @@
 import { API_CONFIG } from '../config/api';
 
 export interface Commission {
-  id?: number;
-  seuilMin: number;
-  seuilMax: number | null;
-  pourcentage: number;
-  description: string;
-  active: boolean;
-  ordre: number;
+  id: number;
+  clientId: number;
+  commandeId: number;
+  montantCommission: number;
+  pourcentageCommission: number;
+  statut: 'EN_ATTENTE' | 'VALIDEE' | 'PAYEE';
+  dateCreation: string;
+  dateValidation?: string;
+  datePaiement?: string;
+  commande: {
+    id: number;
+    numeroCommande: string;
+    montantTotal: number;
+    dateCreation: string;
+  };
 }
 
-export interface CalculCommissionResponse {
-  montant: number;
-  commission: number;
-  total: number;
+export interface SoldeCommission {
+  soldeTotal: number;
+  soldeDisponible: number;
+  soldeEnAttente: number;
+  soldePaye: number;
+  nombreCommissions: number;
 }
 
 class CommissionService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('afrizar_token');
+  private getHeaders() {
+    const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
+      'Authorization': `Bearer ${token}`
     };
   }
 
-  async getAllCommissions(): Promise<Commission[]> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commissions');
-    }
-    return response.json();
-  }
+  async obtenirMesCommissions(): Promise<Commission[]> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/client`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
 
-  async getCommissionById(id: number): Promise<Commission> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Commission non trouvée');
-    }
-    return response.json();
-  }
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Veuillez vous connecter pour accéder à vos commissions');
+        }
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
 
-  async createCommission(commission: Omit<Commission, 'id'>): Promise<Commission> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(commission),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la création de la commission');
-    }
-    return response.json();
-  }
-
-  async updateCommission(id: number, commission: Omit<Commission, 'id'>): Promise<Commission> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions/${id}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(commission),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la mise à jour de la commission');
-    }
-    return response.json();
-  }
-
-  async deleteCommission(id: number): Promise<void> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions/${id}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la suppression de la commission');
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors de la récupération des commissions:', error);
+      throw error;
     }
   }
 
-  async activateCommission(id: number): Promise<void> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions/${id}/activer`, {
-      method: 'PATCH',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error("Erreur lors de l'activation de la commission");
+  async obtenirSoldeCommission(): Promise<SoldeCommission> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/solde`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Veuillez vous connecter pour accéder à votre solde');
+        }
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors de la récupération du solde:', error);
+      throw error;
     }
   }
 
-  async deactivateCommission(id: number): Promise<void> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions/${id}/desactiver`, {
-      method: 'PATCH',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la désactivation de la commission');
+  async demanderRetrait(montant: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/retrait`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ montant }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Veuillez vous connecter pour demander un retrait');
+        }
+        if (response.status === 400) {
+          throw new Error('Montant insuffisant ou invalide');
+        }
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors de la demande de retrait:', error);
+      throw error;
     }
   }
 
-  async calculateCommission(montant: number): Promise<CalculCommissionResponse> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions/calculer?montant=${montant}`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors du calcul de la commission');
-    }
-    return response.json();
-  }
+  async obtenirHistoriqueRetraits(): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/retraits`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
 
-  async initializeDefaultCommissions(): Promise<void> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/admin/commissions/initialiser`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'initialisation des commissions');
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Veuillez vous connecter pour accéder à l\'historique');
+        }
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique:', error);
+      throw error;
     }
   }
 }
 
 export default new CommissionService();
-

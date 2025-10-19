@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle, ShoppingCart } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
+import { useAuth } from '../contexts/AuthContext';
+import { usePanier } from '../contexts/PanierContext';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
+import Swal from 'sweetalert2';
 
 const VetementsPage = ({ onNavigate }) => {
   const { t } = useI18n();
+  const { user, isAuthenticated } = useAuth();
+  const { ajouterAuPanier, nombreArticles } = usePanier();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Changé de selectedSubcategory
   const [selectedSize, setSelectedSize] = useState('all');
@@ -18,6 +23,7 @@ const VetementsPage = ({ onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221770450099"; // Format international sans le +
@@ -60,10 +66,15 @@ const VetementsPage = ({ onNavigate }) => {
   };
 
   // Fonction pour obtenir l'URL complète de l'image
-  const getImageUrl = (imageUrl?: string) => {
+  const getImageUrl = (imageUrl?: string | string[]) => {
     if (!imageUrl) return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop';
-    if (imageUrl.startsWith('http')) return imageUrl;
-    return `http://localhost:8080${imageUrl}`;
+    
+    // Si c'est un tableau, prendre le premier élément
+    const photo = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
+    
+    if (!photo) return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop';
+    if (photo.startsWith('http')) return photo;
+    return `http://localhost:8080${photo}`;
   };
 
   // Transformer les produits de l'API pour le format d'affichage
@@ -173,6 +184,40 @@ const VetementsPage = ({ onNavigate }) => {
       newWishlist.add(productId);
     }
     setWishlistItems(newWishlist);
+  };
+
+  // Fonction pour ajouter au panier (SANS vérification de connexion)
+  const handleAddToCart = async (e, item) => {
+    e.stopPropagation();
+
+    try {
+      setAddingToCart(item.id);
+      
+      // Ajouter au panier (temporaire ou backend selon connexion)
+      await ajouterAuPanier(
+        item,
+        1,
+        item.sizes?.[0], // Prendre la première taille disponible
+        item.colors?.[0] // Prendre la première couleur disponible
+      );
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Produit ajouté !',
+        text: 'Le produit a été ajouté à votre panier',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de l\'ajout au panier',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setAddingToCart(null);
+    }
   };
 
   const getColorStyle = (color) => {
@@ -330,19 +375,30 @@ const VetementsPage = ({ onNavigate }) => {
                 )}
 
                 {/* Boutons d'action */}
-                <div className="flex space-x-4">
+                <div className="space-y-3">
                   <button 
                     onClick={() => handleWishlistClick({stopPropagation: () => {}}, product.id)}
-                    className="flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
+                    className="w-full flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
                   >
-                    <Heart className={`h-5 w-5 ${wishlistItems.has(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
+                    <Heart className={`h-5 w-5 mr-2 ${wishlistItems.has(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
+                    <span>Ajouter aux favoris</span>
                   </button>
+                  
+                  <button
+                    onClick={(e) => handleAddToCart(e, product)}
+                    disabled={addingToCart === product.id}
+                    className="w-full bg-[#F99834] text-white py-3 px-6 rounded-lg hover:bg-[#E5861A] transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    <span>{addingToCart === product.id ? 'Ajout en cours...' : 'Ajouter au panier'}</span>
+                  </button>
+                  
                   <button
                     onClick={(e) => handleWhatsAppOrder(e, product)}
-                    className="flex-1 bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                    className="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
                   >
                     <MessageCircle className="h-5 w-5" />
-                    <span>{t('clothes.order_whatsapp')}</span>
+                    <span>Commander sur WhatsApp</span>
                   </button>
                 </div>
               </div>

@@ -1,12 +1,15 @@
 import { API_CONFIG } from '../config/api';
+import authService from './authService';
 
-export interface LigneCommande {
-  id?: number;
-  produitId: number;
-  nomProduit: string;
-  quantite: number;
-  prixUnitaire: number;
-  prixTotal: number;
+export interface CreateCommandeDto {
+  type?: 'IMMEDIATE' | 'DIFFEREE' | 'MIXTE';
+  dateLivraisonSouhaitee?: string;
+  notes?: string;
+  pointsFideliteUtilises?: number;
+  adresseLivraison?: string;
+  ville?: string;
+  pays?: string;
+  codePostal?: string;
 }
 
 export interface Commande {
@@ -15,218 +18,127 @@ export interface Commande {
   dateCreation: string;
   statut: string;
   type: string;
-  dateLivraisonSouhaitee?: string;
-  dateLivraisonEstimee?: string;
   montantHT: number;
   montantCommission: number;
   fraisLivraison: number;
   montantTotal: number;
-  pointsFideliteUtilises: number;
-  reduction: number;
-  notes?: string;
   clientId: number;
-  clientNom?: string;
-  clientPrenom?: string;
+  clientNom: string;
   lignesCommande: LigneCommande[];
 }
 
-export interface CommandePage {
-  content: Commande[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
-
-export interface CommandeStatistics {
-  chiffreAffaires: number;
-  panierMoyen: number;
-  totalCommandes: number;
-  commandesEnAttente: number;
-  commandesConfirmees: number;
-  commandesLivrees: number;
+export interface LigneCommande {
+  id: number;
+  produitId: number;
+  produitNom: string;
+  quantite: number;
+  prixUnitaire: number;
+  sousTotal: number;
+  commission: number;
+  taille?: string;
+  personnalisation?: string;
 }
 
 class CommandeService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
+  private baseUrl = `${API_CONFIG.BASE_URL}/api/client/commandes`;
+
+  private getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
     };
+
+    const token = authService.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
-  async getAllCommandes(page = 0, size = 20): Promise<CommandePage> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes?page=${page}&size=${size}`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commandes');
+  async creerCommandeDepuisPanier(dto: CreateCommandeDto): Promise<Commande> {
+    try {
+      console.log('📦 Création commande depuis panier:', dto);
+      const response = await fetch(`${this.baseUrl}/depuis-panier`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(dto),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Erreur lors de la création de la commande');
+      }
+
+      const commande = await response.json();
+      console.log('✅ Commande créée:', commande);
+      return commande;
+    } catch (error) {
+      console.error('❌ Erreur création commande:', error);
+      throw error;
     }
-    return response.json();
   }
 
-  async getCommandeById(id: number): Promise<Commande> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Commande non trouvée');
+  async obtenirMesCommandes(page: number = 0, size: number = 10): Promise<{
+    content: Commande[];
+    totalElements: number;
+    totalPages: number;
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/mes-commandes?page=${page}&size=${size}`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des commandes');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Erreur récupération commandes:', error);
+      throw error;
     }
-    return response.json();
   }
 
-  async getCommandesByClient(clientId: number, page = 0, size = 10): Promise<CommandePage> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/client/${clientId}?page=${page}&size=${size}`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commandes du client');
-    }
-    return response.json();
-  }
+  async obtenirDetailsCommande(id: number): Promise<Commande> {
+    try {
+      const response = await fetch(`${this.baseUrl}/${id}`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
 
-  async getCommandesByStatut(statut: string): Promise<Commande[]> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/statut/${statut}`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commandes par statut');
-    }
-    return response.json();
-  }
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération de la commande');
+      }
 
-  async changeStatut(id: number, statut: string): Promise<Commande> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/${id}/statut?statut=${statut}`, {
-      method: 'PATCH',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors du changement de statut');
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Erreur récupération commande:', error);
+      throw error;
     }
-    return response.json();
-  }
-
-  async confirmerCommande(id: number): Promise<Commande> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/${id}/confirmer`, {
-      method: 'PATCH',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la confirmation de la commande');
-    }
-    return response.json();
   }
 
   async annulerCommande(id: number, motif?: string): Promise<Commande> {
-    const url = motif 
-      ? `${API_CONFIG.BASE_URL}/commandes/${id}/annuler?motif=${encodeURIComponent(motif)}`
-      : `${API_CONFIG.BASE_URL}/commandes/${id}/annuler`;
-    
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error("Erreur lors de l'annulation de la commande");
-    }
-    return response.json();
-  }
-
-  async expedierCommande(id: number, numeroSuivi: string, transporteur: string): Promise<Commande> {
-    const response = await fetch(
-      `${API_CONFIG.BASE_URL}/commandes/${id}/expedier?numeroSuivi=${encodeURIComponent(numeroSuivi)}&transporteur=${encodeURIComponent(transporteur)}`,
-      {
-        method: 'PATCH',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    if (!response.ok) {
-      throw new Error("Erreur lors de l'expédition de la commande");
-    }
-    return response.json();
-  }
-
-  async livrerCommande(id: number): Promise<Commande> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/${id}/livrer`, {
-      method: 'PATCH',
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la livraison de la commande');
-    }
-    return response.json();
-  }
-
-  async getCommandesEnRetard(): Promise<Commande[]> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/en-retard`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commandes en retard');
-    }
-    return response.json();
-  }
-
-  async getChiffreAffaires(): Promise<number> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/statistiques/chiffre-affaires`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération du chiffre d\'affaires');
-    }
-    return response.json();
-  }
-
-  async getPanierMoyen(): Promise<number> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/statistiques/panier-moyen`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération du panier moyen');
-    }
-    return response.json();
-  }
-
-  async getCountByStatut(statut: string): Promise<number> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/commandes/statistiques/count/${statut}`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error('Erreur lors du comptage des commandes');
-    }
-    return response.json();
-  }
-
-  async getStatistics(): Promise<CommandeStatistics> {
     try {
-      const [
-        chiffreAffaires,
-        panierMoyen,
-        enAttente,
-        confirmees,
-        livrees
-      ] = await Promise.all([
-        this.getChiffreAffaires(),
-        this.getPanierMoyen(),
-        this.getCountByStatut('EN_ATTENTE'),
-        this.getCountByStatut('CONFIRMEE'),
-        this.getCountByStatut('LIVREE')
-      ]);
+      console.log(`🚫 Annulation commande ${id} - Motif:`, motif);
+      const response = await fetch(`${this.baseUrl}/${id}/annuler`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: motif ? JSON.stringify(motif) : undefined,
+      });
 
-      return {
-        chiffreAffaires,
-        panierMoyen,
-        totalCommandes: enAttente + confirmees + livrees,
-        commandesEnAttente: enAttente,
-        commandesConfirmees: confirmees,
-        commandesLivrees: livrees
-      };
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'annulation de la commande');
+      }
+
+      const commande = await response.json();
+      console.log('✅ Commande annulée');
+      return commande;
     } catch (error) {
-      throw new Error('Erreur lors de la récupération des statistiques');
+      console.error('❌ Erreur annulation commande:', error);
+      throw error;
     }
   }
 }
 
 export default new CommandeService();
-

@@ -445,15 +445,16 @@ import React, { useState } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Heart, LogOut, Settings, Crown, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/InternationalizationContext';
+import { usePanier } from '../contexts/PanierContext';
 import LanguageSelector from './LanguageSelector';
 
 const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const { t, switchLanguage, language } = useI18n();
+  const { nombreArticles } = usePanier();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cartCount] = useState(3);
   const [wishlistCount] = useState(5);
 
   const handleSearch = (e) => {
@@ -517,11 +518,19 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center">
-              <Crown className="h-8 w-8 text-orange-600 mr-2" />
-              <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
+            <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => handleNavigation('home')}>
+              <img 
+                src="/images/logo_sans_fond.png"
+                alt="Logo Afrizar"
+                className="h-20 w-20 mr-4 object-contain"
+                onError={(e) => {
+                  console.error('❌ Erreur chargement logo');
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              {/* <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
                 Afrizar
-              </span>
+              </span> */}
             </div>
 
             {/* Navigation Desktop */}
@@ -592,11 +601,14 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                 )}
               </button>
 
-              <button className="relative text-gray-700 hover:text-orange-600 transition-colors">
+              <button 
+                onClick={() => onNavigate('panier')}
+                className="relative text-gray-700 hover:text-orange-600 transition-colors"
+              >
                 <ShoppingBag className="h-6 w-6" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartCount}
+                {nombreArticles > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+                    {nombreArticles}
                   </span>
                 )}
               </button>

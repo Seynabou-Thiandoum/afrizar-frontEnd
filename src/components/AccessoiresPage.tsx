@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle, ShoppingCart } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
+import { useAuth } from '../contexts/AuthContext';
+import { usePanier } from '../contexts/PanierContext';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
+import Swal from 'sweetalert2';
 
 const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   const { t } = useI18n();
+  const { user, isAuthenticated } = useAuth();
+  const { ajouterAuPanier } = usePanier();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Nouveau état pour les types
   const [priceRange, setPriceRange] = useState('all');
@@ -16,6 +21,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221123456789"; // Format international sans le +
@@ -57,16 +63,35 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
     }
   };
 
+  // Fonction pour obtenir l'URL complète de l'image
+  const getImageUrl = (imageUrl?: string | string[]) => {
+    if (!imageUrl) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
+    
+    // Si c'est un tableau, prendre le premier élément
+    const photo = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
+    
+    if (!photo) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
+    if (photo.startsWith('http')) return photo;
+    return `http://localhost:8080${photo}`;
+  };
+
   // Transformer les produits de l'API pour le format d'affichage
   const transformerProduit = (produit: any) => {
     const categorie = categories.find(cat => cat.id === produit.categorieId);
+    
+    // Récupérer la première photo de la liste des photos
+    const mainPhoto = produit.photos && produit.photos.length > 0 
+      ? produit.photos[0] 
+      : (produit.imageUrl || null);
+    
+    console.log('📸 Accessoire:', produit.nom, '- Photos:', produit.photos, '- MainPhoto:', mainPhoto);
     
     return {
       id: produit.id,
       name: produit.nom,
       price: `${new Intl.NumberFormat('fr-FR').format(produit.prix)} FCFA`,
       originalPrice: produit.prixPromo ? `${new Intl.NumberFormat('fr-FR').format(produit.prixPromo)} FCFA` : null,
-      image: produit.imageUrl || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop',
+      image: getImageUrl(mainPhoto),
       category: categorie?.nom || 'Accessoire',
       subcategory: categorie?.genre?.toLowerCase() || 'homme',
       rating: 4.5, // Note par défaut
@@ -75,11 +100,10 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
       discount: produit.prixPromo ? `-${Math.round((1 - produit.prix / produit.prixPromo) * 100)}%` : null,
       colors: produit.couleur ? [produit.couleur] : ['Blanc', 'Noir', 'Marron'],
       description: produit.description || 'Accessoire artisanal de qualité supérieure.',
-      sizes: produit.taille ? [produit.taille] : ['S', 'M', 'L'],
-      gallery: [
-        produit.imageUrl || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&h=500&fit=crop',
-        ...(produit.imagesSupplementaires || [])
-      ]
+      sizes: produit.taille ? [produit.taille] : ['Unique'],
+      gallery: produit.photos && produit.photos.length > 0
+        ? produit.photos.map(photo => getImageUrl(photo))
+        : [getImageUrl(mainPhoto)]
     };
   };
 
@@ -151,6 +175,40 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
     e.stopPropagation();
     // Logique wishlist
     console.log('Ajouté aux favoris:', productId);
+  };
+
+  // Fonction pour ajouter au panier (SANS vérification de connexion)
+  const handleAddToCart = async (e: any, item: any) => {
+    e.stopPropagation();
+
+    try {
+      setAddingToCart(item.id);
+      
+      // Ajouter au panier (temporaire ou backend selon connexion)
+      await ajouterAuPanier(
+        item,
+        1,
+        item.sizes?.[0], // Prendre la première taille disponible
+        item.colors?.[0] // Prendre la première couleur disponible
+      );
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Produit ajouté !',
+        text: 'Le produit a été ajouté à votre panier',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de l\'ajout au panier',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setAddingToCart(null);
+    }
   };
 
   // Composant pour les détails du produit
@@ -284,16 +342,27 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                 )}
 
                 {/* Boutons d'action */}
-                <div className="flex space-x-4">
+                <div className="space-y-3">
                   <button 
                     onClick={() => handleWishlistClick({stopPropagation: () => {}}, product.id)}
-                    className="flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
+                    className="w-full flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
                   >
-                    <Heart className="h-5 w-5 text-gray-600" />
+                    <Heart className="h-5 w-5 mr-2 text-gray-600" />
+                    <span>Ajouter aux favoris</span>
                   </button>
+                  
+                  <button
+                    onClick={(e) => handleAddToCart(e, product)}
+                    disabled={addingToCart === product.id}
+                    className="w-full bg-[#F99834] text-white py-3 px-6 rounded-lg hover:bg-[#E5861A] transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    <span>{addingToCart === product.id ? 'Ajout en cours...' : 'Ajouter au panier'}</span>
+                  </button>
+                  
                   <button
                     onClick={() => handleWhatsAppOrder(product)}
-                    className="flex-1 bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                    className="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
                   >
                     <MessageCircle className="h-5 w-5" />
                     <span>Commander sur WhatsApp</span>
