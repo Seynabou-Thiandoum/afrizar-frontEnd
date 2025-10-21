@@ -844,3 +844,5 @@ const VetementsPage = ({ onNavigate }) => {
 };
 
 export default VetementsPage;
+
+

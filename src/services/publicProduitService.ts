@@ -135,3 +135,5 @@ class PublicProduitService {
 }
 
 export default new PublicProduitService();
+
+

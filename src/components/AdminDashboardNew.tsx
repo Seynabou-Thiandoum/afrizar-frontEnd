@@ -18,7 +18,8 @@ import {
   Tag,
   TrendingUp,
   ArrowLeft,
-  Truck
+  Truck,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import adminService from '../services/adminService';
@@ -30,10 +31,11 @@ import AdminProducts from './admin/AdminProducts';
 import AdminCommissions from './admin/AdminCommissions';
 import AdminOrders from './admin/AdminOrders';
 import AdminFraisLivraison from './admin/AdminFraisLivraison';
+import AdminModesPaiement from './admin/AdminModesPaiement';
 
 const AdminDashboardNew = () => {
   const { user, logout } = useAuth();
-  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders' | 'frais-livraison'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders' | 'frais-livraison' | 'modes-paiement'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -201,6 +203,18 @@ const AdminDashboardNew = () => {
           >
             <Truck className="h-5 w-5" />
             <span>Frais de Livraison</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('modes-paiement')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              activeView === 'modes-paiement'
+                ? 'bg-amber-50 text-amber-600 font-semibold'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <CreditCard className="h-5 w-5" />
+            <span>Modes de Paiement</span>
           </button>
         </nav>
 
@@ -447,6 +461,7 @@ const AdminDashboardNew = () => {
           {activeView === 'profile' && <AdminProfile />}
           {activeView === 'users' && <AdminUsers />}
           {activeView === 'vendors' && <AdminVendors />}
+          {activeView === 'modes-paiement' && <AdminModesPaiement />}
           {activeView === 'products' && <AdminProducts />}
           {activeView === 'categories' && <AdminCategoriesNew />}
           {activeView === 'commissions' && <AdminCommissions />}

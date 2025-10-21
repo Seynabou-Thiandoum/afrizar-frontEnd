@@ -209,3 +209,5 @@ class PanierService {
 
 export default new PanierService();
 
+
+

@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import InternationalPayment from './InternationalPayment';
 import InternationalShipping from './InternationalShipping';
+import SelecteurModePaiement from './SelecteurModePaiement';
+import { ModePaiement } from '../services/modePaiementService';
 import { useI18n } from '../contexts/InternationalizationContext';
 
 const Checkout = ({ onBack }) => {
