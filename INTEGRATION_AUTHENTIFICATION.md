@@ -483,3 +483,4 @@ En cas de problème :
 **Documentation complète du backend** : `../Afrizar_Back_End/GUIDE_AUTHENTIFICATION_ROLES.md`
 
 
+

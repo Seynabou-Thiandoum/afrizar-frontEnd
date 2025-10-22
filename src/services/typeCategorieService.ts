@@ -84,3 +84,4 @@ export const typeCategorieService = {
     return response.data;
   }
 };
+

@@ -147,14 +147,22 @@ const PanierPage: React.FC<PanierPageProps> = ({ onNavigate }) => {
             <ShoppingBag className="h-24 w-24 text-gray-300 mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Votre panier est vide</h2>
             <p className="text-gray-600 mb-8">
-              Découvrez nos produits et ajoutez-les à votre panier
+              Commencez vos achats en parcourant nos catégories
             </p>
-            <button
-              onClick={() => onNavigate('vetements')}
-              className="px-6 py-3 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors"
-            >
-              Découvrir nos vêtements
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => onNavigate('vetements')}
+                className="px-6 py-3 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors font-medium"
+              >
+                Voir les Vêtements
+              </button>
+              <button
+                onClick={() => onNavigate('accessoires')}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Voir les Accessoires
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -3,8 +3,10 @@ import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt,
 import { useI18n } from '../contexts/InternationalizationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePanier } from '../contexts/PanierContext';
+import ProductImageSlider from './ProductImageSlider';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
+import { API_CONFIG } from '../config/api';
 import Swal from 'sweetalert2';
 
 const VetementsPage = ({ onNavigate }) => {
@@ -109,8 +111,63 @@ const VetementsPage = ({ onNavigate }) => {
     };
   };
 
-  // Transformer tous les produits
-  const allVetements = products.map(transformerProduit);
+  // Transformer tous les produits avec calcul des prix
+  const [allVetements, setAllVetements] = useState<any[]>([]);
+  
+  useEffect(() => {
+    const transformerProduitsAvecPrix = async () => {
+      const produitsTransformes = await Promise.all(
+        products.map(async (produit) => {
+          const categorie = categories.find(cat => cat.id === produit.categorieId);
+          
+          // Récupérer la première photo de la liste des photos
+          const mainPhoto = produit.photos && produit.photos.length > 0 
+            ? produit.photos[0] 
+            : (produit.imageUrl || null);
+          
+          console.log('📸 Produit:', produit.nom, '- Photos:', produit.photos, '- MainPhoto:', mainPhoto);
+          
+          // Calculer le prix final avec commission
+          let prixFinal = produit.prix;
+          try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/api/calculs/prix-complet?prixVendeur=${produit.prix}&vendeurId=${produit.vendeurId}&poids=1&pays=SENEGAL&typeExpedition=STANDARD`);
+            if (response.ok) {
+              const data = await response.json();
+              prixFinal = data.detailProduit?.prixFinal || produit.prix;
+              console.log('💰 Prix calculé:', produit.nom, '- Prix vendeur:', produit.prix, '- Prix final:', prixFinal);
+            }
+          } catch (error) {
+            console.log('Erreur calcul prix, utilisation prix vendeur:', error);
+          }
+          
+          return {
+            id: produit.id,
+            name: produit.nom,
+            price: `${new Intl.NumberFormat('fr-FR').format(prixFinal)} FCFA`,
+            originalPrice: produit.prixPromo ? `${new Intl.NumberFormat('fr-FR').format(produit.prixPromo)} FCFA` : null,
+            image: getImageUrl(mainPhoto),
+            category: categorie?.nom || 'Vêtement',
+            subcategory: categorie?.genre?.toLowerCase() || 'homme',
+            rating: 4.5, // Note par défaut
+            reviews: Math.floor(Math.random() * 50) + 5, // Nombre d'avis aléatoire
+            isNew: Math.random() > 0.7, // 30% de chance d'être nouveau
+            discount: produit.prixPromo ? `-${Math.round((1 - produit.prix / produit.prixPromo) * 100)}%` : null,
+            sizes: produit.taille ? [produit.taille] : ['S', 'M', 'L', 'XL'],
+            colors: produit.couleur ? [produit.couleur] : ['Blanc', 'Noir', 'Bleu'],
+            description: produit.description || 'Produit artisanal de qualité supérieure.',
+            gallery: produit.photos && produit.photos.length > 0
+              ? produit.photos.map((photo: any) => getImageUrl(photo))
+              : [getImageUrl(mainPhoto)]
+          };
+        })
+      );
+      setAllVetements(produitsTransformes);
+    };
+    
+    if (products.length > 0) {
+      transformerProduitsAvecPrix();
+    }
+  }, [products, categories]);
 
   // Créer les catégories dynamiquement
   const categoriesList = [

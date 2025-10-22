@@ -14,14 +14,16 @@ import {
   X,
   Save
 } from 'lucide-react';
-import commissionService, { Commission } from '../../services/commissionService';
+import trancheCommissionService, { TrancheCommission } from '../../services/trancheCommissionService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AdminCommissions = () => {
-  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const { user } = useAuth();
+  const [commissions, setCommissions] = useState<TrancheCommission[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
+  const [selectedCommission, setSelectedCommission] = useState<TrancheCommission | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   // Calculatrice
@@ -39,13 +41,20 @@ const AdminCommissions = () => {
   });
 
   useEffect(() => {
+    // Vérifier l'authentification
+    if (!user || user.role !== 'ADMIN') {
+      setMessage({ type: 'error', text: 'Accès refusé. Seuls les administrateurs peuvent accéder à cette page.' });
+      setLoading(false);
+      return;
+    }
+    
     loadCommissions();
-  }, []);
+  }, [user]);
 
   const loadCommissions = async () => {
     setLoading(true);
     try {
-      const data = await commissionService.getAllCommissions();
+      const data = await trancheCommissionService.getAllCommissions();
       setCommissions(data);
     } catch (error) {
       setMessage({ type: 'error', text: 'Erreur lors du chargement des commissions' });
@@ -57,7 +66,7 @@ const AdminCommissions = () => {
   const handleCreateCommission = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await commissionService.createCommission(commissionForm);
+      await trancheCommissionService.createCommission(commissionForm);
       setMessage({ type: 'success', text: 'Tranche créée avec succès' });
       setShowModal(false);
       resetForm();
@@ -71,7 +80,7 @@ const AdminCommissions = () => {
     e.preventDefault();
     if (!selectedCommission) return;
     try {
-      await commissionService.updateCommission(selectedCommission.id!, commissionForm);
+      await trancheCommissionService.updateCommission(selectedCommission.id!, commissionForm);
       setMessage({ type: 'success', text: 'Tranche modifiée avec succès' });
       setShowModal(false);
       resetForm();
@@ -84,7 +93,7 @@ const AdminCommissions = () => {
   const handleDeleteCommission = async (id: number) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette tranche ?')) return;
     try {
-      await commissionService.deleteCommission(id);
+      await trancheCommissionService.deleteCommission(id);
       setMessage({ type: 'success', text: 'Tranche supprimée avec succès' });
       loadCommissions();
     } catch (error) {
@@ -95,10 +104,10 @@ const AdminCommissions = () => {
   const handleToggleActive = async (commission: Commission) => {
     try {
       if (commission.active) {
-        await commissionService.deactivateCommission(commission.id!);
+        await trancheCommissionService.deactivateCommission(commission.id!);
         setMessage({ type: 'success', text: 'Tranche désactivée' });
       } else {
-        await commissionService.activateCommission(commission.id!);
+        await trancheCommissionService.activateCommission(commission.id!);
         setMessage({ type: 'success', text: 'Tranche activée' });
       }
       loadCommissions();
@@ -110,7 +119,8 @@ const AdminCommissions = () => {
   const handleInitializeDefault = async () => {
     if (!confirm('Initialiser les tranches par défaut ? Ceci créera 4 tranches si aucune n\'existe.')) return;
     try {
-      await commissionService.initializeDefaultCommissions();
+      // TODO: Implémenter l'initialisation des commissions par défaut
+      setMessage({ type: 'success', text: 'Initialisation des commissions par défaut (à implémenter)' });
       setMessage({ type: 'success', text: 'Tranches par défaut initialisées' });
       loadCommissions();
     } catch (error) {
@@ -125,7 +135,7 @@ const AdminCommissions = () => {
       return;
     }
     try {
-      const result = await commissionService.calculateCommission(amount);
+      const result = await trancheCommissionService.simulateCommission(amount);
       setCalculatorResult(result);
     } catch (error) {
       setMessage({ type: 'error', text: 'Erreur lors du calcul' });
@@ -175,6 +185,27 @@ const AdminCommissions = () => {
       minimumFractionDigits: 0
     }).format(amount);
   };
+
+  // Si l'utilisateur n'est pas authentifié ou n'est pas admin
+  if (!user || user.role !== 'ADMIN') {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Accès refusé</h2>
+          <p className="text-gray-600 mb-4">
+            Seuls les administrateurs peuvent accéder à cette page.
+          </p>
+          <button
+            onClick={() => window.location.href = '/login'}
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Se connecter
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

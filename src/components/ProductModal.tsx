@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Star, Heart, ShoppingCart, Plus, Minus, MapPin, Clock, Shield, Truck } from 'lucide-react';
+import ProductImageSlider from './ProductImageSlider';
 
 interface Product {
   id: number;
@@ -65,34 +66,21 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose })
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-              {/* Images */}
+              {/* Images avec slideshow */}
               <div className="space-y-4">
-                <div className="relative">
-                  <img
-                    src={product.images[selectedImage]}
-                    alt={product.name}
-                    className="w-full h-96 object-cover rounded-xl"
-                  />
-                  {product.originalPrice && (
-                    <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                      -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-                    </div>
-                  )}
-                </div>
+                <ProductImageSlider
+                  images={product.images}
+                  productName={product.name}
+                  className="w-full"
+                  showThumbnails={true}
+                  autoPlay={false}
+                  showFullscreen={true}
+                />
                 
-                {product.images.length > 1 && (
-                  <div className="flex space-x-2">
-                    {product.images.map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImage(index)}
-                        className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                          selectedImage === index ? 'border-orange-600' : 'border-gray-200'
-                        }`}
-                      >
-                        <img src={image} alt="" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
+                {/* Badge de réduction */}
+                {product.originalPrice && (
+                  <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold z-10">
+                    -{Math.round((1 - product.price / product.originalPrice) * 100)}%
                   </div>
                 )}
               </div>

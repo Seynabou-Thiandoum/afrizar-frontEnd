@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, ArrowLeft, MessageCircle, TrendingUp, Flame, Award } from 'lucide-react';
+import ProductImageSlider from './ProductImageSlider';
 
 const TendancesPage = ({ products = [], type = 'all', onNavigate }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -161,36 +162,24 @@ const TendancesPage = ({ products = [], type = 'all', onNavigate }) => {
 
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Images */}
+              {/* Images avec slideshow */}
               <div>
                 <div className="mb-4 relative">
-                  <img
-                    src={product.gallery?.[selectedImageIndex] || product.image}
-                    alt={product.name}
-                    className="w-full h-96 object-cover rounded-lg"
+                  <ProductImageSlider
+                    images={product.gallery || [product.image]}
+                    productName={product.name}
+                    className="w-full"
+                    showThumbnails={true}
+                    autoPlay={false}
+                    showFullscreen={true}
                   />
                   {/* Badge Tendance */}
-                  <div className="absolute top-4 left-4">
+                  <div className="absolute top-4 left-4 z-10">
                     <span className="bg-gradient-to-r from-pink-500 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold">
                       🔥 TENDANCE
                     </span>
                   </div>
                 </div>
-                {product.gallery && product.gallery.length > 1 && (
-                  <div className="flex space-x-2">
-                    {product.gallery.map((img, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImageIndex(index)}
-                        className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${
-                          selectedImageIndex === index ? 'border-orange-500' : 'border-gray-300'
-                        }`}
-                      >
-                        <img src={img} alt="" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Détails */}

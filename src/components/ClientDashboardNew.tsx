@@ -335,7 +335,7 @@ const ClientDashboardNew = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Commandes Récentes</h2>
               <div className="space-y-4">
-                {commandes.slice(0, 3).map((commande) => {
+                {Array.isArray(commandes) ? commandes.slice(0, 3).map((commande) => {
                   const statutInfo = getStatutInfo(commande.statut);
                   const StatutIcon = statutInfo.icon;
                   
@@ -365,7 +365,12 @@ const ClientDashboardNew = () => {
                       </div>
                     </div>
                   );
-                })}
+                }) : (
+                  <div className="text-center py-8">
+                    <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">Aucune commande trouvée</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -377,7 +382,7 @@ const ClientDashboardNew = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Historique des Commandes</h2>
               <div className="space-y-4">
-                {commandes.map((commande) => {
+                {Array.isArray(commandes) ? commandes.map((commande) => {
                   const statutInfo = getStatutInfo(commande.statut);
                   const StatutIcon = statutInfo.icon;
                   
@@ -430,7 +435,12 @@ const ClientDashboardNew = () => {
                       </button>
                     </div>
                   );
-                })}
+                }) : (
+                  <div className="text-center py-8">
+                    <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">Aucune commande trouvée</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -523,13 +533,22 @@ const ClientDashboardNew = () => {
               ) : (
                 <div className="text-center py-12">
                   <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Votre panier est vide</p>
-                  <button
-                    onClick={() => window.location.hash = 'vetements'}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    Découvrir les produits
-                  </button>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Votre panier est vide</h3>
+                  <p className="text-gray-600 mb-6">Commencez vos achats en parcourant nos catégories</p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                      onClick={() => window.location.hash = 'vetements'}
+                      className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                    >
+                      Voir les Vêtements
+                    </button>
+                    <button
+                      onClick={() => window.location.hash = 'accessoires'}
+                      className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Voir les Accessoires
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

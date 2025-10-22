@@ -102,13 +102,27 @@ const Cart = ({ onClose, onNavigate }) => {
         <div className="text-center">
           <ShoppingCart className="h-24 w-24 text-gray-300 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Votre panier est vide</h2>
-          <p className="text-gray-600 mb-6">Découvrez nos magnifiques créations sénégalaises</p>
-          <button
-            onClick={onClose}
-            className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
-          >
-            Continuer les achats
-          </button>
+          <p className="text-gray-600 mb-6">Commencez vos achats en parcourant nos catégories</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => {
+                onClose();
+                window.location.hash = 'vetements';
+              }}
+              className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+            >
+              Voir les Vêtements
+            </button>
+            <button
+              onClick={() => {
+                onClose();
+                window.location.hash = 'accessoires';
+              }}
+              className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Voir les Accessoires
+            </button>
+          </div>
         </div>
       </div>
     );

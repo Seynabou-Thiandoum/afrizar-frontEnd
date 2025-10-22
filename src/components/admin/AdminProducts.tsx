@@ -18,6 +18,7 @@ import produitService, { Produit, CreateProduitDto } from '../../services/produi
 import adminService, { Vendeur } from '../../services/adminService';
 import categorieService, { Categorie } from '../../services/categorieService';
 import ImageUpload from '../common/ImageUpload';
+import ProductImageSlider from '../ProductImageSlider';
 import { API_CONFIG } from '../../config/api';
 
 // Helper pour construire l'URL complète de l'image
@@ -495,78 +496,137 @@ const AdminProducts = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((produit) => (
             <div key={produit.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              {/* Image */}
+              {/* Images avec slideshow */}
               <div className="relative h-48 bg-gray-100">
-                {getImageUrl(produit.photos || produit.imageUrl) ? (
-                  <img
-                    src={getImageUrl(produit.photos || produit.imageUrl)}
-                    alt={produit.nom}
-                    className="w-full h-full object-cover"
-                    onLoad={() => console.log('✅ Image produit chargée:', produit.nom)}
-                    onError={() => console.error('❌ Erreur chargement image:', produit.nom, getImageUrl(produit.photos || produit.imageUrl))}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="h-16 w-16 text-gray-300" />
-                  </div>
-                )}
-                <div className="absolute top-2 right-2">
-                  {getStatutBadge(produit.statut)}
-                </div>
+                {(() => {
+                  // Préparer les images pour le slideshow
+                  const images = [];
+                  
+                  // Image principale
+                  if (produit.imageUrl) {
+                    images.push(getImageUrl(produit.imageUrl));
+                  }
+                  
+                  // Images supplémentaires
+                  if (produit.photos && Array.isArray(produit.photos)) {
+                    produit.photos.forEach(photo => {
+                      const url = getImageUrl(photo);
+                      if (url && !images.includes(url)) {
+                        images.push(url);
+                      }
+                    });
+                  }
+                  
+                  // Images supplémentaires (ancien format)
+                  if (produit.imagesSupplementaires && Array.isArray(produit.imagesSupplementaires)) {
+                    produit.imagesSupplementaires.forEach(img => {
+                      if (img && !images.includes(img)) {
+                        images.push(img);
+                      }
+                    });
+                  }
+                  
+                  if (images.length > 0) {
+                    return (
+                      <>
+                        <ProductImageSlider
+                          images={images}
+                          productName={produit.nom}
+                          className="w-full h-full"
+                          showThumbnails={false}
+                          autoPlay={false}
+                          showFullscreen={true}
+                        />
+                        <div className="absolute top-2 right-2 z-10">
+                          {getStatutBadge(produit.statut)}
+                        </div>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-16 w-16 text-gray-300" />
+                        </div>
+                        <div className="absolute top-2 right-2 z-10">
+                          {getStatutBadge(produit.statut)}
+                        </div>
+                      </>
+                    );
+                  }
+                })()}
               </div>
 
               {/* Content */}
               <div className="p-4">
-                <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{produit.nom}</h3>
-                <p className="text-sm text-gray-600 mb-2 line-clamp-2">{produit.description}</p>
-
-                <div className="flex items-center space-x-2 mb-2">
-                  <Store className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">{produit.vendeurBoutique}</span>
+                <div className="mb-3">
+                  <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{produit.nom}</h3>
+                  <p className="text-sm text-gray-600 line-clamp-2">{produit.description}</p>
                 </div>
 
-                <div className="flex items-center space-x-2 mb-3">
-                  <Tag className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">{produit.categorieNom}</span>
+                {/* Informations vendeur et catégorie */}
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Store className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{produit.vendeurBoutique}</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Tag className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{produit.categorieNom}</span>
+                  </div>
                 </div>
 
                 {/* Détails du produit */}
-                <div className="space-y-1 mb-3">
-                  {produit.taille && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">Taille:</span>
-                      <span className="text-xs font-medium text-gray-700">{produit.taille}</span>
+                <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                  <h4 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Détails du produit</h4>
+                  {produit.taille || produit.couleur || produit.matiere || (produit.poids && produit.poids > 0) ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {produit.taille && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500">Taille:</span>
+                          <span className="text-xs font-medium text-gray-700">{produit.taille}</span>
+                        </div>
+                      )}
+                      {produit.couleur && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500">Couleur:</span>
+                          <span className="text-xs font-medium text-gray-700">{produit.couleur}</span>
+                        </div>
+                      )}
+                      {produit.matiere && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500">Matière:</span>
+                          <span className="text-xs font-medium text-gray-700">{produit.matiere}</span>
+                        </div>
+                      )}
+                      {produit.poids && produit.poids > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500">Poids:</span>
+                          <span className="text-xs font-medium text-gray-700">{produit.poids} kg</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {produit.couleur && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">Couleur:</span>
-                      <span className="text-xs font-medium text-gray-700">{produit.couleur}</span>
-                    </div>
-                  )}
-                  {produit.matiere && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">Matière:</span>
-                      <span className="text-xs font-medium text-gray-700">{produit.matiere}</span>
-                    </div>
-                  )}
-                  {produit.poids && produit.poids > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500">Poids:</span>
-                      <span className="text-xs font-medium text-gray-700">{produit.poids} kg</span>
+                  ) : (
+                    <div className="text-center py-2">
+                      <span className="text-xs text-gray-400 italic">Aucun détail spécifique</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="text-lg font-bold text-gray-900">{formatPrice(produit.prix)}</div>
-                    {produit.prixPromo && (
-                      <div className="text-sm text-gray-500 line-through">{formatPrice(produit.prixPromo)}</div>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Stock: <span className="font-semibold">{produit.stock}</span>
+                {/* Prix et Stock */}
+                <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-lg font-bold text-blue-900">{formatPrice(produit.prix)}</div>
+                      {produit.prixPromo && (
+                        <div className="text-sm text-gray-500 line-through">{formatPrice(produit.prixPromo)}</div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600">Stock</div>
+                      <div className="text-lg font-bold text-blue-900">{produit.stock}</div>
+                    </div>
                   </div>
                 </div>
 

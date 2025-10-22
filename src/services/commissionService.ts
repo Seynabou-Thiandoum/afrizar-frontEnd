@@ -37,7 +37,7 @@ class CommissionService {
 
   async obtenirMesCommissions(): Promise<Commission[]> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/client`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions-clients/client`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -58,7 +58,7 @@ class CommissionService {
 
   async obtenirSoldeCommission(): Promise<SoldeCommission> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/solde`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions-clients/solde`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -79,7 +79,7 @@ class CommissionService {
 
   async demanderRetrait(montant: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/retrait`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions-clients/retrait`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify({ montant }),
@@ -104,7 +104,7 @@ class CommissionService {
 
   async obtenirHistoriqueRetraits(): Promise<any[]> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions/retraits`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions-clients/retraits`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
