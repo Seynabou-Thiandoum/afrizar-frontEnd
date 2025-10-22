@@ -87,7 +87,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = authService.getToken();
 
       if (savedUser && token) {
-        // Vérifier si le token est toujours valide
+        // TEMPORAIRE : Désactiver la validation du token car elle cause des erreurs
+        // TODO : Corriger l'endpoint /api/auth/valider-token côté backend
+        console.log('✅ Utilisateur trouvé dans localStorage:', savedUser.email);
+        setUser(convertBackendUser(savedUser));
+        
+        /* DÉSACTIVÉ TEMPORAIREMENT
         const isValid = await authService.validateToken();
         
         if (isValid) {
@@ -96,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Token invalide, déconnecter
           authService.removeToken();
         }
+        */
       }
       
       setLoading(false);
@@ -216,6 +222,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     authService.logout();
     setUser(null);
+    // Rediriger vers la page d'accueil après déconnexion
+    window.location.href = '/';
   };
 
   const hasPermission = (permission: string): boolean => {

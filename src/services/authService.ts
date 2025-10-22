@@ -237,19 +237,30 @@ class AuthService {
   // Valider le token
   async validateToken(): Promise<boolean> {
     try {
+      const token = this.getToken();
+      if (!token) {
+        console.log('❌ Aucun token à valider');
+        return false;
+      }
+
       const response = await fetch(`${this.baseUrl}/valider-token`, {
         method: 'GET',
         headers: this.getHeaders(),
       });
 
       if (!response.ok) {
+        console.log('❌ Validation token échouée, status:', response.status);
         return false;
       }
 
       const data = await response.json();
-      return data.valide === true;
+      const isValid = data.valide === true;
+      console.log('✅ Token validé:', isValid ? 'VALIDE' : 'INVALIDE');
+      return isValid;
     } catch (error) {
-      console.error('Erreur de validation du token:', error);
+      console.error('❌ Erreur de validation du token:', error);
+      // En cas d'erreur réseau, considérer le token comme invalide
+      this.removeToken();
       return false;
     }
   }

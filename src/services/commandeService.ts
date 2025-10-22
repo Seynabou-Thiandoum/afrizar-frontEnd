@@ -50,6 +50,9 @@ class CommandeService {
     const token = authService.getToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+      console.log('🔐 CommandeService - Token ajouté:', token.substring(0, 20) + '...');
+    } else {
+      console.warn('⚠️ CommandeService - AUCUN TOKEN!');
     }
 
     return headers;

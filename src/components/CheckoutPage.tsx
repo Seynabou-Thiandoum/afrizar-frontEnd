@@ -4,6 +4,8 @@ import { usePanier } from '../contexts/PanierContext';
 import { useAuth } from '../contexts/AuthContext';
 import commandeService, { CreateCommandeDto } from '../services/commandeService';
 import fraisLivraisonService, { FraisLivraison } from '../services/fraisLivraisonService';
+import SelecteurModePaiement from './SelecteurModePaiement';
+import { ModePaiement } from '../services/modePaiementService';
 import Swal from 'sweetalert2';
 
 interface CheckoutPageProps {
@@ -19,7 +21,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
   const [commandeCreee, setCommandeCreee] = useState<any>(null);
   const [fraisLivraison, setFraisLivraison] = useState<FraisLivraison[]>([]);
   const [fraisLivraisonSelectionne, setFraisLivraisonSelectionne] = useState<FraisLivraison | null>(null);
-  const [modePaiement, setModePaiement] = useState<string>('');
+  const [modePaiement, setModePaiement] = useState<ModePaiement | null>(null);
   const [hasVerifiedAuth, setHasVerifiedAuth] = useState(false);
 
   const [formData, setFormData] = useState<CreateCommandeDto>({
@@ -75,9 +77,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
         return;
       }
 
-      // Vérifier si c'est un client
-      if (user?.role !== 'client') {
-        console.log('❌ Utilisateur n\'est pas un client, role:', user?.role);
+      // Vérifier si c'est un client ou admin (pour tests)
+      if (user?.role !== 'client' && user?.role !== 'admin') {
+        console.log('❌ Utilisateur ne peut pas passer de commande, role:', user?.role);
         Swal.fire({
           title: 'Accès restreint',
           text: 'Seuls les clients peuvent passer des commandes',
@@ -90,7 +92,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
         return;
       }
 
-      console.log('✅ Utilisateur authentifié et c\'est un client');
+      console.log('✅ Utilisateur authentifié, rôle:', user?.role);
       setHasVerifiedAuth(true);
 
       // Synchroniser le panier temporaire avec le backend
@@ -116,6 +118,32 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
     } catch (error) {
       console.error('Erreur lors du chargement des frais de livraison:', error);
     }
+  };
+
+  // Calculer le montant avec frais de livraison
+  const calculateMontantAvecLivraison = (): number => {
+    const montantPanier = panier?.montantTotal || 0;
+    const fraisLiv = fraisLivraisonSelectionne?.frais || 0;
+    return montantPanier + fraisLiv;
+  };
+
+  // Calculer les frais du mode de paiement
+  const calculateFraisPaiement = (): number => {
+    if (!modePaiement) return 0;
+    
+    const montantAvecLivraison = calculateMontantAvecLivraison();
+    let frais = modePaiement.fraisFixe || 0;
+    
+    if (modePaiement.fraisPourcentage) {
+      frais += (montantAvecLivraison * modePaiement.fraisPourcentage) / 100;
+    }
+    
+    return frais;
+  };
+
+  // Calculer le montant total final
+  const calculateMontantTotalFinal = (): number => {
+    return calculateMontantAvecLivraison() + calculateFraisPaiement();
   };
 
   // Helper pour obtenir l'URL complète de l'image
@@ -338,46 +366,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
         )}
       </div>
 
-      {/* Modes de paiement */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Mode de paiement</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button 
-            className={`p-4 border rounded-lg transition-colors ${
-              modePaiement === 'carte'
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onClick={() => setModePaiement('carte')}
-          >
-            <div className="flex items-center space-x-3">
-              <CreditCard className="h-6 w-6 text-purple-600" />
-              <div className="text-left">
-                <h4 className="font-semibold">Carte bancaire</h4>
-                <p className="text-sm text-gray-600">Visa, Mastercard, American Express</p>
-              </div>
-            </div>
-          </button>
-          
-          <button 
-            className={`p-4 border rounded-lg transition-colors ${
-              modePaiement === 'livraison'
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onClick={() => setModePaiement('livraison')}
-          >
-            <div className="flex items-center space-x-3">
-              <Truck className="h-6 w-6 text-green-600" />
-              <div className="text-left">
-                <h4 className="font-semibold">Paiement à la livraison</h4>
-                <p className="text-sm text-gray-600">Payez en espèces à la réception</p>
-              </div>
-            </div>
-          </button>
-        </div>
-      </div>
+      {/* Modes de paiement - Système dynamique configuré par l'admin */}
+      <SelecteurModePaiement
+        montantTotal={calculateMontantAvecLivraison()}
+        onSelectMode={setModePaiement}
+        modeSelectionne={modePaiement}
+      />
 
       <div className="mt-6 flex justify-between">
         <button
@@ -456,24 +450,39 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="space-y-3">
           <div className="flex justify-between text-gray-700">
-            <span>Sous-total</span>
+            <span>Sous-total articles</span>
             <span>{panier?.montantTotal.toLocaleString()} FCFA</span>
           </div>
           <div className="flex justify-between text-gray-700">
-            <span>Livraison</span>
+            <span>Frais de livraison</span>
             <span className="text-green-600 font-semibold">
               {fraisLivraisonSelectionne ? `${fraisLivraisonSelectionne.frais.toLocaleString()} FCFA` : 'À sélectionner'}
             </span>
           </div>
+          {modePaiement && calculateFraisPaiement() > 0 && (
+            <div className="flex justify-between text-gray-700">
+              <span>Frais de paiement ({modePaiement.nom})</span>
+              <span className="text-blue-600 font-semibold">
+                {calculateFraisPaiement().toLocaleString()} FCFA
+              </span>
+            </div>
+          )}
           <div className="border-t pt-3 flex justify-between text-lg font-bold">
-            <span>Total</span>
+            <span>Total à payer</span>
             <span className="text-[#F99834]">
-              {fraisLivraisonSelectionne 
-                ? (panier?.montantTotal + fraisLivraisonSelectionne.frais).toLocaleString() 
-                : panier?.montantTotal.toLocaleString()
-              } FCFA
+              {calculateMontantTotalFinal().toLocaleString()} FCFA
             </span>
           </div>
+          {modePaiement && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
+              <p className="text-sm text-amber-800">
+                <strong>💳 Mode de paiement :</strong> {modePaiement.nom}
+                {modePaiement.instructions && (
+                  <span className="block mt-1 text-xs">{modePaiement.instructions}</span>
+                )}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -659,13 +668,18 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
                       {fraisLivraisonSelectionne ? `${fraisLivraisonSelectionne.frais.toLocaleString()} FCFA` : 'À sélectionner'}
                     </span>
                   </div>
+                  {modePaiement && calculateFraisPaiement() > 0 && (
+                    <div className="flex justify-between text-gray-700">
+                      <span className="text-sm">Frais paiement</span>
+                      <span className="text-sm">
+                        {calculateFraisPaiement().toLocaleString()} FCFA
+                      </span>
+                    </div>
+                  )}
                   <div className="border-t pt-2 flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span className="text-[#F99834]">
-                      {fraisLivraisonSelectionne 
-                        ? (panier.montantTotal + fraisLivraisonSelectionne.frais).toLocaleString() 
-                        : panier.montantTotal.toLocaleString()
-                      } FCFA
+                      {calculateMontantTotalFinal().toLocaleString()} FCFA
                     </span>
                   </div>
                 </div>

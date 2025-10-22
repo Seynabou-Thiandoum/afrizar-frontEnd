@@ -37,8 +37,14 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token expiré ou invalide
-      localStorage.removeItem('afrizar_token');
-      window.location.href = '/connexion';
+      // Vérifier si c'est vraiment un problème de token et pas juste une ressource non autorisée
+      const errorMessage = error.response?.data?.message || '';
+      if (errorMessage.includes('Token expiré') || errorMessage.includes('Token invalide')) {
+        console.warn('🔐 Token expiré, déconnexion...');
+        localStorage.removeItem('afrizar_token');
+        localStorage.removeItem('afrizar_user');
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }
