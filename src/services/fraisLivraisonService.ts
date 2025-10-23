@@ -37,7 +37,7 @@ class FraisLivraisonService {
   async obtenirOptionsLivraison(): Promise<FraisLivraison[]> {
     try {
       // Utiliser l'API existante pour obtenir la grille des tarifs
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/calculs/tarifs-expedition`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/calculs/expedition/grille-tarifs`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

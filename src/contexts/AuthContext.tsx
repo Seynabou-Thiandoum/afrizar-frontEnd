@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string; error?: string; user?: User }>;
   register: (userData: any, userType: 'client' | 'vendor') => Promise<{ success: boolean; message?: string; error?: string }>;
   logout: () => void;
+  forceLogout: () => void;
   isAuthenticated: boolean;
   hasPermission: (permission: string) => boolean;
   switchRole: (role: string) => void;
@@ -80,13 +81,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Fonction pour nettoyer les tokens corrompus
+  const cleanCorruptedToken = (token: string | null): boolean => {
+    if (!token) return false;
+    
+    // Vérifier que le token a le bon format JWT (2 points)
+    if (!token.includes('.') || token.split('.').length !== 3) {
+      console.error('❌ Token JWT corrompu détecté, nettoyage...');
+      localStorage.removeItem('afrizar_token');
+      localStorage.removeItem('afrizar_user');
+      return false;
+    }
+    
+    return true;
+  };
+
   // Charger l'utilisateur depuis le localStorage au démarrage
   useEffect(() => {
     const initAuth = async () => {
       const savedUser = authService.getUser();
       const token = authService.getToken();
 
-      if (savedUser && token) {
+      if (savedUser && token && cleanCorruptedToken(token)) {
         // TEMPORAIRE : Désactiver la validation du token car elle cause des erreurs
         // TODO : Corriger l'endpoint /api/auth/valider-token côté backend
         console.log('✅ Utilisateur trouvé dans localStorage:', savedUser.email);
@@ -220,9 +236,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    authService.logout();
+    try {
+      authService.logout();
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    } finally {
+      // Toujours nettoyer les données locales
+      localStorage.removeItem('afrizar_token');
+      localStorage.removeItem('afrizar_user');
+      setUser(null);
+      // Rediriger vers la page d'accueil après déconnexion
+      window.location.href = '/';
+    }
+  };
+
+  // Fonction pour forcer la déconnexion en cas de token corrompu
+  const forceLogout = () => {
+    console.log('🔄 Déconnexion forcée due à un token corrompu');
+    localStorage.removeItem('afrizar_token');
+    localStorage.removeItem('afrizar_user');
     setUser(null);
-    // Rediriger vers la page d'accueil après déconnexion
     window.location.href = '/';
   };
 
@@ -243,6 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       register,
       logout,
+      forceLogout,
       isAuthenticated: !!user,
       hasPermission,
       switchRole,

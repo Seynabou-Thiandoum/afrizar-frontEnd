@@ -42,7 +42,7 @@ const AdminCommissions = () => {
 
   useEffect(() => {
     // Vérifier l'authentification
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || user.role !== 'admin') {
       setMessage({ type: 'error', text: 'Accès refusé. Seuls les administrateurs peuvent accéder à cette page.' });
       setLoading(false);
       return;
@@ -136,8 +136,19 @@ const AdminCommissions = () => {
     }
     try {
       const result = await trancheCommissionService.simulateCommission(amount);
-      setCalculatorResult(result);
+      console.log('📊 Résultat simulation:', result);
+      
+      // Mapper le résultat vers le format attendu
+      const mappedResult = {
+        montant: result.montant,
+        commission: result.montantCommission,
+        total: result.prixFinal
+      };
+      
+      console.log('📊 Résultat mappé:', mappedResult);
+      setCalculatorResult(mappedResult);
     } catch (error) {
+      console.error('❌ Erreur calcul commission:', error);
       setMessage({ type: 'error', text: 'Erreur lors du calcul' });
     }
   };
@@ -179,6 +190,12 @@ const AdminCommissions = () => {
   };
 
   const formatCurrency = (amount: number) => {
+    // Vérifier si la valeur est valide
+    if (isNaN(amount) || amount === null || amount === undefined) {
+      console.warn('⚠️ Valeur invalide pour formatCurrency:', amount);
+      return '0 F CFA';
+    }
+    
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -187,7 +204,7 @@ const AdminCommissions = () => {
   };
 
   // Si l'utilisateur n'est pas authentifié ou n'est pas admin
-  if (!user || user.role !== 'ADMIN') {
+  if (!user || user.role !== 'admin') {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
@@ -296,15 +313,15 @@ const AdminCommissions = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Montant :</span>
-                    <span className="font-semibold">{formatCurrency(calculatorResult.montant)}</span>
+                    <span className="font-semibold">{formatCurrency(calculatorResult.montant || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Commission :</span>
-                    <span className="font-semibold text-red-600">+{formatCurrency(calculatorResult.commission)}</span>
+                    <span className="font-semibold text-red-600">+{formatCurrency(calculatorResult.commission || 0)}</span>
                   </div>
                   <div className="flex justify-between text-base border-t pt-2">
                     <span className="font-bold text-gray-900">Total :</span>
-                    <span className="font-bold text-gray-900">{formatCurrency(calculatorResult.total)}</span>
+                    <span className="font-bold text-gray-900">{formatCurrency(calculatorResult.total || 0)}</span>
                   </div>
                 </div>
               </div>

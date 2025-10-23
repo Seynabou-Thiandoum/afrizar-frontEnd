@@ -276,14 +276,24 @@ const AdminProducts = () => {
   };
 
   const openEditModal = (produit: Produit) => {
+    console.log('📝 Ouverture modal édition pour produit:', produit);
+    console.log('📸 Images du produit:', produit.photos);
+    console.log('📸 Images supplémentaires:', produit.imagesSupplementaires);
+    
     setSelectedProduit(produit);
+    
+    // Charger la première image comme image principale
+    const premiereImage = produit.photos && produit.photos.length > 0 
+      ? produit.photos[0] 
+      : produit.imageUrl || '';
+    
     setProductForm({
       nom: produit.nom,
       description: produit.description,
       prix: produit.prix,
       prixPromo: produit.prixPromo,
       categorieId: produit.categorieId,
-      imageUrl: produit.imageUrl || '',
+      imageUrl: premiereImage,
       stock: produit.stock,
       vendeurId: produit.vendeurId,
       taille: produit.taille || '',
@@ -291,7 +301,19 @@ const AdminProducts = () => {
       matiere: produit.matiere || '',
       poids: produit.poids || 0
     });
-    setImageInputs(produit.imagesSupplementaires && produit.imagesSupplementaires.length > 0 ? produit.imagesSupplementaires : ['']);
+    
+    // Charger toutes les images supplémentaires (sans la première qui est déjà dans imageUrl)
+    const imagesSupp = produit.photos && produit.photos.length > 1 
+      ? produit.photos.slice(1) 
+      : (produit.imagesSupplementaires || []);
+    
+    console.log('📸 Images supplémentaires à charger:', imagesSupp);
+    setImageInputs(imagesSupp.length > 0 ? imagesSupp : ['']);
+    
+    // Afficher un message de debug
+    console.log('✅ Modal d\'édition ouvert avec:');
+    console.log('  - Image principale:', premiereImage);
+    console.log('  - Images supplémentaires:', imagesSupp);
     setEditMode(true);
     setShowModal(true);
   };
@@ -820,9 +842,50 @@ const AdminProducts = () => {
                     />
                   </div>
 
+                  {/* Affichage des images existantes en mode édition */}
+                  {editMode && selectedProduit && (
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Images actuelles du produit
+                      </label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                        {selectedProduit.photos && selectedProduit.photos.length > 0 ? (
+                          selectedProduit.photos.map((photo, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={getImageUrl(photo)}
+                                alt={`Image ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                                onError={(e) => {
+                                  console.error('❌ Erreur chargement image:', photo);
+                                  e.currentTarget.src = '/placeholder-product.jpg';
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-lg transition-all flex items-center justify-center">
+                                <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                  Image {index + 1}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="col-span-2 md:col-span-4 text-center text-gray-500 py-4">
+                            <ImageIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                            <p>Aucune image existante</p>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-600 mt-2">
+                        💡 Ces images seront remplacées par les nouvelles images que vous sélectionnez ci-dessous
+                      </p>
+                    </div>
+                  )}
+
                   {/* Images supplémentaires */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Images supplémentaires</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      {editMode ? 'Nouvelles images supplémentaires' : 'Images supplémentaires'}
+                    </label>
                     <div className="space-y-4">
                       {imageInputs.map((img, index) => (
                         <div key={index} className="relative">

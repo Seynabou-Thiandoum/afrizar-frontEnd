@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Users,
   Package,
   ShoppingBag,
-  DollarSign,
   Shield,
-  Settings,
   User,
   LogOut,
-  Crown,
   LayoutDashboard,
   UserCog,
   Store,
@@ -19,7 +16,8 @@ import {
   TrendingUp,
   ArrowLeft,
   Truck,
-  CreditCard
+  CreditCard,
+  Globe
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import adminService from '../services/adminService';
@@ -32,10 +30,11 @@ import AdminCommissions from './admin/AdminCommissions';
 import AdminOrders from './admin/AdminOrders';
 import AdminFraisLivraison from './admin/AdminFraisLivraison';
 import AdminModesPaiement from './admin/AdminModesPaiement';
+import AdminActualitesMode from './admin/AdminActualitesMode';
 
 const AdminDashboardNew = () => {
   const { user, logout } = useAuth();
-  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders' | 'frais-livraison' | 'modes-paiement'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders' | 'frais-livraison' | 'modes-paiement' | 'actualites-mode'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -64,16 +63,6 @@ const AdminDashboardNew = () => {
     window.location.href = '/';
   };
 
-  // Afficher un message de développement pour les vues non encore implémentées
-  const ComingSoonView = ({ title }: { title: string }) => (
-    <div className="flex items-center justify-center h-96">
-      <div className="text-center">
-        <Clock className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
-        <p className="text-gray-600">Cette section sera bientôt disponible</p>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -216,6 +205,18 @@ const AdminDashboardNew = () => {
             <CreditCard className="h-5 w-5" />
             <span>Modes de Paiement</span>
           </button>
+
+          <button
+            onClick={() => setActiveView('actualites-mode')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              activeView === 'actualites-mode'
+                ? 'bg-[#F99834]/10 text-[#F99834] font-semibold'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Globe className="h-5 w-5" />
+            <span>Actualités Mode</span>
+          </button>
         </nav>
 
         {/* User section */}
@@ -274,6 +275,7 @@ const AdminDashboardNew = () => {
                 {activeView === 'categories' && 'Gestion des Catégories'}
                 {activeView === 'commissions' && 'Gestion des Commissions'}
                 {activeView === 'orders' && 'Gestion des Commandes'}
+                {activeView === 'actualites-mode' && 'Actualités Mode & Tendances'}
               </h2>
               <p className="text-gray-600 mt-1">
                 {activeView === 'dashboard' && 'Vue d\'ensemble de votre plateforme'}
@@ -284,6 +286,7 @@ const AdminDashboardNew = () => {
                 {activeView === 'categories' && 'Organisez vos produits par catégories'}
                 {activeView === 'commissions' && 'Configurez les tranches de commission'}
                 {activeView === 'orders' && 'Suivez toutes les commandes clients'}
+                {activeView === 'actualites-mode' && 'Gérez les actualités, tendances et produits à la mode'}
               </p>
             </div>
             {activeView !== 'dashboard' && (
@@ -467,6 +470,7 @@ const AdminDashboardNew = () => {
           {activeView === 'commissions' && <AdminCommissions />}
           {activeView === 'orders' && <AdminOrders />}
           {activeView === 'frais-livraison' && <AdminFraisLivraison />}
+          {activeView === 'actualites-mode' && <AdminActualitesMode />}
         </div>
       </div>
     </div>

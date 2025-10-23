@@ -567,6 +567,12 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
     {t('vendors')}
   </button>
   <button
+    onClick={() => handleNavigation('tendances')}
+    className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
+  >
+    À la mode
+  </button>
+  <button
     onClick={() => handleNavigation('contact')}
     className="text-gray-700 hover:text-[#F99834] font-medium transition-colors"
   >
@@ -772,6 +778,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
                 <button onClick={() => handleNavigation('vetements')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('clothes')}</button>
                 <button onClick={() => handleNavigation('accessoires')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('accessories')}</button>
                 <button onClick={() => handleNavigation('vendeurs')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('vendors')}</button>
+                <button onClick={() => handleNavigation('tendances')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">À la mode</button>
                 <button onClick={() => handleNavigation('contact')} className="block w-full text-left text-gray-700 hover:text-orange-600 py-2">{t('contact')}</button>
                 
                 {isAuthenticated && user && (

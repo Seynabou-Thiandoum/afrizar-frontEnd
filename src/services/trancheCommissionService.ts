@@ -30,7 +30,8 @@ export interface StatistiquesCommission {
 
 class TrancheCommissionService {
   private getHeaders() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afrizar_token');
+    console.log('🔑 Token pour commissions:', token ? token.substring(0, 20) + '...' : 'Aucun token');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -40,6 +41,21 @@ class TrancheCommissionService {
   // Obtenir toutes les tranches de commission
   async getAllCommissions(): Promise<TrancheCommission[]> {
     try {
+      const token = localStorage.getItem('afrizar_token');
+      if (!token) {
+        throw new Error('Token d\'authentification manquant');
+      }
+
+      // Vérifier que le token a le bon format JWT (2 points)
+      if (!token.includes('.') || token.split('.').length !== 3) {
+        console.error('❌ Token JWT invalide:', token);
+        localStorage.removeItem('afrizar_token');
+        localStorage.removeItem('afrizar_user');
+        // Rediriger vers la page de connexion
+        window.location.href = '/auth';
+        throw new Error('Token d\'authentification invalide. Veuillez vous reconnecter.');
+      }
+
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/commissions`, {
         method: 'GET',
         headers: this.getHeaders(),

@@ -28,7 +28,7 @@ export interface SoldeCommission {
 
 class CommissionService {
   private getHeaders() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afrizar_token');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
