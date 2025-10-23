@@ -35,6 +35,8 @@ import {
 } from 'lucide-react';
 import { usePanier } from '../contexts/PanierContext';
 import { useAuth } from '../contexts/AuthContext';
+import tendanceService, { ProduitTendance, ProduitsALaMode } from '../services/tendanceService';
+import actualiteService, { Actualite as ActualiteReelle } from '../services/actualiteService';
 
 interface Produit {
   id: number;
@@ -91,6 +93,8 @@ const TendancesPage = () => {
   const [produits, setProduits] = useState<Produit[]>([]);
   const [actualites, setActualites] = useState<Actualite[]>([]);
   const [tendances, setTendances] = useState<Tendance[]>([]);
+  const [produitsReels, setProduitsReels] = useState<ProduitsALaMode | null>(null);
+  const [actualitesReelles, setActualitesReelles] = useState<ActualiteReelle[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'actualites' | 'tendances' | 'produits'>('actualites');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -333,16 +337,81 @@ const TendancesPage = () => {
   ];
 
   useEffect(() => {
-    // Simuler le chargement des données
-    setTimeout(() => {
+    chargerDonnees();
+  }, []);
+
+  const chargerDonnees = async () => {
+    try {
+      setLoading(true);
+      
+      // Charger les données réelles et fictives en parallèle
+      const [produitsReelsData, actualitesReellesData] = await Promise.all([
+        tendanceService.obtenirProduitsALaMode(12),
+        actualiteService.obtenirActualitesRecentes(6)
+      ]);
+      
+      setProduitsReels(produitsReelsData);
+      setActualitesReelles(actualitesReellesData);
       setProduits(produitsTendance);
       setActualites(actualitesDemo);
       setTendances(tendancesDemo);
+      
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      // En cas d'erreur, afficher les données fictives
+      setProduits(produitsTendance);
+      setActualites(actualitesDemo);
+      setTendances(tendancesDemo);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
 
   const categories = ['all', 'Robes', 'Costumes', 'Boubou', 'Chemises', 'Jupes', 'Pantalons'];
+
+  // Fonction pour convertir les actualités réelles en format compatible
+  const convertirActualiteReelle = (actualite: ActualiteReelle): Actualite => {
+    return {
+      id: actualite.id,
+      titre: actualite.titre,
+      resume: actualite.resume,
+      contenu: actualite.contenu,
+      imageUrl: actualite.imageUrl || '/images/placeholder-news.jpg',
+      auteur: actualite.auteur,
+      datePublication: actualite.datePublication,
+      categorie: actualite.categorie || 'Actualités',
+      tags: actualite.tags || [],
+      likes: actualite.nombreLikes,
+      commentaires: actualite.nombreCommentaires,
+      partages: actualite.nombrePartages,
+      vue: actualite.estVisible,
+      tendance: actualite.estTendance
+    };
+  };
+
+  // Fonction pour convertir les produits réels en format compatible
+  const convertirProduitReel = (produit: ProduitTendance): Produit => {
+    return {
+      id: produit.id,
+      nom: produit.nom,
+      description: produit.description,
+      prix: produit.prix,
+      prixPromo: produit.prixPromo,
+      imageUrl: produit.photos && produit.photos.length > 0 ? produit.photos[0] : '/images/placeholder-product.jpg',
+      vendeur: {
+        nom: produit.nomVendeur,
+        logo: undefined
+      },
+      categorie: produit.nomCategorie || 'Sans catégorie',
+      note: produit.noteMoyenne,
+      nombreAvis: produit.nombreEvaluations,
+      vendus: Math.floor(Math.random() * 100) + 1, // Simulation
+      tendance: produit.description?.includes('[TENDANCE]') || false,
+      nouveaute: false,
+      promo: !!produit.prixPromo,
+      tags: [produit.nomCategorie || 'mode'].filter(Boolean)
+    };
+  };
 
   const trierProduits = (produits: Produit[]) => {
     return [...produits].sort((a, b) => {
@@ -379,6 +448,30 @@ const TendancesPage = () => {
     });
   };
 
+  // Combiner les actualités fictives et réelles
+  const toutesActualites = [
+    ...actualites,
+    ...(actualitesReelles.map(convertirActualiteReelle))
+  ].filter((actualite, index, array) => 
+    array.findIndex(a => a.id === actualite.id) === index
+  );
+
+  // Combiner les produits fictifs et réels
+  const tousProduits = [
+    ...produits,
+    ...(produitsReels ? [
+      ...produitsReels.produitsPlusVus.map(convertirProduitReel),
+      ...produitsReels.produitsMieuxNotes.map(convertirProduitReel),
+      ...produitsReels.produitsPromo.map(convertirProduitReel),
+      ...produitsReels.produitsRecents.map(convertirProduitReel)
+    ] : [])
+  ];
+
+  // Supprimer les doublons basés sur l'ID
+  const produitsUniques = tousProduits.filter((produit, index, self) => 
+    index === self.findIndex(p => p.id === produit.id)
+  );
+
   const filtrerProduits = (produits: Produit[]) => {
     if (selectedCategory === 'all') {
       return produits;
@@ -386,7 +479,7 @@ const TendancesPage = () => {
     return produits.filter(produit => produit.categorie === selectedCategory);
   };
 
-  const produitsFiltres = trierProduits(filtrerProduits(produits));
+  const produitsFiltres = trierProduits(filtrerProduits(produitsUniques));
 
   const handleAjouterAuPanier = (produit: Produit) => {
     if (!isAuthenticated) {
@@ -497,8 +590,8 @@ const TendancesPage = () => {
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="relative h-64 md:h-80">
                 <img
-                  src={actualites[0]?.imageUrl}
-                  alt={actualites[0]?.titre}
+                  src={toutesActualites[0]?.imageUrl}
+                  alt={toutesActualites[0]?.titre}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.src = '/images/placeholder-news.jpg';
@@ -508,36 +601,36 @@ const TendancesPage = () => {
                 <div className="absolute bottom-6 left-6 right-6 text-white">
                   <div className="flex items-center space-x-2 mb-2">
                     <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                      {actualites[0]?.categorie}
+                      {toutesActualites[0]?.categorie}
                     </span>
-                    {actualites[0]?.tendance && (
+                    {toutesActualites[0]?.tendance && (
                       <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center">
                         <Flame className="h-3 w-3 mr-1" />
                         Tendance
                       </span>
                     )}
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2">{actualites[0]?.titre}</h2>
-                  <p className="text-lg text-gray-200 mb-4">{actualites[0]?.resume}</p>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2">{toutesActualites[0]?.titre}</h2>
+                  <p className="text-lg text-gray-200 mb-4">{toutesActualites[0]?.resume}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 text-sm text-gray-300">
                       <div className="flex items-center">
                         <User className="h-4 w-4 mr-1" />
-                        {actualites[0]?.auteur}
+                        {toutesActualites[0]?.auteur}
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(actualites[0]?.datePublication).toLocaleDateString('fr-FR')}
+                        {new Date(toutesActualites[0]?.datePublication).toLocaleDateString('fr-FR')}
                       </div>
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-gray-300">
                       <div className="flex items-center">
                         <ThumbsUp className="h-4 w-4 mr-1" />
-                        {actualites[0]?.likes}
+                        {toutesActualites[0]?.likes}
                       </div>
                       <div className="flex items-center">
                         <MessageCircle className="h-4 w-4 mr-1" />
-                        {actualites[0]?.commentaires}
+                        {toutesActualites[0]?.commentaires}
                       </div>
                     </div>
                   </div>
@@ -547,7 +640,7 @@ const TendancesPage = () => {
 
             {/* News Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {actualites.slice(1).map((actualite) => (
+              {toutesActualites.slice(1).map((actualite) => (
                 <article key={actualite.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative h-48">
                     <img
@@ -752,6 +845,108 @@ const TendancesPage = () => {
               </div>
             </div>
 
+            {/* Section des produits réels */}
+            {produitsReels && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Produits à la Mode</h3>
+                  <p className="text-gray-600">Découvrez les produits tendance de nos vendeurs</p>
+                </div>
+
+                {/* Produits les plus vus */}
+                {produitsReels.produitsPlusVus.length > 0 && (
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-semibold text-gray-900 flex items-center">
+                        <Eye className="h-5 w-5 mr-2 text-blue-500" />
+                        Plus Vus
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {produitsReels.produitsPlusVus.slice(0, 4).map((produit) => {
+                        const produitConverti = convertirProduitReel(produit);
+                        return (
+                          <div key={produit.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                            <img
+                              src={produitConverti.imageUrl}
+                              alt={produitConverti.nom}
+                              className="w-full h-32 object-cover rounded-lg mb-3"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-product.jpg';
+                              }}
+                            />
+                            <h5 className="font-medium text-gray-900 text-sm mb-1 line-clamp-1">
+                              {produitConverti.nom}
+                            </h5>
+                            <p className="text-orange-600 font-semibold text-sm">
+                              {produitConverti.prix.toLocaleString()} FCFA
+                            </p>
+                            <div className="flex items-center mt-2 text-xs text-gray-500">
+                              <Eye className="h-3 w-3 mr-1" />
+                              {produit.nombreVues} vues
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Produits en promotion */}
+                {produitsReels.produitsPromo.length > 0 && (
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-semibold text-gray-900 flex items-center">
+                        <Sparkles className="h-5 w-5 mr-2 text-orange-500" />
+                        Promotions
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {produitsReels.produitsPromo.slice(0, 4).map((produit) => {
+                        const produitConverti = convertirProduitReel(produit);
+                        return (
+                          <div key={produit.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors relative">
+                            {produit.prixPromo && (
+                              <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                -{Math.round(((produit.prix - produit.prixPromo) / produit.prix) * 100)}%
+                              </div>
+                            )}
+                            <img
+                              src={produitConverti.imageUrl}
+                              alt={produitConverti.nom}
+                              className="w-full h-32 object-cover rounded-lg mb-3"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-product.jpg';
+                              }}
+                            />
+                            <h5 className="font-medium text-gray-900 text-sm mb-1 line-clamp-1">
+                              {produitConverti.nom}
+                            </h5>
+                            <div className="flex items-center space-x-2">
+                              {produit.prixPromo ? (
+                                <>
+                                  <p className="text-red-600 font-semibold text-sm">
+                                    {produit.prixPromo.toLocaleString()} FCFA
+                                  </p>
+                                  <p className="text-gray-400 line-through text-xs">
+                                    {produit.prix.toLocaleString()} FCFA
+                                  </p>
+                                </>
+                              ) : (
+                                <p className="text-orange-600 font-semibold text-sm">
+                                  {produitConverti.prix.toLocaleString()} FCFA
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Products Grid */}
             {produitsFiltres.length === 0 ? (
               <div className="text-center py-16">
@@ -901,24 +1096,24 @@ const TendancesPage = () => {
           {activeTab === 'actualites' && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
               <div>
-                <div className="text-3xl font-bold text-orange-500 mb-2">{actualites.length}</div>
+                <div className="text-3xl font-bold text-orange-500 mb-2">{toutesActualites.length}</div>
                 <div className="text-gray-600">Articles publiés</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-orange-500 mb-2">
-                  {actualites.reduce((sum, a) => sum + a.likes, 0)}
+                  {toutesActualites.reduce((sum, a) => sum + a.likes, 0)}
                 </div>
                 <div className="text-gray-600">Likes total</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-orange-500 mb-2">
-                  {actualites.reduce((sum, a) => sum + a.commentaires, 0)}
+                  {toutesActualites.reduce((sum, a) => sum + a.commentaires, 0)}
                 </div>
                 <div className="text-gray-600">Commentaires</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-orange-500 mb-2">
-                  {actualites.filter(a => a.tendance).length}
+                  {toutesActualites.filter(a => a.tendance).length}
                 </div>
                 <div className="text-gray-600">Articles tendance</div>
               </div>
