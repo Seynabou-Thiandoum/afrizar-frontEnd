@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+console.log("BASE_URL:", process.env.REACT_APP_API_URL); // <- Ajoute ici
 // Configuration de l'API
 export const API_CONFIG = {
   BASE_URL: process.env.REACT_APP_API_URL,
