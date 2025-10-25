@@ -1,11 +1,24 @@
 import axios from 'axios';
+const getApiUrl = () => {
+  // En production sur Render
+  if (window.location.hostname !== 'localhost') {
+    return 'https://afrizar-back-end.onrender.com';
+  }
+  // En développement local
+  return 'http://localhost:8080';
+};
 
 // Configuration de l'API
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8080',
+  BASE_URL: getApiUrl(),
+  // BASE_URL: REACT_APP_API_URL,
+  // BASE_URL: 'http://localhost:8080',
   TIMEOUT: 10000, // 10 secondes
   RETRY_ATTEMPTS: 3,
 };
+
+console.log("BASE_URL:", API_CONFIG.BASE_URL); // <- Ajoute ici
+
 
 // Instance axios configurée
 export const api = axios.create({

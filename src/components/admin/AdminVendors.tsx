@@ -151,7 +151,7 @@ const AdminVendors = () => {
       };
       console.log('📦 Données complètes envoyées:', requestBody);
       
-      const response = await fetch('http://localhost:8080/api/auth/inscription', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/inscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
