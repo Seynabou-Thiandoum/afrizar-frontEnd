@@ -18,6 +18,7 @@ interface VendorProfilePageProps {
 
 const VendorProfilePage = ({ vendorId, onBack, onNavigate }: VendorProfilePageProps) => {
   const [vendor, setVendor] = useState<PublicVendeur | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +30,20 @@ const VendorProfilePage = ({ vendorId, onBack, onNavigate }: VendorProfilePagePr
     try {
       setLoading(true);
       setError(null);
-      const data = await publicVendeurService.getPublishedVendeur(vendorId);
-      setVendor(data);
+      
+      // Charger les informations du vendeur
+      const vendorData = await publicVendeurService.getPublishedVendeur(vendorId);
+      setVendor(vendorData);
+      
+      // Charger les produits du vendeur
+      try {
+        const productsResponse = await fetch(`${API_CONFIG.BASE_URL}/api/produits/vendeur/${vendorId}`);
+        const productsData = await productsResponse.json();
+        setProducts(productsData.content || productsData || []);
+      } catch (productErr) {
+        console.error('Erreur chargement produits:', productErr);
+        setProducts([]);
+      }
     } catch (err) {
       setError('Vendeur non trouvé ou non publié');
       console.error('Erreur chargement vendeur:', err);
@@ -87,16 +100,15 @@ const VendorProfilePage = ({ vendorId, onBack, onNavigate }: VendorProfilePagePr
               {/* Photo de profil */}
               <div className="flex-shrink-0">
                 <div className="relative">
-                  {/* Forcer l'affichage de l'image connue pour debug */}
                   <img
-                    src="http://localhost:8080/api/files/2decb2a5-f52a-4b75-875f-718e7e45be44.png"
+                    src={getImageUrl(vendor.photoProfil) || 'https://via.placeholder.com/128x128?text=Photo'}
                     alt={vendor.nomBoutique}
                     className="w-32 h-32 rounded-full object-cover border-4 border-orange-100"
                     onLoad={() => {
-                      console.log('✅ Image forcée chargée avec succès');
+                      console.log('✅ Image du vendeur chargée avec succès');
                     }}
                     onError={() => {
-                      console.error('❌ Erreur même avec l\'image forcée');
+                      console.error('❌ Erreur chargement image vendeur');
                     }}
                   />
                   {vendor.verifie && (
@@ -137,7 +149,7 @@ const VendorProfilePage = ({ vendorId, onBack, onNavigate }: VendorProfilePagePr
                   <p className="text-gray-700 text-lg leading-relaxed mb-6">{vendor.description}</p>
                 )}
 
-                {/* Informations de contact */}
+                {/* Informations publiques uniquement */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   {vendor.adresseBoutique && (
                     <div className="flex items-center space-x-3">
@@ -146,14 +158,15 @@ const VendorProfilePage = ({ vendorId, onBack, onNavigate }: VendorProfilePagePr
                     </div>
                   )}
                   
-                  <div className="flex items-center space-x-3">
-                    <Mail className="h-5 w-5 text-gray-500" />
-                    <span className="text-gray-700">{vendor.email}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Phone className="h-5 w-5 text-gray-500" />
-                    <span className="text-gray-700">{vendor.telephone}</span>
+                  {/* Biographie du vendeur */}
+                  <div className="flex items-start space-x-3">
+                    <Users className="h-5 w-5 text-gray-500 mt-1" />
+                    <div>
+                      <span className="text-gray-700 font-medium">À propos</span>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {vendor.biographie || vendor.description || 'Artisan passionné par la création de pièces uniques.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -178,14 +191,53 @@ const VendorProfilePage = ({ vendorId, onBack, onNavigate }: VendorProfilePagePr
           </div>
         </div>
 
-        {/* Section produits (placeholder pour l'instant) */}
+        {/* Section produits */}
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Produits de {vendor.nomBoutique}</h2>
-          <div className="text-center py-12">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Produits bientôt disponibles</h3>
-            <p className="text-gray-600">Les produits de ce vendeur seront affichés ici prochainement.</p>
-          </div>
+          
+          {products.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun produit disponible</h3>
+              <p className="text-gray-600">Ce vendeur n'a pas encore publié de produits.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="aspect-w-16 aspect-h-12 bg-gray-100">
+                    <img
+                      src={product.imageUrl ? `${API_CONFIG.BASE_URL}${product.imageUrl}` : 'https://via.placeholder.com/300x300?text=Produit'}
+                      alt={product.nom}
+                      className="w-full h-48 object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.nom}</h4>
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-orange-600">
+                        {product.prix ? `${product.prix.toLocaleString()} F CFA` : 'Prix sur demande'}
+                      </span>
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                        <span className="text-sm text-gray-600">
+                          {product.noteMoyenne ? Number(product.noteMoyenne).toFixed(1) : '0.0'}
+                        </span>
+                      </div>
+                    </div>
+                    {product.stock > 0 && (
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          En stock ({product.stock})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Statistiques */}
