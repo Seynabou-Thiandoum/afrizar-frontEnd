@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
 import publicProduitService, { PublicProduit } from '../services/publicProduitService';
+import { getImageUrl as getFullImageUrl } from '../config/api';
 
 const VetementsPage = ({ onNavigate }) => {
   const { t } = useI18n();
@@ -20,7 +21,7 @@ const VetementsPage = ({ onNavigate }) => {
   const [categories, setCategories] = useState<any[]>([]);
 
   // Numéro WhatsApp
-  const whatsappNumber = "221770450099";
+  const whatsappNumber = "221710320404";
 
   // Charger les produits et catégories
   useEffect(() => {
@@ -56,9 +57,7 @@ const VetementsPage = ({ onNavigate }) => {
 
   // Fonction pour obtenir l'URL complète de l'image
   const getImageUrl = (imageUrl?: string) => {
-    if (!imageUrl) return '/placeholder-product.jpg';
-    if (imageUrl.startsWith('http')) return imageUrl;
-    return `http://localhost:8080${imageUrl}`;
+    return getFullImageUrl(imageUrl);
   };
 
   // Transformer les produits en format compatible avec l'interface existante

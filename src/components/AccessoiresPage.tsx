@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle, ShoppingCart } from 'lucide-react';
+import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle, ShoppingCart, Loader2 } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePanier } from '../contexts/PanierContext';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
-import { API_CONFIG } from '../config/api';
+import { API_CONFIG, getImageUrl as getFullImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
 
 const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
@@ -66,14 +66,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
 
   // Fonction pour obtenir l'URL complète de l'image
   const getImageUrl = (imageUrl?: string | string[]) => {
-    if (!imageUrl) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
-    
-    // Si c'est un tableau, prendre le premier élément
-    const photo = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
-    
-    if (!photo) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
-    if (photo.startsWith('http')) return photo;
-    return `http://localhost:8080${photo}`;
+    return getFullImageUrl(imageUrl);
   };
 
   // Transformer les produits de l'API pour le format d'affichage
@@ -236,6 +229,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   // Fonction pour ajouter au panier (SANS vérification de connexion)
   const handleAddToCart = async (e: any, item: any) => {
     e.stopPropagation();
+    e.preventDefault(); // Empêcher toute navigation
 
     try {
       setAddingToCart(item.id);
@@ -253,14 +247,20 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
         title: 'Produit ajouté !',
         text: 'Le produit a été ajouté à votre panier',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
+        didClose: () => {
+          // Ne rien faire, rester sur la page
+        }
       });
     } catch (error: any) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
         text: error.message || 'Erreur lors de l\'ajout au panier',
-        confirmButtonText: 'OK'
+        confirmButtonText: 'OK',
+        didClose: () => {
+          // Ne rien faire, rester sur la page
+        }
       });
     } finally {
       setAddingToCart(null);
@@ -642,6 +642,21 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
+                            handleAddToCart(e, item);
+                          }}
+                          className="bg-[#F99834] text-white p-2 rounded-full shadow-lg hover:bg-[#E5861A] transition-colors"
+                          title="Ajouter au panier"
+                          disabled={addingToCart === item.id}
+                        >
+                          {addingToCart === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ShoppingCart className="h-4 w-4" />
+                          )}
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleWhatsAppOrder(item);
                           }}
                           className="bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
@@ -773,24 +788,52 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                               )}
                             </div>
                             
-                            <div className="flex space-x-2">
-                              <button 
-                                onClick={(e) => handleWishlistClick(e, item.id)}
-                                className="p-2 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
-                              >
-                                <Heart className="h-4 w-4 text-gray-600 hover:text-red-500" />
-                              </button>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleWhatsAppOrder(item);
-                                }}
-                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
-                              >
-                                <MessageCircle className="h-4 w-4" />
-                                <span>Commander</span>
-                              </button>
-                            </div>
+                                                         <div className="flex space-x-2">
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleProductClick(item.id);
+                                 }}
+                                 className="p-2 border border-gray-300 rounded-lg hover:bg-[#F99834] hover:bg-opacity-10 transition-colors"
+                                 title="Voir détails"
+                               >
+                                 <Eye className="h-4 w-4 text-gray-600" />
+                               </button>
+                               <button 
+                                 onClick={(e) => handleWishlistClick(e, item.id)}
+                                 className="p-2 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
+                                 title="Ajouter aux favoris"
+                               >
+                                 <Heart className="h-4 w-4 text-gray-600 hover:text-red-500" />
+                               </button>
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleAddToCart(e, item);
+                                 }}
+                                 className="bg-[#F99834] text-white px-4 py-2 rounded-lg hover:bg-[#E5861A] transition-colors flex items-center space-x-2 disabled:opacity-50"
+                                 title="Ajouter au panier"
+                                 disabled={addingToCart === item.id}
+                               >
+                                 {addingToCart === item.id ? (
+                                   <Loader2 className="h-4 w-4 animate-spin" />
+                                 ) : (
+                                   <ShoppingCart className="h-4 w-4" />
+                                 )}
+                                 <span>{addingToCart === item.id ? 'Ajout...' : 'Panier'}</span>
+                               </button>
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleWhatsAppOrder(item);
+                                 }}
+                                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
+                                 title="Commander sur WhatsApp"
+                               >
+                                 <MessageCircle className="h-4 w-4" />
+                                 <span>Commander</span>
+                               </button>
+                             </div>
                           </div>
                         </div>
                       </div>

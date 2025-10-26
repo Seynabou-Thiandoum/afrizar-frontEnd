@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft, ShoppingBag, AlertCircle, Loader } from 'lucide-react';
 import { usePanier } from '../contexts/PanierContext';
 import { useAuth } from '../contexts/AuthContext';
+import { getImageUrl as getFullImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
 
 interface PanierPageProps {
@@ -19,12 +20,7 @@ const PanierPage: React.FC<PanierPageProps> = ({ onNavigate }) => {
 
   // Helper pour obtenir l'URL complète de l'image
   const getImageUrl = (photos?: string[]) => {
-    if (!photos || photos.length === 0) {
-      return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop';
-    }
-    const photo = photos[0];
-    if (photo.startsWith('http')) return photo;
-    return `http://localhost:8080${photo}`;
+    return getFullImageUrl(photos);
   };
 
   const handleModifierQuantite = async (itemIndex: number, nouvelleQuantite: number) => {

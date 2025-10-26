@@ -911,7 +911,7 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-2.5 text-center text-sm font-bold">
+      <div className="text-white py-2.5 text-center text-sm font-bold" style={{backgroundColor: '#F99834'}}>
         <div className="flex items-center justify-center space-x-2">
           <Zap className="h-4 w-4 animate-pulse" />
           <span>MEGA SOLDES : Jusqu'à -50% sur tout le site !</span>
@@ -930,7 +930,7 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
                   <span className={`${slide.badge === 'HOT' ? 'bg-red-600' : slide.badge === 'NEW' ? 'bg-green-600' : 'bg-orange-600'} text-white px-4 py-1 rounded-full text-sm font-bold inline-block mb-4 animate-pulse`}>{slide.badge}</span>
                   <h1 className="text-5xl md:text-7xl font-black text-white mb-4 leading-tight">{slide.title}</h1>
                   <p className="text-xl md:text-2xl text-white/90 mb-8">{slide.subtitle}</p>
-                  <button className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-full font-bold text-lg hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all shadow-2xl">
+                  <button className="text-white px-8 py-4 rounded-full font-bold text-lg transform hover:scale-105 transition-all shadow-2xl" style={{backgroundColor: '#F99834'}}>
                     Découvrir <ArrowRight className="inline ml-2 h-5 w-5" />
                   </button>
                 </div>
@@ -993,9 +993,9 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
                 <p className="text-gray-600">Offres limitées - Dépêchez-vous !</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 bg-gradient-to-r from-red-100 to-orange-100 rounded-full px-6 py-3 shadow-lg border-2 border-red-200">
-              <Clock className="h-5 w-5 text-red-600" />
-              <div className="flex space-x-2 text-lg font-bold text-gray-900">
+            <div className="flex items-center space-x-2 rounded-full px-6 py-3 shadow-lg border-2" style={{backgroundColor: '#F99834', borderColor: '#F99834'}}>
+              <Clock className="h-5 w-5 text-white" />
+              <div className="flex space-x-2 text-lg font-bold text-white">
                 <span>{String(timeLeft.hours).padStart(2, '0')}</span><span>:</span>
                 <span>{String(timeLeft.minutes).padStart(2, '0')}</span><span>:</span>
                 <span>{String(timeLeft.seconds).padStart(2, '0')}</span>
@@ -1026,7 +1026,7 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
                   <div className="text-xs text-orange-600 font-bold mb-3 flex items-center">
                     <Zap className="h-3 w-3 mr-1" />{product.stock}
                   </div>
-                  <button className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-2.5 rounded-lg font-bold hover:from-red-700 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md">Acheter</button>
+                  <button className="w-full text-white py-2.5 rounded-lg font-bold transition-all transform hover:scale-105 shadow-md" style={{backgroundColor: '#F99834'}}>Acheter</button>
                 </div>
               </div>
             ))}
@@ -1080,7 +1080,7 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
                     <span className="text-2xl font-black text-orange-600">{product.price}</span>
                     {product.originalPrice && <span className="text-sm text-gray-500 line-through">{product.originalPrice}</span>}
                   </div>
-                  <button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-bold hover:from-orange-600 hover:to-red-600 transition-all transform hover:scale-105 shadow-md">Ajouter au panier</button>
+                  <button className="w-full text-white py-3 rounded-xl font-bold transition-all transform hover:scale-105 shadow-md" style={{backgroundColor: '#F99834'}}>Ajouter au panier</button>
                 </div>
               </div>
             ))}
@@ -1189,7 +1189,7 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
                   </div>
                   <div className="font-medium">{vendor.products} produits</div>
                 </div>
-                <button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2.5 rounded-full font-bold hover:from-orange-600 hover:to-red-600 transition-all transform hover:scale-105 shadow-md">
+                <button className="w-full text-white py-2.5 rounded-full font-bold transition-all transform hover:scale-105 shadow-md" style={{backgroundColor: '#F99834'}}>
                   Voir la boutique
                 </button>
               </div>
@@ -1285,7 +1285,7 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
               <h3 className="text-2xl font-black text-gray-900 mb-2">Ne ratez rien !</h3>
               <p className="text-gray-600 mb-6">Inscrivez-vous et recevez <span className="font-bold text-orange-600">-10%</span> sur votre première commande</p>
               <input type="email" placeholder="Votre email" className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl mb-4 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all" />
-              <button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-bold hover:from-orange-600 hover:to-red-600 transition-all transform hover:scale-105 shadow-lg mb-3">
+              <button className="w-full text-white py-3 rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg mb-3" style={{backgroundColor: '#F99834'}}>
                 S'inscrire maintenant
               </button>
               <button onClick={() => setShowNewsletter(false)} className="text-sm text-gray-500 hover:text-gray-700">

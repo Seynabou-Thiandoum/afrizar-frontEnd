@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
+import { API_CONFIG } from '../config/api';
 
 const SimpleApiTest = () => {
   const [testResults, setTestResults] = useState<{
@@ -19,7 +20,7 @@ const SimpleApiTest = () => {
 
     try {
       // Test simple de connexion au backend
-      const response = await fetch('http://localhost:8080/api/vendeurs/verifies', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/vendeurs/verifies`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ const SimpleApiTest = () => {
         <div className="mt-6 bg-gray-50 rounded-lg p-4">
           <h3 className="font-semibold text-gray-900 mb-2">Configuration</h3>
           <div className="text-sm text-gray-600 space-y-1">
-            <div><strong>URL de l'API:</strong> http://localhost:8080</div>
+            <div><strong>URL de l'API:</strong> {API_CONFIG.BASE_URL}</div>
             <div><strong>Endpoint testé:</strong> /api/vendeurs/verifies</div>
             <div><strong>Méthode:</strong> GET</div>
           </div>

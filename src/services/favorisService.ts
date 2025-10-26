@@ -2,36 +2,41 @@ import { API_CONFIG } from '../config/api';
 
 export interface Favori {
   id: number;
-  clientId: number;
   produitId: number;
-  produitNom: string;
-  produitImageUrl: string;
-  produitPrix: number;
-  vendeurNom: string;
+  utilisateurId: number;
   dateAjout: string;
+  produit?: {
+    id: number;
+    nom: string;
+    prix: number;
+    imageUrl: string;
+    description: string;
+    vendeur: {
+      nomBoutique: string;
+    };
+  };
 }
 
 class FavorisService {
-  private getHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  }
+  private baseUrl = `${API_CONFIG.BASE_URL}/api/favoris`;
 
-  async obtenirMesFavoris(): Promise<Favori[]> {
+  // Obtenir les favoris de l'utilisateur
+  async obtenirFavoris(): Promise<Favori[]> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/client/favoris`, {
-        method: 'GET',
-        headers: this.getHeaders(),
+      const token = localStorage.getItem('afrizar_token');
+      if (!token) {
+        throw new Error('Token non trouvé');
+      }
+
+      const response = await fetch(`${this.baseUrl}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Veuillez vous connecter pour accéder à vos favoris');
-        }
-        throw new Error(`Erreur HTTP: ${response.status}`);
+        throw new Error('Erreur lors de la récupération des favoris');
       }
 
       return await response.json();
@@ -41,86 +46,87 @@ class FavorisService {
     }
   }
 
-  async ajouterAuxFavoris(produitId: number): Promise<Favori> {
+  // Ajouter un produit aux favoris
+  async ajouterFavori(produitId: number): Promise<boolean> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/client/favoris`, {
+      const token = localStorage.getItem('afrizar_token');
+      if (!token) {
+        throw new Error('Token non trouvé');
+      }
+
+      const response = await fetch(`${this.baseUrl}`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ produitId }),
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Veuillez vous connecter pour ajouter aux favoris');
-        }
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erreur lors de l\'ajout aux favoris');
+        throw new Error('Erreur lors de l\'ajout aux favoris');
       }
 
-      return await response.json();
+      return true;
     } catch (error) {
       console.error('Erreur lors de l\'ajout aux favoris:', error);
       throw error;
     }
   }
 
-  async retirerDesFavoris(favoriId: number): Promise<void> {
+  // Supprimer un produit des favoris
+  async supprimerFavori(produitId: number): Promise<boolean> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/client/favoris/${favoriId}`, {
+      const token = localStorage.getItem('afrizar_token');
+      if (!token) {
+        throw new Error('Token non trouvé');
+      }
+
+      const response = await fetch(`${this.baseUrl}/${produitId}`, {
         method: 'DELETE',
-        headers: this.getHeaders(),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Veuillez vous connecter pour retirer des favoris');
-        }
-        if (response.status === 404) {
-          throw new Error('Favori non trouvé');
-        }
-        throw new Error(`Erreur HTTP: ${response.status}`);
+        throw new Error('Erreur lors de la suppression des favoris');
       }
+
+      return true;
     } catch (error) {
-      console.error('Erreur lors du retrait des favoris:', error);
+      console.error('Erreur lors de la suppression des favoris:', error);
       throw error;
     }
   }
 
-  async verifierEstFavori(produitId: number): Promise<boolean> {
+  // Vérifier si un produit est en favori
+  async estFavori(produitId: number): Promise<boolean> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/client/favoris/verifier/${produitId}`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        return false;
-      }
-
-      const data = await response.json();
-      return data.estFavori;
+      const favoris = await this.obtenirFavoris();
+      return favoris.some(favori => favori.produitId === produitId);
     } catch (error) {
-      console.error('Erreur lors de la vérification du favori:', error);
+      console.error('Erreur lors de la vérification des favoris:', error);
       return false;
     }
   }
 
-  async compterFavoris(): Promise<number> {
+  // Toggle favori (ajouter ou supprimer)
+  async toggleFavori(produitId: number): Promise<boolean> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/client/favoris/count`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        return 0;
+      const estFavori = await this.estFavori(produitId);
+      
+      if (estFavori) {
+        await this.supprimerFavori(produitId);
+        return false;
+      } else {
+        await this.ajouterFavori(produitId);
+        return true;
       }
-
-      const data = await response.json();
-      return data.count;
     } catch (error) {
-      console.error('Erreur lors du comptage des favoris:', error);
-      return 0;
+      console.error('Erreur lors du toggle favori:', error);
+      throw error;
     }
   }
 }

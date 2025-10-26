@@ -441,12 +441,13 @@
 
 // export default Header;
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Heart, LogOut, Settings, Crown, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/InternationalizationContext';
 import { usePanier } from '../contexts/PanierContext';
 import LanguageSelector from './LanguageSelector';
+import favorisService from '../services/favorisService';
 
 const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -455,7 +456,25 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [wishlistCount] = useState(5);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  useEffect(() => {
+    loadWishlistCount();
+  }, [isAuthenticated]);
+
+  const loadWishlistCount = async () => {
+    if (isAuthenticated && user) {
+      try {
+        const count = await favorisService.compterFavoris();
+        setWishlistCount(count);
+      } catch (error) {
+        console.error('Erreur lors du chargement du nombre de favoris:', error);
+        setWishlistCount(0);
+      }
+    } else {
+      setWishlistCount(0);
+    }
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();

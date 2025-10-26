@@ -27,6 +27,7 @@ import { usePanier } from '../contexts/PanierContext';
 import commandeService, { Commande } from '../services/commandeService';
 import favorisService, { Favori } from '../services/favorisService';
 import fraisLivraisonService, { FraisLivraison } from '../services/fraisLivraisonService';
+import { getImageUrl as getFullImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
 
 const ClientDashboardNew = () => {
@@ -460,12 +461,7 @@ const ClientDashboardNew = () => {
                         {/* Image du produit */}
                         <div className="flex-shrink-0">
                           <img
-                            src={item.produitPhotos && item.produitPhotos.length > 0 
-                              ? (item.produitPhotos[0].startsWith('http') 
-                                  ? item.produitPhotos[0] 
-                                  : `http://localhost:8080${item.produitPhotos[0]}`)
-                              : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop'
-                            }
+                            src={getFullImageUrl(item.produitPhotos)}
                             alt={item.produitNom}
                             className="w-20 h-20 object-cover rounded-lg"
                           />
@@ -571,12 +567,7 @@ const ClientDashboardNew = () => {
                       <div key={favori.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
                         <div className="relative">
                           <img
-                            src={favori.produitImageUrl 
-                              ? (favori.produitImageUrl.startsWith('http') 
-                                  ? favori.produitImageUrl 
-                                  : `http://localhost:8080${favori.produitImageUrl}`)
-                              : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop'
-                            }
+                            src={getFullImageUrl(favori.produitImageUrl)}
                             alt={favori.produitNom}
                             className="w-full h-48 object-cover rounded-lg mb-4"
                           />

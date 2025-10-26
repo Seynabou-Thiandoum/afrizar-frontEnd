@@ -6,6 +6,7 @@ import commandeService, { CreateCommandeDto } from '../services/commandeService'
 import fraisLivraisonService, { FraisLivraison } from '../services/fraisLivraisonService';
 import SelecteurModePaiement from './SelecteurModePaiement';
 import { ModePaiement } from '../services/modePaiementService';
+import { getImageUrl as getFullImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
 
 interface CheckoutPageProps {
@@ -148,10 +149,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
 
   // Helper pour obtenir l'URL complète de l'image
   const getImageUrl = (photos?: string[]) => {
-    if (!photos || photos.length === 0) return '/placeholder-product.jpg';
-    const photo = photos[0];
-    if (photo.startsWith('http')) return photo;
-    return `http://localhost:8080${photo}`;
+    return getFullImageUrl(photos);
   };
 
   const handleSubmitCommande = async (e: React.FormEvent) => {
