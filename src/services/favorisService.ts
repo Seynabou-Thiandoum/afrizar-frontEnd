@@ -18,7 +18,7 @@ export interface Favori {
 }
 
 class FavorisService {
-  private baseUrl = `${API_CONFIG.BASE_URL}/api/favoris`;
+  private baseUrl = `${API_CONFIG.BASE_URL}/api/client/favoris`;
 
   // Obtenir les favoris de l'utilisateur
   async obtenirFavoris(): Promise<Favori[]> {
@@ -127,6 +127,17 @@ class FavorisService {
     } catch (error) {
       console.error('Erreur lors du toggle favori:', error);
       throw error;
+    }
+  }
+
+  // Compter le nombre de favoris
+  async compterFavoris(): Promise<number> {
+    try {
+      const favoris = await this.obtenirFavoris();
+      return favoris.length;
+    } catch (error) {
+      console.error('Erreur lors du comptage des favoris:', error);
+      return 0;
     }
   }
 }

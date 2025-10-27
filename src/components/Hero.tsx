@@ -822,6 +822,7 @@
 
 import { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, ChevronLeft, ChevronRight, ArrowRight, Sparkles, Star, MapPin, Users, Package, Shield, Zap, Clock, TrendingUp, Gift, Tag, Bell, X, MessageSquare, Phone, Mail } from 'lucide-react';
+import dynamicContentService, { CarouselSlide } from '../services/dynamicContentService';
 
 interface AfrizarHomepageProps {
   onNavigate?: (page: string) => void;
@@ -835,6 +836,7 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
     minutes: 45,
     seconds: 30
   });
+  const [carouselSlides, setCarouselSlides] = useState<CarouselSlide[]>([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -856,6 +858,19 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
     const timer = setTimeout(() => setShowNewsletter(true), 5000);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    chargerSlidesCarousel();
+  }, []);
+
+  const chargerSlidesCarousel = async () => {
+    try {
+      const slides = await dynamicContentService.obtenirSlidesCarousel();
+      setCarouselSlides(slides);
+    } catch (error) {
+      console.error('Erreur lors du chargement des slides:', error);
+    }
+  };
 
   const heroSlides = [
     { id: 1, image: "https://images.unsplash.com/photo-1583745800992-0d82e55ae8b5?w=1200&h=600&fit=crop", title: "MEGA SOLDES", subtitle: "Jusqu'à -50% sur toute la collection", badge: "HOT" },
@@ -896,14 +911,22 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
   ];
 
   useEffect(() => {
+    const slides = carouselSlides.length > 0 ? carouselSlides : heroSlides;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [heroSlides.length]);
+  }, [carouselSlides.length, heroSlides.length]);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  const nextSlide = () => {
+    const slides = carouselSlides.length > 0 ? carouselSlides : heroSlides;
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+  
+  const prevSlide = () => {
+    const slides = carouselSlides.length > 0 ? carouselSlides : heroSlides;
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
   const getBadgeColor = (color: string) => {
     const colors: { [key: string]: string } = { green: 'bg-green-500', red: 'bg-red-500', orange: 'bg-orange-500' };
     return colors[color] || 'bg-gray-500';
@@ -920,28 +943,47 @@ const AfrizarHomepage = ({ onNavigate }: AfrizarHomepageProps) => {
       </div>
 
       <section className="relative h-[500px] overflow-hidden">
-        {heroSlides.map((slide, index) => (
-          <div key={slide.id} className={`absolute inset-0 transition-all duration-1000 ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
-            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40"></div>
-            <div className="absolute inset-0 flex items-center">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                <div className="max-w-2xl">
-                  <span className={`${slide.badge === 'HOT' ? 'bg-red-600' : slide.badge === 'NEW' ? 'bg-green-600' : 'bg-orange-600'} text-white px-4 py-1 rounded-full text-sm font-bold inline-block mb-4 animate-pulse`}>{slide.badge}</span>
-                  <h1 className="text-5xl md:text-7xl font-black text-white mb-4 leading-tight">{slide.title}</h1>
-                  <p className="text-xl md:text-2xl text-white/90 mb-8">{slide.subtitle}</p>
-                  <button className="text-white px-8 py-4 rounded-full font-bold text-lg transform hover:scale-105 transition-all shadow-2xl" style={{backgroundColor: '#F99834'}}>
-                    Découvrir <ArrowRight className="inline ml-2 h-5 w-5" />
-                  </button>
+        {(carouselSlides.length > 0 ? carouselSlides : heroSlides).map((slide, index) => {
+          const dynamicSlide = slide as CarouselSlide;
+          const staticSlide = slide as { id: number; image: string; title: string; subtitle: string; badge: string; };
+          
+          return (
+            <div key={slide.id} className={`absolute inset-0 transition-all duration-1000 ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
+              <img src={dynamicSlide.imageUrl || staticSlide.image} alt={dynamicSlide.titre || staticSlide.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40"></div>
+              <div className="absolute inset-0 flex items-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                  <div className="max-w-2xl">
+                    <span className={`${slide.badge === 'HOT' ? 'bg-red-600' : slide.badge === 'NEW' ? 'bg-green-600' : 'bg-orange-600'} text-white px-4 py-1 rounded-full text-sm font-bold inline-block mb-4 animate-pulse`}>{slide.badge}</span>
+                    <h1 className="text-5xl md:text-7xl font-black text-white mb-4 leading-tight">{dynamicSlide.titre || staticSlide.title}</h1>
+                    <p className="text-xl md:text-2xl text-white/90 mb-8">{dynamicSlide.sousTitre || staticSlide.subtitle}</p>
+                    <button 
+                      onClick={() => {
+                        if (dynamicSlide.boutonLien) {
+                          if (dynamicSlide.boutonLien.startsWith('http')) {
+                            window.open(dynamicSlide.boutonLien, '_blank');
+                          } else {
+                            onNavigate?.(dynamicSlide.boutonLien);
+                          }
+                        } else {
+                          onNavigate?.('vetements');
+                        }
+                      }}
+                      className="text-white px-8 py-4 rounded-full font-bold text-lg transform hover:scale-105 transition-all shadow-2xl" 
+                      style={{backgroundColor: '#F99834'}}
+                    >
+                      {dynamicSlide.boutonTexte || 'Découvrir'} <ArrowRight className="inline ml-2 h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <button onClick={prevSlide} className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30"><ChevronLeft className="h-6 w-6" /></button>
         <button onClick={nextSlide} className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30"><ChevronRight className="h-6 w-6" /></button>
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {heroSlides.map((_, index) => (
+          {(carouselSlides.length > 0 ? carouselSlides : heroSlides).map((_, index) => (
             <button key={index} onClick={() => setCurrentSlide(index)} className={`h-2 rounded-full transition-all ${index === currentSlide ? 'bg-white w-8' : 'bg-white/50 w-2'}`} />
           ))}
         </div>

@@ -231,9 +231,10 @@ const ClientDashboardNew = () => {
             onClick={() => setActiveView('panier')}
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
               activeView === 'panier'
-                ? 'bg-purple-600 text-white'
+                ? 'text-white'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
+            style={activeView === 'panier' ? {backgroundColor: '#F99834'} : {}}
           >
             <div className="flex items-center justify-center space-x-2">
               <ShoppingCart className="h-5 w-5" />
@@ -514,7 +515,8 @@ const ClientDashboardNew = () => {
                   <div className="flex space-x-4">
                     <button
                       onClick={() => window.location.hash = 'checkout'}
-                      className="flex-1 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+                      className="flex-1 py-3 text-white rounded-lg transition-colors font-semibold"
+                      style={{backgroundColor: '#F99834'}}
                     >
                       Passer la commande
                     </button>

@@ -3,6 +3,7 @@ import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt,
 import { useI18n } from '../contexts/InternationalizationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePanier } from '../contexts/PanierContext';
+import { useFavoris } from '../contexts/FavorisContext';
 import ProductImageSlider from './ProductImageSlider';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
@@ -13,6 +14,7 @@ const VetementsPage = ({ onNavigate }) => {
   const { t } = useI18n();
   const { user, isAuthenticated } = useAuth();
   const { ajouterAuPanier, nombreArticles } = usePanier();
+  const { ajouterFavori, supprimerFavori, estFavori } = useFavoris();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Changé de selectedSubcategory
   const [selectedSize, setSelectedSize] = useState('all');
@@ -20,7 +22,6 @@ const VetementsPage = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
-  const [wishlistItems, setWishlistItems] = useState(new Set());
   const [selectedProduct, setSelectedProduct] = useState(null); // Pour les détails produit
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
@@ -225,15 +226,47 @@ const VetementsPage = ({ onNavigate }) => {
     }
   };
 
-  const handleWishlistClick = (e, productId) => {
+  const handleWishlistClick = async (e, productId) => {
     e.stopPropagation();
-    const newWishlist = new Set(wishlistItems);
-    if (newWishlist.has(productId)) {
-      newWishlist.delete(productId);
-    } else {
-      newWishlist.add(productId);
+    
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Connexion requise',
+        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
+        confirmButtonText: 'OK'
+      });
+      return;
     }
-    setWishlistItems(newWishlist);
+
+    try {
+      if (estFavori(productId)) {
+        await supprimerFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Retiré des favoris',
+          text: 'Le produit a été retiré de vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        await ajouterFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Ajouté aux favoris',
+          text: 'Le produit a été ajouté à vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de la gestion des favoris',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   // Fonction pour ajouter au panier (SANS vérification de connexion)
@@ -437,7 +470,7 @@ const VetementsPage = ({ onNavigate }) => {
                     onClick={() => handleWishlistClick({stopPropagation: () => {}}, product.id)}
                     className="w-full flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
                   >
-                    <Heart className={`h-5 w-5 mr-2 ${wishlistItems.has(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
+                    <Heart className={`h-5 w-5 mr-2 ${estFavori(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
                     <span>Ajouter aux favoris</span>
                   </button>
                   
@@ -696,7 +729,7 @@ const VetementsPage = ({ onNavigate }) => {
                         className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <Heart className={`h-4 w-4 transition-colors ${
-                          wishlistItems.has(item.id) 
+                          estFavori(item.id) 
                             ? 'text-red-500 fill-current' 
                             : 'text-gray-600 hover:text-red-500'
                         }`} />
@@ -897,7 +930,7 @@ const VetementsPage = ({ onNavigate }) => {
                                   title="Ajouter aux favoris"
                                 >
                                   <Heart className={`h-4 w-4 transition-colors ${
-                                    wishlistItems.has(item.id) 
+                                    estFavori(item.id) 
                                       ? 'text-red-500 fill-current' 
                                       : 'text-gray-600 hover:text-red-500'
                                   }`} />
@@ -1054,7 +1087,7 @@ const VetementsPage = ({ onNavigate }) => {
                       className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <Heart className={`h-4 w-4 transition-colors ${
-                        wishlistItems.has(item.id) 
+                        estFavori(item.id) 
                           ? 'text-red-500 fill-current' 
                           : 'text-gray-600 hover:text-red-500'
                       }`} />

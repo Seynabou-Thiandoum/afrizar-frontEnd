@@ -20,11 +20,15 @@ import {
 import ProductModal from './ProductModal';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
+import { useFavoris } from '../contexts/FavorisContext';
+import { useAuth } from '../contexts/AuthContext';
+import Swal from 'sweetalert2';
 
 const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
+  const { ajouterFavori, supprimerFavori, estFavori } = useFavoris();
+  const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [wishlist, setWishlist] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
@@ -238,14 +242,45 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
         .map(transformerProduit)
     : [];
 
-  const toggleWishlist = (productId: number) => {
-    const newWishlist = new Set(wishlist);
-    if (newWishlist.has(productId)) {
-      newWishlist.delete(productId);
-    } else {
-      newWishlist.add(productId);
+  const toggleWishlist = async (productId: number) => {
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Connexion requise',
+        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
+        confirmButtonText: 'OK'
+      });
+      return;
     }
-    setWishlist(newWishlist);
+
+    try {
+      if (estFavori(productId)) {
+        await supprimerFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Retiré des favoris',
+          text: 'Le produit a été retiré de vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        await ajouterFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Ajouté aux favoris',
+          text: 'Le produit a été ajouté à vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de la gestion des favoris',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   const formatPrice = (price: number, currency: string) => {
@@ -398,12 +433,12 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
                     <button
                       onClick={() => toggleWishlist(product.id)}
                       className={`p-2 rounded-full transition-colors ${
-                        wishlist.has(product.id) 
+                        estFavori(product.id) 
                           ? 'bg-red-600 text-white' 
                           : 'bg-white/90 text-gray-700 hover:bg-red-600 hover:text-white'
                       }`}
                     >
-                      <Heart className={`h-5 w-5 ${wishlist.has(product.id) ? 'fill-current' : ''}`} />
+                      <Heart className={`h-5 w-5 ${estFavori(product.id) ? 'fill-current' : ''}`} />
                     </button>
                     <button
                       onClick={() => setSelectedProduct(product)}

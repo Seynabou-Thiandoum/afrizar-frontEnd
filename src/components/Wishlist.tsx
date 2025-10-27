@@ -41,7 +41,7 @@ const Wishlist = ({ onBack, onNavigate }: WishlistProps) => {
     try {
       setLoading(true);
       setError(null);
-      const favoris = await favorisService.obtenirMesFavoris();
+      const favoris = await favorisService.obtenirFavoris();
       setWishlistItems(favoris);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des favoris';
@@ -54,7 +54,11 @@ const Wishlist = ({ onBack, onNavigate }: WishlistProps) => {
 
   const removeFromWishlist = async (favoriId: number) => {
     try {
-      await favorisService.retirerDesFavoris(favoriId);
+      // Trouver le produitId correspondant au favoriId
+      const favori = wishlistItems.find(item => item.id === favoriId);
+      if (!favori) return;
+      
+      await favorisService.supprimerFavori(favori.produitId);
       setWishlistItems(items => items.filter(item => item.id !== favoriId));
       
       Swal.fire({

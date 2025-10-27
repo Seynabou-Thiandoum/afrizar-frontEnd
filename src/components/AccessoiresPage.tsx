@@ -3,6 +3,7 @@ import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle, S
 import { useI18n } from '../contexts/InternationalizationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePanier } from '../contexts/PanierContext';
+import { useFavoris } from '../contexts/FavorisContext';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
 import { API_CONFIG, getImageUrl as getFullImageUrl } from '../config/api';
@@ -12,6 +13,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   const { t } = useI18n();
   const { user, isAuthenticated } = useAuth();
   const { ajouterAuPanier } = usePanier();
+  const { ajouterFavori, supprimerFavori, estFavori } = useFavoris();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Nouveau état pour les types
   const [priceRange, setPriceRange] = useState('all');
@@ -220,10 +222,47 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
     }
   };
 
-  const handleWishlistClick = (e: any, productId: any) => {
+  const handleWishlistClick = async (e: any, productId: any) => {
     e.stopPropagation();
-    // Logique wishlist
-    console.log('Ajouté aux favoris:', productId);
+    
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Connexion requise',
+        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    try {
+      if (estFavori(productId)) {
+        await supprimerFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Retiré des favoris',
+          text: 'Le produit a été retiré de vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        await ajouterFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Ajouté aux favoris',
+          text: 'Le produit a été ajouté à vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de la gestion des favoris',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   // Fonction pour ajouter au panier (SANS vérification de connexion)
