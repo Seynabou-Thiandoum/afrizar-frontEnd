@@ -133,3 +133,4 @@ export const FavorisProvider: React.FC<FavorisProviderProps> = ({ children }) =>
     </FavorisContext.Provider>
   );
 };
+

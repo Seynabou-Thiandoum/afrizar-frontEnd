@@ -176,3 +176,4 @@ const FavorisPage = ({ onBack }: { onBack: () => void }) => {
 };
 
 export default FavorisPage;
+

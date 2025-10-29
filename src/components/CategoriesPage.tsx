@@ -34,11 +34,17 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(12); // 12 produits par page
 
   // Charger les données depuis l'API
   useEffect(() => {
     chargerDonnees();
-  }, []);
+  }, [currentPage, selectedCategory, searchTerm]);
 
   const chargerDonnees = async () => {
     try {
@@ -47,7 +53,7 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
       // Récupérer les catégories et produits en parallèle
       const [categoriesData, produitsData] = await Promise.all([
         categorieService.getAllCategories(),
-        produitService.getAllProduits(0, 1000)
+        produitService.getAllProduits(currentPage, pageSize)
       ]);
 
       // Grouper les catégories par type (VETEMENTS, ACCESSOIRES)
@@ -283,8 +289,15 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' ' + currency;
+  // Fonctions de pagination
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCategorySelect = (category: any) => {
+    setCurrentPage(0); // Reset à la première page
+    setSelectedCategory(category);
   };
 
   const handleOrderWhatsApp = (product: any) => {
@@ -657,6 +670,53 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
               </div>
             );
           })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Précédent
+            </button>
+            
+            <div className="flex space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = i;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 rounded-lg ${
+                      currentPage === page
+                        ? 'bg-[#F99834] text-white'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page + 1}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages - 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Suivant
+            </button>
+          </div>
+        )}
+
+        {/* Informations de pagination */}
+        {totalElements > 0 && (
+          <div className="mt-4 text-center text-sm text-gray-600">
+            Affichage de {currentPage * pageSize + 1} à {Math.min((currentPage + 1) * pageSize, totalElements)} sur {totalElements} produits
           </div>
         )}
       </div>

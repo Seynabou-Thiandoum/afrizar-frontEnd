@@ -25,6 +25,12 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(12); // 12 produits par page
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221123456789"; // Format international sans le +
@@ -32,7 +38,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   // Charger les données depuis l'API
   useEffect(() => {
     chargerDonnees();
-  }, []);
+  }, [currentPage, selectedCategory, selectedType, priceRange, sortBy, searchTerm]);
 
   const chargerDonnees = async () => {
     try {
@@ -41,7 +47,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
       // Récupérer les catégories et produits en parallèle
       const [categoriesData, produitsData] = await Promise.all([
         categorieService.getAllCategories(),
-        produitService.getAllProduits(0, 1000)
+        produitService.getAllProduits(currentPage, pageSize)
       ]);
 
       // Filtrer seulement les catégories d'accessoires
@@ -56,19 +62,45 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
 
       setCategories(categoriesAccessoires);
       setProducts(produitsAccessoires);
+      setTotalPages(produitsData.totalPages || 0);
+      setTotalElements(produitsData.totalElements || produitsAccessoires.length);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       // En cas d'erreur, utiliser des données par défaut
       setCategories([]);
       setProducts([]);
+      setTotalPages(0);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fonction pour obtenir l'URL complète de l'image
-  const getImageUrl = (imageUrl?: string | string[]) => {
-    return getFullImageUrl(imageUrl);
+  // Fonctions de pagination
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    setCurrentPage(0); // Reset à la première page lors du changement de filtre
+    switch (filterType) {
+      case 'category':
+        setSelectedCategory(value);
+        break;
+      case 'type':
+        setSelectedType(value);
+        break;
+      case 'price':
+        setPriceRange(value);
+        break;
+      case 'sort':
+        setSortBy(value);
+        break;
+      case 'search':
+        setSearchTerm(value);
+        break;
+    }
   };
 
   // Transformer les produits de l'API pour le format d'affichage
@@ -528,7 +560,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                     <button
                       key={cat.id}
                       onClick={() => {
-                        setSelectedCategory(cat.id);
+                        handleFilterChange('category', cat.id);
                         setSelectedType('all'); // Reset type filter when category changes
                       }}
                       className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
@@ -550,7 +582,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Types</h3>
                   <div className="space-y-1">
                     <button
-                      onClick={() => setSelectedType('all')}
+                      onClick={() => handleFilterChange('type', 'all')}
                       className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                         selectedType === 'all' 
                           ? 'bg-orange-100 text-orange-700' 
@@ -562,7 +594,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                     {(subcategories as any)[selectedCategory].map((subcat: any) => (
                       <button
                         key={subcat}
-                        onClick={() => setSelectedType(subcat)}
+                        onClick={() => handleFilterChange('type', subcat)}
                         className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                           selectedType === subcat 
                             ? 'bg-orange-100 text-orange-700' 
@@ -581,7 +613,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Prix</h3>
                 <select
                   value={priceRange}
-                  onChange={(e) => setPriceRange(e.target.value)}
+                  onChange={(e) => handleFilterChange('price', e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="all">Tous les prix</option>
@@ -606,7 +638,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
               <div className="flex items-center space-x-4">
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => handleFilterChange('sort', e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="popular">Plus populaires</option>
@@ -887,6 +919,53 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                 <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun accessoire trouvé</h3>
                 <p className="text-gray-600">Essayez de modifier vos critères de recherche</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Précédent
+                </button>
+                
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = i;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-3 py-2 rounded-lg ${
+                          currentPage === page
+                            ? 'bg-[#F99834] text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Suivant
+                </button>
+              </div>
+            )}
+
+            {/* Informations de pagination */}
+            {totalElements > 0 && (
+              <div className="mt-4 text-center text-sm text-gray-600">
+                Affichage de {currentPage * pageSize + 1} à {Math.min((currentPage + 1) * pageSize, totalElements)} sur {totalElements} accessoires
               </div>
             )}
           </div>

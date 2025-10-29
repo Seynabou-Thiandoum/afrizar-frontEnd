@@ -227,3 +227,4 @@ const SelecteurModePaiement: React.FC<SelecteurModePaiementProps> = ({
 
 export default SelecteurModePaiement;
 
+
