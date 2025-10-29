@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle, ShoppingCart } from 'lucide-react';
+import { Heart, Search, Grid, List, Star, Eye, Plus, ArrowLeft, MessageCircle, ShoppingCart, Loader2 } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePanier } from '../contexts/PanierContext';
+import { useFavoris } from '../contexts/FavorisContext';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
-import { API_CONFIG } from '../config/api';
+import { API_CONFIG, getImageUrl as getFullImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
 
 const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   const { t } = useI18n();
   const { user, isAuthenticated } = useAuth();
   const { ajouterAuPanier } = usePanier();
+  const { ajouterFavori, supprimerFavori, estFavori } = useFavoris();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Nouveau état pour les types
   const [priceRange, setPriceRange] = useState('all');
@@ -23,6 +25,12 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(12); // 12 produits par page
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221123456789"; // Format international sans le +
@@ -30,7 +38,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   // Charger les données depuis l'API
   useEffect(() => {
     chargerDonnees();
-  }, []);
+  }, [currentPage, selectedCategory, selectedType, priceRange, sortBy, searchTerm]);
 
   const chargerDonnees = async () => {
     try {
@@ -39,7 +47,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
       // Récupérer les catégories et produits en parallèle
       const [categoriesData, produitsData] = await Promise.all([
         categorieService.getAllCategories(),
-        produitService.getAllProduits(0, 1000)
+        produitService.getAllProduits(currentPage, pageSize)
       ]);
 
       // Filtrer seulement les catégories d'accessoires
@@ -54,26 +62,45 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
 
       setCategories(categoriesAccessoires);
       setProducts(produitsAccessoires);
+      setTotalPages(produitsData.totalPages || 0);
+      setTotalElements(produitsData.totalElements || produitsAccessoires.length);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       // En cas d'erreur, utiliser des données par défaut
       setCategories([]);
       setProducts([]);
+      setTotalPages(0);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fonction pour obtenir l'URL complète de l'image
-  const getImageUrl = (imageUrl?: string | string[]) => {
-    if (!imageUrl) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
-    
-    // Si c'est un tableau, prendre le premier élément
-    const photo = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
-    
-    if (!photo) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
-    if (photo.startsWith('http')) return photo;
-    return `http://localhost:8080${photo}`;
+  // Fonctions de pagination
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    setCurrentPage(0); // Reset à la première page lors du changement de filtre
+    switch (filterType) {
+      case 'category':
+        setSelectedCategory(value);
+        break;
+      case 'type':
+        setSelectedType(value);
+        break;
+      case 'price':
+        setPriceRange(value);
+        break;
+      case 'sort':
+        setSortBy(value);
+        break;
+      case 'search':
+        setSearchTerm(value);
+        break;
+    }
   };
 
   // Transformer les produits de l'API pour le format d'affichage
@@ -227,15 +254,53 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
     }
   };
 
-  const handleWishlistClick = (e: any, productId: any) => {
+  const handleWishlistClick = async (e: any, productId: any) => {
     e.stopPropagation();
-    // Logique wishlist
-    console.log('Ajouté aux favoris:', productId);
+    
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Connexion requise',
+        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    try {
+      if (estFavori(productId)) {
+        await supprimerFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Retiré des favoris',
+          text: 'Le produit a été retiré de vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        await ajouterFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Ajouté aux favoris',
+          text: 'Le produit a été ajouté à vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de la gestion des favoris',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   // Fonction pour ajouter au panier (SANS vérification de connexion)
   const handleAddToCart = async (e: any, item: any) => {
     e.stopPropagation();
+    e.preventDefault(); // Empêcher toute navigation
 
     try {
       setAddingToCart(item.id);
@@ -253,14 +318,20 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
         title: 'Produit ajouté !',
         text: 'Le produit a été ajouté à votre panier',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
+        didClose: () => {
+          // Ne rien faire, rester sur la page
+        }
       });
     } catch (error: any) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
         text: error.message || 'Erreur lors de l\'ajout au panier',
-        confirmButtonText: 'OK'
+        confirmButtonText: 'OK',
+        didClose: () => {
+          // Ne rien faire, rester sur la page
+        }
       });
     } finally {
       setAddingToCart(null);
@@ -489,7 +560,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                     <button
                       key={cat.id}
                       onClick={() => {
-                        setSelectedCategory(cat.id);
+                        handleFilterChange('category', cat.id);
                         setSelectedType('all'); // Reset type filter when category changes
                       }}
                       className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
@@ -511,7 +582,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Types</h3>
                   <div className="space-y-1">
                     <button
-                      onClick={() => setSelectedType('all')}
+                      onClick={() => handleFilterChange('type', 'all')}
                       className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                         selectedType === 'all' 
                           ? 'bg-orange-100 text-orange-700' 
@@ -523,7 +594,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                     {(subcategories as any)[selectedCategory].map((subcat: any) => (
                       <button
                         key={subcat}
-                        onClick={() => setSelectedType(subcat)}
+                        onClick={() => handleFilterChange('type', subcat)}
                         className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                           selectedType === subcat 
                             ? 'bg-orange-100 text-orange-700' 
@@ -542,7 +613,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Prix</h3>
                 <select
                   value={priceRange}
-                  onChange={(e) => setPriceRange(e.target.value)}
+                  onChange={(e) => handleFilterChange('price', e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="all">Tous les prix</option>
@@ -567,7 +638,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
               <div className="flex items-center space-x-4">
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => handleFilterChange('sort', e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="popular">Plus populaires</option>
@@ -638,6 +709,21 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                           className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-orange-50 transition-colors"
                         >
                           <Eye className="h-4 w-4 text-gray-600" />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(e, item);
+                          }}
+                          className="bg-[#F99834] text-white p-2 rounded-full shadow-lg hover:bg-[#E5861A] transition-colors"
+                          title="Ajouter au panier"
+                          disabled={addingToCart === item.id}
+                        >
+                          {addingToCart === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ShoppingCart className="h-4 w-4" />
+                          )}
                         </button>
                         <button 
                           onClick={(e) => {
@@ -773,24 +859,52 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                               )}
                             </div>
                             
-                            <div className="flex space-x-2">
-                              <button 
-                                onClick={(e) => handleWishlistClick(e, item.id)}
-                                className="p-2 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
-                              >
-                                <Heart className="h-4 w-4 text-gray-600 hover:text-red-500" />
-                              </button>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleWhatsAppOrder(item);
-                                }}
-                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
-                              >
-                                <MessageCircle className="h-4 w-4" />
-                                <span>Commander</span>
-                              </button>
-                            </div>
+                                                         <div className="flex space-x-2">
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleProductClick(item.id);
+                                 }}
+                                 className="p-2 border border-gray-300 rounded-lg hover:bg-[#F99834] hover:bg-opacity-10 transition-colors"
+                                 title="Voir détails"
+                               >
+                                 <Eye className="h-4 w-4 text-gray-600" />
+                               </button>
+                               <button 
+                                 onClick={(e) => handleWishlistClick(e, item.id)}
+                                 className="p-2 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
+                                 title="Ajouter aux favoris"
+                               >
+                                 <Heart className="h-4 w-4 text-gray-600 hover:text-red-500" />
+                               </button>
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleAddToCart(e, item);
+                                 }}
+                                 className="bg-[#F99834] text-white px-4 py-2 rounded-lg hover:bg-[#E5861A] transition-colors flex items-center space-x-2 disabled:opacity-50"
+                                 title="Ajouter au panier"
+                                 disabled={addingToCart === item.id}
+                               >
+                                 {addingToCart === item.id ? (
+                                   <Loader2 className="h-4 w-4 animate-spin" />
+                                 ) : (
+                                   <ShoppingCart className="h-4 w-4" />
+                                 )}
+                                 <span>{addingToCart === item.id ? 'Ajout...' : 'Panier'}</span>
+                               </button>
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleWhatsAppOrder(item);
+                                 }}
+                                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
+                                 title="Commander sur WhatsApp"
+                               >
+                                 <MessageCircle className="h-4 w-4" />
+                                 <span>Commander</span>
+                               </button>
+                             </div>
                           </div>
                         </div>
                       </div>
@@ -805,6 +919,53 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
                 <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun accessoire trouvé</h3>
                 <p className="text-gray-600">Essayez de modifier vos critères de recherche</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Précédent
+                </button>
+                
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = i;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-3 py-2 rounded-lg ${
+                          currentPage === page
+                            ? 'bg-[#F99834] text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Suivant
+                </button>
+              </div>
+            )}
+
+            {/* Informations de pagination */}
+            {totalElements > 0 && (
+              <div className="mt-4 text-center text-sm text-gray-600">
+                Affichage de {currentPage * pageSize + 1} à {Math.min((currentPage + 1) * pageSize, totalElements)} sur {totalElements} accessoires
               </div>
             )}
           </div>

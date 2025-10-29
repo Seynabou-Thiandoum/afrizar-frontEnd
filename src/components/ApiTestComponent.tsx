@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { VendorService } from '../services/vendorService';
 import { useVendorStats, useVerifiedVendors, useFeaturedVendors } from '../hooks/useVendors';
+import { API_CONFIG } from '../config/api';
 
 interface ApiTestResult {
   endpoint: string;
@@ -287,7 +288,7 @@ const ApiTestComponent = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-gray-700">URL de base:</span>
-              <span className="ml-2 text-gray-600">http://localhost:8080</span>
+              <span className="ml-2 text-gray-600">{API_CONFIG.BASE_URL}</span>
             </div>
             <div>
               <span className="font-medium text-gray-700">Endpoint vendeurs:</span>

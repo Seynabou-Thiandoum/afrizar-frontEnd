@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle, ShoppingCart } from 'lucide-react';
+import { Heart, Search, Filter, Grid, List, Star, ShoppingBag, Eye, Plus, Shirt, ArrowLeft, MessageCircle, ShoppingCart, Loader2 } from 'lucide-react';
 import { useI18n } from '../contexts/InternationalizationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePanier } from '../contexts/PanierContext';
+import { useFavoris } from '../contexts/FavorisContext';
 import ProductImageSlider from './ProductImageSlider';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
-import { API_CONFIG } from '../config/api';
+import { API_CONFIG, getImageUrl as getFullImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
 
 const VetementsPage = ({ onNavigate }) => {
   const { t } = useI18n();
   const { user, isAuthenticated } = useAuth();
   const { ajouterAuPanier, nombreArticles } = usePanier();
+  const { ajouterFavori, supprimerFavori, estFavori } = useFavoris();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all'); // Changé de selectedSubcategory
   const [selectedSize, setSelectedSize] = useState('all');
@@ -20,12 +22,17 @@ const VetementsPage = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
-  const [wishlistItems, setWishlistItems] = useState(new Set());
   const [selectedProduct, setSelectedProduct] = useState(null); // Pour les détails produit
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(12); // 12 produits par page
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221770450099"; // Format international sans le +
@@ -33,7 +40,7 @@ const VetementsPage = ({ onNavigate }) => {
   // Charger les données depuis l'API
   useEffect(() => {
     chargerDonnees();
-  }, []);
+  }, [currentPage, selectedCategory, selectedType, selectedSize, priceRange, sortBy, searchTerm]);
 
   const chargerDonnees = async () => {
     try {
@@ -42,7 +49,7 @@ const VetementsPage = ({ onNavigate }) => {
       // Récupérer les catégories et produits en parallèle
       const [categoriesData, produitsData] = await Promise.all([
         categorieService.getAllCategories(),
-        produitService.getAllProduits(0, 1000)
+        produitService.getAllProduits(currentPage, pageSize)
       ]);
 
       // Filtrer seulement les catégories de vêtements
@@ -57,26 +64,48 @@ const VetementsPage = ({ onNavigate }) => {
 
       setCategories(categoriesVetements);
       setProducts(produitsVetements);
+      setTotalPages(produitsData.totalPages || 0);
+      setTotalElements(produitsData.totalElements || produitsVetements.length);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       // En cas d'erreur, utiliser des données par défaut
       setCategories([]);
       setProducts([]);
+      setTotalPages(0);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fonction pour obtenir l'URL complète de l'image
-  const getImageUrl = (imageUrl?: string | string[]) => {
-    if (!imageUrl) return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop';
-    
-    // Si c'est un tableau, prendre le premier élément
-    const photo = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
-    
-    if (!photo) return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop';
-    if (photo.startsWith('http')) return photo;
-    return `http://localhost:8080${photo}`;
+  // Fonctions de pagination
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    setCurrentPage(0); // Reset à la première page lors du changement de filtre
+    switch (filterType) {
+      case 'category':
+        setSelectedCategory(value);
+        break;
+      case 'type':
+        setSelectedType(value);
+        break;
+      case 'size':
+        setSelectedSize(value);
+        break;
+      case 'price':
+        setPriceRange(value);
+        break;
+      case 'sort':
+        setSortBy(value);
+        break;
+      case 'search':
+        setSearchTerm(value);
+        break;
+    }
   };
 
   // Transformer les produits de l'API pour le format d'affichage
@@ -232,20 +261,53 @@ const VetementsPage = ({ onNavigate }) => {
     }
   };
 
-  const handleWishlistClick = (e, productId) => {
+  const handleWishlistClick = async (e, productId) => {
     e.stopPropagation();
-    const newWishlist = new Set(wishlistItems);
-    if (newWishlist.has(productId)) {
-      newWishlist.delete(productId);
-    } else {
-      newWishlist.add(productId);
+    
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Connexion requise',
+        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
+        confirmButtonText: 'OK'
+      });
+      return;
     }
-    setWishlistItems(newWishlist);
+
+    try {
+      if (estFavori(productId)) {
+        await supprimerFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Retiré des favoris',
+          text: 'Le produit a été retiré de vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        await ajouterFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Ajouté aux favoris',
+          text: 'Le produit a été ajouté à vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de la gestion des favoris',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   // Fonction pour ajouter au panier (SANS vérification de connexion)
   const handleAddToCart = async (e, item) => {
     e.stopPropagation();
+    e.preventDefault(); // Empêcher toute navigation
 
     try {
       setAddingToCart(item.id);
@@ -263,14 +325,20 @@ const VetementsPage = ({ onNavigate }) => {
         title: 'Produit ajouté !',
         text: 'Le produit a été ajouté à votre panier',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
+        didClose: () => {
+          // Ne rien faire, rester sur la page
+        }
       });
     } catch (error: any) {
       Swal.fire({
         icon: 'error',
         title: 'Erreur',
         text: error.message || 'Erreur lors de l\'ajout au panier',
-        confirmButtonText: 'OK'
+        confirmButtonText: 'OK',
+        didClose: () => {
+          // Ne rien faire, rester sur la page
+        }
       });
     } finally {
       setAddingToCart(null);
@@ -437,7 +505,7 @@ const VetementsPage = ({ onNavigate }) => {
                     onClick={() => handleWishlistClick({stopPropagation: () => {}}, product.id)}
                     className="w-full flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
                   >
-                    <Heart className={`h-5 w-5 mr-2 ${wishlistItems.has(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
+                    <Heart className={`h-5 w-5 mr-2 ${estFavori(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
                     <span>Ajouter aux favoris</span>
                   </button>
                   
@@ -459,32 +527,68 @@ const VetementsPage = ({ onNavigate }) => {
                   </button>
                 </div>
               </div>
-            </div>
+            {sortedClothes.length === 0 && (
+              <div className="text-center py-16 bg-white rounded-xl">
+                <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun vêtement trouvé</h3>
+                <p className="text-gray-600">Essayez de modifier vos critères de recherche</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Précédent
+                </button>
+                
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = i;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-3 py-2 rounded-lg ${
+                          currentPage === page
+                            ? 'bg-[#F99834] text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Suivant
+                </button>
+              </div>
+            )}
+
+            {/* Informations de pagination */}
+            {totalElements > 0 && (
+              <div className="mt-4 text-center text-sm text-gray-600">
+                Affichage de {currentPage * pageSize + 1} à {Math.min((currentPage + 1) * pageSize, totalElements)} sur {totalElements} vêtements
+              </div>
+            )}
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  // Si un produit est sélectionné, afficher ses détails
-  if (selectedProduct) {
-    return <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />;
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-            <span className="ml-3 text-gray-600">Chargement des vêtements...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
+export default VetementsPage;
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -696,7 +800,7 @@ const VetementsPage = ({ onNavigate }) => {
                         className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <Heart className={`h-4 w-4 transition-colors ${
-                          wishlistItems.has(item.id) 
+                          estFavori(item.id) 
                             ? 'text-red-500 fill-current' 
                             : 'text-gray-600 hover:text-red-500'
                         }`} />
@@ -711,6 +815,21 @@ const VetementsPage = ({ onNavigate }) => {
                           className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-[#F99834] hover:bg-opacity-10 transition-colors"
                         >
                           <Eye className="h-4 w-4 text-gray-600" />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(e, item);
+                          }}
+                          className="bg-[#F99834] text-white p-2 rounded-full shadow-lg hover:bg-[#E5861A] transition-colors"
+                          title="Ajouter au panier"
+                          disabled={addingToCart === item.id}
+                        >
+                          {addingToCart === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ShoppingCart className="h-4 w-4" />
+                          )}
                         </button>
                         <button 
                           onClick={(e) => handleWhatsAppOrder(e, item)}
@@ -865,31 +984,47 @@ const VetementsPage = ({ onNavigate }) => {
                                 )}
                               </div>
                               
-                              <div className="flex items-center space-x-3">
-                                <button 
-                                  onClick={(e) => handleWishlistClick(e, item.id)}
-                                  className="p-2 rounded-full border border-gray-300 hover:bg-red-50 transition-colors"
-                                >
-                                  <Heart className={`h-5 w-5 transition-colors ${
-                                    wishlistItems.has(item.id) 
-                                      ? 'text-red-500 fill-current' 
-                                      : 'text-gray-600 hover:text-red-500'
-                                  }`} />
-                                </button>
-                                
+                              <div className="flex items-center space-x-2">
                                 <button 
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleProductClick(item.id);
                                   }}
-                                  className="p-2 rounded-full border border-gray-300 hover:bg-[#F99834] hover:bg-opacity-10 transition-colors"
+                                  className="p-2 border border-gray-300 rounded-lg hover:bg-[#F99834] hover:bg-opacity-10 transition-colors"
+                                  title="Voir détails"
                                 >
-                                  <Eye className="h-5 w-5 text-gray-600" />
+                                  <Eye className="h-4 w-4 text-gray-600" />
                                 </button>
-                                
+                                <button 
+                                  onClick={(e) => handleWishlistClick(e, item.id)}
+                                  className="p-2 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
+                                  title="Ajouter aux favoris"
+                                >
+                                  <Heart className={`h-4 w-4 transition-colors ${
+                                    estFavori(item.id) 
+                                      ? 'text-red-500 fill-current' 
+                                      : 'text-gray-600 hover:text-red-500'
+                                  }`} />
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddToCart(e, item);
+                                  }}
+                                  className="bg-[#F99834] text-white px-4 py-2 rounded-lg hover:bg-[#E5861A] transition-colors flex items-center space-x-2 disabled:opacity-50"
+                                  title="Ajouter au panier"
+                                  disabled={addingToCart === item.id}
+                                >
+                                  {addingToCart === item.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <ShoppingCart className="h-4 w-4" />
+                                  )}
+                                  <span>{addingToCart === item.id ? 'Ajout...' : 'Panier'}</span>
+                                </button>
                                 <button 
                                   onClick={(e) => handleWhatsAppOrder(e, item)}
-                                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
+                                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
                                   title="Commander sur WhatsApp"
                                 >
                                   <MessageCircle className="h-4 w-4" />
@@ -1023,7 +1158,7 @@ const VetementsPage = ({ onNavigate }) => {
                       className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <Heart className={`h-4 w-4 transition-colors ${
-                        wishlistItems.has(item.id) 
+                        estFavori(item.id) 
                           ? 'text-red-500 fill-current' 
                           : 'text-gray-600 hover:text-red-500'
                       }`} />

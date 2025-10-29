@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Star, MapPin, Package, Users, Search, Filter, Grid, List, Award, ShoppingBag } from 'lucide-react';
 import publicVendeurService, { PublicVendeur } from '../services/publicVendeurService';
-import { API_CONFIG } from '../config/api';
+import { API_CONFIG, getImageUrl } from '../config/api';
 import VendorProfilePage from './VendorProfilePage';
-
-// Helper pour construire l'URL complète de l'image (temporairement commenté pour debug)
-// const getImageUrl = (photoUrl: string | undefined): string | undefined => {
-//   if (!photoUrl) return undefined;
-//   if (photoUrl.startsWith('http')) return photoUrl;
-//   return `${API_CONFIG.BASE_URL}${photoUrl}`;
-// };
 
 interface VendeursPageProps {
   onNavigate?: (page: string, data?: any) => void;
@@ -240,17 +233,10 @@ const VendeursPage = ({ onNavigate }: VendeursPageProps) => {
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 cursor-pointer group"
               >
                 <div className="relative mb-4">
-                  {/* Forcer l'affichage de l'image connue pour debug */}
                   <img
-                    src="http://localhost:8080/api/files/2decb2a5-f52a-4b75-875f-718e7e45be44.png"
+                    src={getImageUrl(vendor.photoUrl) || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop'}
                     alt={vendor.nomBoutique}
                     className="w-20 h-20 rounded-full object-cover mx-auto border-4 border-orange-100"
-                    onLoad={() => {
-                      console.log('✅ Image forcée chargée dans la liste des vendeurs');
-                    }}
-                    onError={() => {
-                      console.error('❌ Erreur même avec l\'image forcée dans la liste');
-                    }}
                   />
                   {vendor.verifie && (
                     <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -313,17 +299,10 @@ const VendeursPage = ({ onNavigate }: VendeursPageProps) => {
               >
                 <div className="flex items-start space-x-6">
                   <div className="relative">
-                    {/* Forcer l'affichage de l'image connue pour debug - Vue liste */}
                     <img
-                      src="http://localhost:8080/api/files/2decb2a5-f52a-4b75-875f-718e7e45be44.png"
+                      src={getImageUrl(vendor.photoUrl) || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop'}
                       alt={vendor.nomBoutique}
                       className="w-16 h-16 rounded-full object-cover border-3 border-orange-100"
-                      onLoad={() => {
-                        console.log('✅ Image forcée chargée dans la vue liste des vendeurs');
-                      }}
-                      onError={() => {
-                        console.error('❌ Erreur même avec l\'image forcée dans la vue liste');
-                      }}
                     />
                     {vendor.verifie && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">

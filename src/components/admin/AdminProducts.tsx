@@ -65,6 +65,12 @@ const AdminProducts = () => {
   const [editMode, setEditMode] = useState(false);
   const [selectedProduit, setSelectedProduit] = useState<Produit | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(20); // 20 produits par page
 
   const [productForm, setProductForm] = useState<CreateProduitDto>({
     nom: '',
@@ -114,16 +120,23 @@ const AdminProducts = () => {
     }
   }, []);
 
+  // Recharger les données quand la page change
+  useEffect(() => {
+    loadData();
+  }, [currentPage]);
+
   const loadData = async () => {
     try {
       setLoading(true);
       const [produitsData, vendeursData, categoriesData] = await Promise.all([
-        produitService.getAllProduits(0, 1000),
+        produitService.getAllProduits(currentPage, pageSize),
         adminService.getTousLesVendeurs(0, 1000, true),
         categorieService.getAllCategories()
       ]);
       
       setProduits(produitsData.content || produitsData);
+      setTotalPages(produitsData.totalPages || 0);
+      setTotalElements(produitsData.totalElements || produitsData.length);
       setVendeurs(vendeursData.content || []);
       setCategories(categoriesData);
     } catch (error) {

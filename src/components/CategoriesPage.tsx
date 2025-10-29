@@ -20,21 +20,31 @@ import {
 import ProductModal from './ProductModal';
 import categorieService from '../services/categorieService';
 import produitService from '../services/produitService';
+import { useFavoris } from '../contexts/FavorisContext';
+import { useAuth } from '../contexts/AuthContext';
+import Swal from 'sweetalert2';
 
 const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
+  const { ajouterFavori, supprimerFavori, estFavori } = useFavoris();
+  const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [wishlist, setWishlist] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [pageSize] = useState(12); // 12 produits par page
 
   // Charger les données depuis l'API
   useEffect(() => {
     chargerDonnees();
-  }, []);
+  }, [currentPage, selectedCategory, searchTerm]);
 
   const chargerDonnees = async () => {
     try {
@@ -43,7 +53,7 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
       // Récupérer les catégories et produits en parallèle
       const [categoriesData, produitsData] = await Promise.all([
         categorieService.getAllCategories(),
-        produitService.getAllProduits(0, 1000)
+        produitService.getAllProduits(currentPage, pageSize)
       ]);
 
       // Grouper les catégories par type (VETEMENTS, ACCESSOIRES)
@@ -238,18 +248,56 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
         .map(transformerProduit)
     : [];
 
-  const toggleWishlist = (productId: number) => {
-    const newWishlist = new Set(wishlist);
-    if (newWishlist.has(productId)) {
-      newWishlist.delete(productId);
-    } else {
-      newWishlist.add(productId);
+  const toggleWishlist = async (productId: number) => {
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Connexion requise',
+        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
+        confirmButtonText: 'OK'
+      });
+      return;
     }
-    setWishlist(newWishlist);
+
+    try {
+      if (estFavori(productId)) {
+        await supprimerFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Retiré des favoris',
+          text: 'Le produit a été retiré de vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        await ajouterFavori(productId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Ajouté aux favoris',
+          text: 'Le produit a été ajouté à vos favoris',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.message || 'Erreur lors de la gestion des favoris',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' ' + currency;
+  // Fonctions de pagination
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCategorySelect = (category: any) => {
+    setCurrentPage(0); // Reset à la première page
+    setSelectedCategory(category);
   };
 
   const handleOrderWhatsApp = (product: any) => {
@@ -398,12 +446,12 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
                     <button
                       onClick={() => toggleWishlist(product.id)}
                       className={`p-2 rounded-full transition-colors ${
-                        wishlist.has(product.id) 
+                        estFavori(product.id) 
                           ? 'bg-red-600 text-white' 
                           : 'bg-white/90 text-gray-700 hover:bg-red-600 hover:text-white'
                       }`}
                     >
-                      <Heart className={`h-5 w-5 ${wishlist.has(product.id) ? 'fill-current' : ''}`} />
+                      <Heart className={`h-5 w-5 ${estFavori(product.id) ? 'fill-current' : ''}`} />
                     </button>
                     <button
                       onClick={() => setSelectedProduct(product)}
@@ -622,6 +670,53 @@ const CategoriesPage = ({ onBack }: { onBack: () => void }) => {
               </div>
             );
           })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Précédent
+            </button>
+            
+            <div className="flex space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = i;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 rounded-lg ${
+                      currentPage === page
+                        ? 'bg-[#F99834] text-white'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page + 1}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages - 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Suivant
+            </button>
+          </div>
+        )}
+
+        {/* Informations de pagination */}
+        {totalElements > 0 && (
+          <div className="mt-4 text-center text-sm text-gray-600">
+            Affichage de {currentPage * pageSize + 1} à {Math.min((currentPage + 1) * pageSize, totalElements)} sur {totalElements} produits
           </div>
         )}
       </div>

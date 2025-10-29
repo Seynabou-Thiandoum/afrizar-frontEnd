@@ -17,7 +17,9 @@ import {
   ArrowLeft,
   Truck,
   CreditCard,
-  Globe
+  Globe,
+  Image as ImageIcon,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import adminService from '../services/adminService';
@@ -31,10 +33,12 @@ import AdminOrders from './admin/AdminOrders';
 import AdminFraisLivraison from './admin/AdminFraisLivraison';
 import AdminModesPaiement from './admin/AdminModesPaiement';
 import AdminActualitesMode from './admin/AdminActualitesMode';
+import AdminCarousel from './admin/AdminCarousel';
+import AdminVentesFlash from './admin/AdminVentesFlash';
 
 const AdminDashboardNew = () => {
   const { user, logout } = useAuth();
-  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders' | 'frais-livraison' | 'modes-paiement' | 'actualites-mode'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'profile' | 'users' | 'vendors' | 'products' | 'categories' | 'commissions' | 'orders' | 'frais-livraison' | 'modes-paiement' | 'actualites-mode' | 'carousel' | 'ventes-flash'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -217,6 +221,34 @@ const AdminDashboardNew = () => {
             <Globe className="h-5 w-5" />
             <span>Actualités Mode</span>
           </button>
+
+          <div className="pt-4 pb-2">
+            <p className="px-4 text-xs font-semibold text-gray-400 uppercase">Contenu</p>
+          </div>
+
+          <button
+            onClick={() => setActiveView('carousel')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              activeView === 'carousel'
+                ? 'bg-purple-50 text-purple-600 font-semibold'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <ImageIcon className="h-5 w-5" />
+            <span>Carousel</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('ventes-flash')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              activeView === 'ventes-flash'
+                ? 'bg-orange-50 text-orange-600 font-semibold'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Zap className="h-5 w-5" />
+            <span>Ventes Flash</span>
+          </button>
         </nav>
 
         {/* User section */}
@@ -276,6 +308,8 @@ const AdminDashboardNew = () => {
                 {activeView === 'commissions' && 'Gestion des Commissions'}
                 {activeView === 'orders' && 'Gestion des Commandes'}
                 {activeView === 'actualites-mode' && 'Actualités Mode & Tendances'}
+                {activeView === 'carousel' && 'Gestion du Carousel'}
+                {activeView === 'ventes-flash' && 'Gestion des Ventes Flash'}
               </h2>
               <p className="text-gray-600 mt-1">
                 {activeView === 'dashboard' && 'Vue d\'ensemble de votre plateforme'}
@@ -287,6 +321,8 @@ const AdminDashboardNew = () => {
                 {activeView === 'commissions' && 'Configurez les tranches de commission'}
                 {activeView === 'orders' && 'Suivez toutes les commandes clients'}
                 {activeView === 'actualites-mode' && 'Gérez les actualités, tendances et produits à la mode'}
+                {activeView === 'carousel' && 'Configurez les slides de votre page d\'accueil'}
+                {activeView === 'ventes-flash' && 'Créez et gérez les ventes flash de votre boutique'}
               </p>
             </div>
             {activeView !== 'dashboard' && (
@@ -471,6 +507,8 @@ const AdminDashboardNew = () => {
           {activeView === 'orders' && <AdminOrders />}
           {activeView === 'frais-livraison' && <AdminFraisLivraison />}
           {activeView === 'actualites-mode' && <AdminActualitesMode />}
+          {activeView === 'carousel' && <AdminCarousel />}
+          {activeView === 'ventes-flash' && <AdminVentesFlash />}
         </div>
       </div>
     </div>

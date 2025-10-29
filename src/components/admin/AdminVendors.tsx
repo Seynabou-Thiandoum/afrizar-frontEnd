@@ -1399,7 +1399,7 @@ const AdminVendors = () => {
                           <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
                             {product.imageUrl ? (
                               <img
-                                src={product.imageUrl.startsWith('http') ? product.imageUrl : `http://localhost:8080${product.imageUrl}`}
+                                src={getImageUrl(product.imageUrl) || 'https://via.placeholder.com/300x200?text=Pas+d%27image'}
                                 alt={product.nom}
                                 className="w-full h-32 object-cover rounded-lg mb-2"
                                 onError={(e) => {

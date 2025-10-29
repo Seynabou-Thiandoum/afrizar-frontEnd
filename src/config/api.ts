@@ -149,3 +149,17 @@ export const ERROR_MESSAGES = {
   UNAUTHORIZED: 'Non autorisé - Veuillez vous connecter',
   FORBIDDEN: 'Accès interdit - Vous n\'avez pas les permissions nécessaires',
 };
+
+// Fonction utilitaire pour obtenir l'URL complète d'une image
+export const getImageUrl = (imageUrl: string | string[] | null | undefined): string => {
+  if (!imageUrl) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
+  
+  // Si c'est un tableau, prendre le premier élément
+  const photo = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
+  
+  if (!photo) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop';
+  if (photo.startsWith('http')) return photo;
+  
+  // Construire l'URL avec la base URL
+  return `${API_CONFIG.BASE_URL}${photo}`;
+};

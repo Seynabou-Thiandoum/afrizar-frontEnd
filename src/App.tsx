@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { InternationalizationProvider } from './contexts/InternationalizationContext';
 import { PanierProvider } from './contexts/PanierContext';
+import { FavorisProvider } from './contexts/FavorisContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
@@ -12,9 +13,9 @@ import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import SurMesure from './components/SurMesure';
 import VendorDashboard from './components/VendorDashboard';
-import AdminDashboard from './components/AdminDashboardNew';
-import SupportDashboard from './components/SupportDashboardComplete';
-import ClientDashboard from './components/ClientDashboardNew';
+import AdminDashboard from './components/AdminDashboard';
+import SupportDashboard from './components/SupportDashboard';
+import ClientDashboard from './components/ClientDashboard';
 import Auth from './components/Auth';
 import OrderTracking from './components/OrderTracking';
 import Wishlist from './components/Wishlist';
@@ -29,9 +30,8 @@ import VetementsPage from './components/Vetements';
 import VendeursPage from './components/Vendeurs';
 import VendorProfilePage from './components/VendorProfilePage';
 import TendancesPage from './components/TendancesPage';
-import ContactPage from './components/ContactPage';
-import PanierPage from './components/PanierPage';
-import CheckoutPage from './components/CheckoutPage';
+import AdminDashboardNew from './components/AdminDashboardNew';
+import ClientDashboardNew from './components/ClientDashboardNew';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -43,48 +43,21 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [pageParams, setPageParams] = useState(null);
 
-  // Sauvegarder la page actuelle dans localStorage
+  // Redirection automatique après connexion
   React.useEffect(() => {
-    localStorage.setItem('currentPage', currentPage);
-  }, [currentPage]);
-
-  // Restaurer la page au chargement
-  React.useEffect(() => {
-    const savedPage = localStorage.getItem('currentPage');
     const hash = window.location.hash.substring(1);
-    
-    if (hash && hash !== 'home') {
+    if (hash && hash !== currentPage && hash !== 'home') {
       setCurrentPage(hash);
-    } else if (savedPage && savedPage !== 'home') {
-      setCurrentPage(savedPage);
-      // Mettre à jour l'URL
-      window.history.replaceState({ page: savedPage }, '', `#${savedPage}`);
+      // Nettoyer le hash après redirection
+      setTimeout(() => {
+        window.history.replaceState(null, '', window.location.pathname);
+      }, 100);
     }
   }, []);
-
-  // Gestion du rafraîchissement de page
-  React.useEffect(() => {
-    const handlePopState = () => {
-      const hash = window.location.hash.substring(1);
-      if (hash && hash !== currentPage) {
-        setCurrentPage(hash);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [currentPage]);
   const handleNavigation = (page, params = null) => {
-    setCurrentPage(page);
-    setPageParams(params); // Stocker les paramètres
-    
-    // Mettre à jour l'URL pour permettre le rafraîchissement
-    if (page !== 'home') {
-      window.history.pushState({ page }, '', `#${page}`);
-    } else {
-      window.history.pushState({ page }, '', window.location.pathname);
-    }
-  };
+  setCurrentPage(page);
+  setPageParams(params); // Stocker les paramètres
+};
 
   const renderPage = () => {
     switch (currentPage) {
@@ -113,19 +86,17 @@ function App() {
       case 'sur-mesure':
         return <SurMesure onBack={() => setCurrentPage('home')} />;
       case 'cart':
-        return <PanierPage onNavigate={setCurrentPage} />;
-      case 'panier':
-        return <PanierPage onNavigate={setCurrentPage} />;
+        return <Cart onClose={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
       case 'checkout':
-        return <CheckoutPage onNavigate={setCurrentPage} onShowAuth={() => setShowAuth(true)} />;
+        return <Checkout onBack={() => setCurrentPage('cart')} />;
       case 'payment':
         return <Checkout onBack={() => setCurrentPage('cart')} />;
       case 'vendor-dashboard':
         return <VendorDashboard />;
       case 'admin-dashboard':
-        return <AdminDashboard />;
+        return <AdminDashboardNew />;
       case 'client-dashboard':
-        return <ClientDashboard onNavigate={setCurrentPage} />;
+        return <ClientDashboardNew onNavigate={setCurrentPage} />;
       case 'support-dashboard':
         return <SupportDashboard />;
       case 'order-tracking':
@@ -185,41 +156,43 @@ function App() {
     <InternationalizationProvider>
       <AuthProvider>
         <PanierProvider>
-          <div className="min-h-screen bg-gray-50">
-            {!['cart', 'panier', 'checkout', 'vendor-dashboard', 'client-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
-              <Header 
-                onNavigate={setCurrentPage}
-                onSearch={setGlobalSearchTerm}
-                onOpenAuth={openAuth}
-              />
-            )}
-            
-            <main>
-              {renderPage()}
-            </main>
-            
-            {/* {currentPage === 'home' && <Footer />}
-            {currentPage === 'vetements' && <Footer />} */}
-            <Footer onNavigate={handleNavigation} />
+          <FavorisProvider>
+            <div className="min-h-screen bg-gray-50">
+              {!['cart', 'checkout', 'vendor-dashboard', 'client-dashboard', 'admin-dashboard', 'support-dashboard', 'order-tracking'].includes(currentPage) && (
+                <Header 
+                  onNavigate={setCurrentPage}
+                  onSearch={setGlobalSearchTerm}
+                  onOpenAuth={openAuth}
+                />
+              )}
+              
+              <main>
+                {renderPage()}
+              </main>
+              
+              {/* {currentPage === 'home' && <Footer />}
+              {currentPage === 'vetements' && <Footer />} */}
+              <Footer onNavigate={handleNavigation} />
 
-            {/* Auth Modal */}
-            {showAuth && (
-              <Auth 
-                onClose={() => setShowAuth(false)}
-                initialMode={authMode}
-              />
-            )}
+              {/* Auth Modal */}
+              {showAuth && (
+                <Auth 
+                  onClose={() => setShowAuth(false)}
+                  initialMode={authMode}
+                />
+              )}
 
-            {/* Deferred Order Modal */}
-            {showDeferredOrder && (
-              <DeferredOrder
-                product={selectedProduct}
-                onClose={() => setShowDeferredOrder(false)}
-                onAddToCart={handleAddToCart}
-              />
-            )}
+              {/* Deferred Order Modal */}
+              {showDeferredOrder && (
+                <DeferredOrder
+                  product={selectedProduct}
+                  onClose={() => setShowDeferredOrder(false)}
+                  onAddToCart={handleAddToCart}
+                />
+              )}
 
-          </div>
+            </div>
+          </FavorisProvider>
         </PanierProvider>
       </AuthProvider>
     </InternationalizationProvider>

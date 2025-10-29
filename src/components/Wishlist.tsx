@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Heart, 
   ArrowLeft, 
@@ -7,104 +7,160 @@ import {
   Eye, 
   Trash2,
   MapPin,
-  Clock
+  Clock,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
+import favorisService, { Favori } from '../services/favorisService';
+import { useAuth } from '../contexts/AuthContext';
+import { getImageUrl } from '../config/api';
+import Swal from 'sweetalert2';
 
-const Wishlist = ({ onBack, onNavigate }) => {
-  const [wishlistItems, setWishlistItems] = useState([
-    {
-      id: 1,
-      name: 'Grand Boubou Brodé Premium',
-      price: 45000,
-      originalPrice: 55000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1439261/pexels-photo-1439261.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.8,
-      reviews: 24,
-      status: 'En stock',
-      category: 'Tenues Femmes',
-      vendor: 'Atelier Fatou',
-      delivery: '3-5 jours',
-      addedDate: '2025-01-10'
-    },
-    {
-      id: 3,
-      name: 'Collier Perles Traditionnelles',
-      price: 12000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.7,
-      reviews: 32,
-      status: 'En stock',
-      category: 'Accessoires',
-      vendor: 'Bijoux Khadija',
-      delivery: '2-3 jours',
-      addedDate: '2025-01-12'
-    },
-    {
-      id: 5,
-      name: 'Sac à Main Cuir Artisanal',
-      price: 25000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1007018/pexels-photo-1007018.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.5,
-      reviews: 28,
-      status: 'Stock limité',
-      category: 'Accessoires',
-      vendor: 'Maroquinerie Salam',
-      delivery: '3-5 jours',
-      addedDate: '2025-01-14'
-    },
-    {
-      id: 7,
-      name: 'Caftan Élégant',
-      price: 42000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1661469/pexels-photo-1661469.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.7,
-      reviews: 16,
-      status: 'En stock',
-      category: 'Tenues Femmes',
-      vendor: 'Couture Royale',
-      delivery: '3-5 jours',
-      addedDate: '2025-01-13'
-    },
-    {
-      id: 8,
-      name: 'Grand Boubou Homme Traditionnel',
-      price: 48000,
-      currency: 'FCFA',
-      image: 'https://images.pexels.com/photos/1121796/pexels-photo-1121796.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.8,
-      reviews: 22,
-      status: 'En stock',
-      category: 'Tenues Hommes',
-      vendor: 'Atelier Traditionnel',
-      delivery: '4-6 jours',
-      addedDate: '2025-01-11'
+interface WishlistProps {
+  onBack: () => void;
+  onNavigate: (page: string, data?: any) => void;
+}
+
+const Wishlist = ({ onBack, onNavigate }: WishlistProps) => {
+  const { user } = useAuth();
+  const [wishlistItems, setWishlistItems] = useState<Favori[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadFavoris();
+  }, []);
+
+  const loadFavoris = async () => {
+    if (!user) {
+      setError('Veuillez vous connecter pour accéder à vos favoris');
+      setLoading(false);
+      return;
     }
-  ]);
 
-  const removeFromWishlist = (productId) => {
-    setWishlistItems(items => items.filter(item => item.id !== productId));
+    try {
+      setLoading(true);
+      setError(null);
+      const favoris = await favorisService.obtenirFavoris();
+      setWishlistItems(favoris);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des favoris';
+      setError(errorMessage);
+      console.error('Erreur chargement favoris:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addToCart = (product) => {
+  const removeFromWishlist = async (favoriId: number) => {
+    try {
+      // Trouver le produitId correspondant au favoriId
+      const favori = wishlistItems.find(item => item.id === favoriId);
+      if (!favori) return;
+      
+      await favorisService.supprimerFavori(favori.produitId);
+      setWishlistItems(items => items.filter(item => item.id !== favoriId));
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Retiré des favoris',
+        text: 'Le produit a été retiré de vos favoris',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du retrait des favoris';
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: errorMessage
+      });
+    }
+  };
+
+  const addToCart = (product: any) => {
     console.log('Ajout au panier depuis favoris:', product);
-    // Logique d'ajout au panier
+    // TODO: Implémenter l'ajout au panier
+    Swal.fire({
+      icon: 'info',
+      title: 'Fonctionnalité à venir',
+      text: 'L\'ajout au panier sera bientôt disponible'
+    });
   };
 
-  const formatPrice = (price, currency) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' ' + currency;
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-orange-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Chargement de vos favoris...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onBack}
+                className="p-3 hover:bg-gray-100 rounded-2xl transition-colors"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </button>
+              <div>
+                <h1 className="text-4xl font-black text-gray-900">Mes Favoris</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-20">
+            <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-8">
+              <AlertCircle className="h-16 w-16 text-red-400" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              {error === 'Veuillez vous connecter pour accéder à vos favoris' 
+                ? 'Connexion requise' 
+                : 'Erreur de chargement'}
+            </h2>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">{error}</p>
+            {error === 'Veuillez vous connecter pour accéder à vos favoris' ? (
+              <button
+                onClick={() => onNavigate('auth')}
+                className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 shadow-xl hover:shadow-orange-500/25 transform hover:scale-105"
+              >
+                Se connecter
+              </button>
+            ) : (
+              <button
+                onClick={loadFavoris}
+                className="bg-orange-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-orange-700 transition-all duration-300 shadow-xl hover:shadow-orange-500/25 transform hover:scale-105"
+              >
+                Réessayer
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -151,28 +207,15 @@ const Wishlist = ({ onBack, onNavigate }) => {
               <div key={item.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group transform hover:-translate-y-2">
                 <div className="relative overflow-hidden">
                   <img
-                    src={item.image}
-                    alt={item.name}
+                    src={getImageUrl(item.produitImageUrl)}
+                    alt={item.produitNom}
                     className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   
                   {/* Status Badge */}
-                  <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-medium ${
-                    item.status === 'En stock' 
-                      ? 'bg-green-100 text-green-800' 
-                      : item.status === 'Stock limité'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-orange-100 text-orange-800'
-                  }`}>
-                    {item.status}
+                  <div className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    En stock
                   </div>
-
-                  {/* Discount Badge */}
-                  {item.originalPrice && (
-                    <div className="absolute top-4 right-4 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                      -{Math.round((1 - item.price / item.originalPrice) * 100)}%
-                    </div>
-                  )}
 
                   {/* Quick Actions */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
@@ -183,7 +226,7 @@ const Wishlist = ({ onBack, onNavigate }) => {
                       <Trash2 className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={() => onNavigate('product-detail', { productId: item.id })}
+                      onClick={() => onNavigate('product-detail', { productId: item.produitId })}
                       className="p-3 bg-white/90 rounded-2xl text-gray-700 hover:bg-orange-600 hover:text-white transition-colors shadow-lg"
                     >
                       <Eye className="h-5 w-5" />
@@ -200,43 +243,28 @@ const Wishlist = ({ onBack, onNavigate }) => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-orange-600 font-medium uppercase tracking-wide">
-                      {item.category}
+                      {item.vendeurNom}
                     </span>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm text-gray-600 font-medium">{item.rating}</span>
-                      <span className="text-xs text-gray-500">({item.reviews})</span>
-                    </div>
                   </div>
                   
                   <h3 className="font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-red-600 transition-colors">
-                    {item.name}
+                    {item.produitNom}
                   </h3>
                   
                   <div className="flex items-center space-x-2 mb-3">
                     <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{item.vendor}</span>
-                  </div>
-
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Clock className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Livraison: {item.delivery}</span>
+                    <span className="text-sm text-gray-600">{item.vendeurNom}</span>
                   </div>
 
                   <div className="text-xs text-gray-500 mb-4">
-                    Ajouté le {formatDate(item.addedDate)}
+                    Ajouté le {formatDate(item.dateAjout)}
                   </div>
                   
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex flex-col">
                       <span className="text-lg font-bold text-gray-900">
-                        {formatPrice(item.price, item.currency)}
+                        {formatPrice(item.produitPrix)}
                       </span>
-                      {item.originalPrice && (
-                        <span className="text-sm text-gray-500 line-through">
-                          {formatPrice(item.originalPrice, item.currency)}
-                        </span>
-                      )}
                     </div>
                   </div>
 

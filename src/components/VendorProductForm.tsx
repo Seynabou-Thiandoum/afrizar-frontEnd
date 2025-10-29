@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Upload, 
   Plus, 
@@ -24,6 +24,7 @@ const VendorProductForm = ({ onClose, onSave, editProduct = null }) => {
     productionDelay: editProduct?.productionDelay || '3-5',
     quality: editProduct?.quality || 'standard',
     category: editProduct?.category || 'Tenues Femmes',
+    vendeurId: editProduct?.vendeurId || '',
     colors: editProduct?.colors || ['#FF6B35'],
     sizes: editProduct?.sizes || ['M'],
     images: editProduct?.images || []
@@ -33,14 +34,45 @@ const VendorProductForm = ({ onClose, onSave, editProduct = null }) => {
   const [shipping, setShipping] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
 
-  const categories = [
-    'Tenues Femmes',
-    'Tenues Hommes', 
-    'Accessoires',
-    'Bijoux',
-    'Chaussures',
-    'Sacs'
-  ];
+  // Charger les catégories depuis l'API
+  const [categories, setCategories] = useState([]);
+  const [vendeurs, setVendeurs] = useState([]);
+  
+  useEffect(() => {
+    // Charger les catégories depuis l'API
+    const loadCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        setCategories(data.content || data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des catégories:', error);
+        // Fallback vers les catégories par défaut
+        setCategories([
+          'Tenues Femmes',
+          'Tenues Hommes', 
+          'Accessoires',
+          'Bijoux',
+          'Chaussures',
+          'Sacs'
+        ]);
+      }
+    };
+    
+    // Charger les vendeurs depuis l'API (pour les admins)
+    const loadVendeurs = async () => {
+      try {
+        const response = await fetch('/api/admin/vendeurs');
+        const data = await response.json();
+        setVendeurs(data.content || data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des vendeurs:', error);
+      }
+    };
+    
+    loadCategories();
+    loadVendeurs();
+  }, []);
 
   const qualityLevels = [
     { value: 'standard', label: 'Standard', description: 'Qualité artisanale classique' },
@@ -303,14 +335,18 @@ const VendorProductForm = ({ onClose, onSave, editProduct = null }) => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie *</label>
                         <select
                           value={formData.category}
                           onChange={(e) => handleInputChange('category', e.target.value)}
                           className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-orange-500"
+                          required
                         >
+                          <option value="">⚠️ Sélectionner une catégorie</option>
                           {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
+                            <option key={cat.id || cat} value={cat.nom || cat}>
+                              {cat.nom || cat} {cat.type ? `(${cat.type} - ${cat.genre})` : ''}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -330,6 +366,25 @@ const VendorProductForm = ({ onClose, onSave, editProduct = null }) => {
                         </select>
                       </div>
                     </div>
+
+                    {/* Champ Vendeur pour les admins */}
+                    {vendeurs.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Vendeur (Admin uniquement)</label>
+                        <select
+                          value={formData.vendeurId || ''}
+                          onChange={(e) => handleInputChange('vendeurId', e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="">Sélectionner un vendeur (optionnel)</option>
+                          {vendeurs.map(vendeur => (
+                            <option key={vendeur.id} value={vendeur.id}>
+                              {vendeur.nomBoutique} ({vendeur.prenom} {vendeur.nom})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
 

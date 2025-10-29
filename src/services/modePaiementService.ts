@@ -173,3 +173,4 @@ const modePaiementService = {
 
 export default modePaiementService;
 
+
