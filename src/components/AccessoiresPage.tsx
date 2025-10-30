@@ -256,16 +256,6 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
 
   const handleWishlistClick = async (e: any, productId: any) => {
     e.stopPropagation();
-    
-    if (!isAuthenticated) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Connexion requise',
-        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
-        confirmButtonText: 'OK'
-      });
-      return;
-    }
 
     try {
       if (estFavori(productId)) {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import favorisService, { Favori } from '../services/favorisService';
 import { useAuth } from './AuthContext';
 
@@ -12,6 +12,7 @@ interface FavorisContextType {
   estFavori: (produitId: number) => boolean;
   chargerFavoris: () => Promise<void>;
   nombreFavoris: number;
+  synchroniserFavoris: () => Promise<void>;
 }
 
 const FavorisContext = createContext<FavorisContextType | undefined>(undefined);
@@ -28,24 +29,58 @@ interface FavorisProviderProps {
   children: ReactNode;
 }
 
+const STORAGE_KEY = 'afrizar_favoris_locaux';
+const STORAGE_KEY_PENDING = 'afrizar_favoris_pending_sync';
+
 export const FavorisProvider: React.FC<FavorisProviderProps> = ({ children }) => {
   const [favoris, setFavoris] = useState<Set<number>>(new Set());
   const [favorisDetails, setFavorisDetails] = useState<Favori[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
-  // Charger les favoris au démarrage
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      chargerFavoris();
-    } else {
-      // Nettoyer les favoris si l'utilisateur n'est pas connecté
-      setFavoris(new Set());
-      setFavorisDetails([]);
-    }
-  }, [isAuthenticated, user]);
+  // === FONCTIONS LOCALSTORAGE ===
 
-  const chargerFavoris = async () => {
+  const chargerFavorisLocaux = useCallback(() => {
+    try {
+      const favorisLocaux = localStorage.getItem(STORAGE_KEY);
+      if (favorisLocaux) {
+        const favorisIds = JSON.parse(favorisLocaux);
+        setFavoris(new Set(favorisIds));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des favoris locaux:', error);
+    }
+  }, []);
+
+  const sauvegarderFavorisLocaux = useCallback((favorisIds: number[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favorisIds));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde des favoris locaux:', error);
+    }
+  }, []);
+
+  const ajouterFavoriLocal = useCallback((produitId: number) => {
+    setFavoris(prev => {
+      const newSet = new Set(prev);
+      newSet.add(produitId);
+      sauvegarderFavorisLocaux(Array.from(newSet));
+      return newSet;
+    });
+  }, [sauvegarderFavorisLocaux]);
+
+  const supprimerFavoriLocal = useCallback((produitId: number) => {
+    setFavoris(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(produitId);
+      sauvegarderFavorisLocaux(Array.from(newSet));
+      return newSet;
+    });
+  }, [sauvegarderFavorisLocaux]);
+
+  // === FONCTIONS SERVEUR ===
+
+  const chargerFavoris = useCallback(async () => {
     if (!isAuthenticated) return;
     
     try {
@@ -55,57 +90,112 @@ export const FavorisProvider: React.FC<FavorisProviderProps> = ({ children }) =>
       
       setFavoris(favorisIds);
       setFavorisDetails(favorisData);
+      // Mettre à jour le localStorage avec les favoris du serveur
+      sauvegarderFavorisLocaux(Array.from(favorisIds));
     } catch (error) {
       console.error('Erreur lors du chargement des favoris:', error);
       // En cas d'erreur, on garde les favoris locaux
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, sauvegarderFavorisLocaux]);
 
-  const ajouterFavori = async (produitId: number) => {
+  // Synchroniser les favoris locaux avec le serveur
+  const synchroniserFavoris = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
     try {
-      await favorisService.ajouterFavori(produitId);
-      setFavoris(prev => new Set([...prev, produitId]));
+      // Récupérer les favoris locaux
+      const favorisLocaux = Array.from(favoris);
       
-      // Recharger les détails pour avoir les infos du produit
+      // Récupérer les favoris du serveur
+      const favorisServeur = await favorisService.obtenirFavoris();
+      const favorisIdsServeur = favorisServeur.map(f => f.produitId);
+      
+      // Trouver les favoris qui sont locaux mais pas sur le serveur
+      const favorisASynchroniser = favorisLocaux.filter(id => !favorisIdsServeur.includes(id));
+      
+      // Ajouter les favoris locaux au serveur
+      for (const produitId of favorisASynchroniser) {
+        try {
+          await favorisService.ajouterFavori(produitId);
+        } catch (error) {
+          console.error(`Erreur lors de la synchronisation du favori ${produitId}:`, error);
+        }
+      }
+      
+      // Recharger les favoris après synchronisation
       await chargerFavoris();
     } catch (error) {
-      console.error('Erreur lors de l\'ajout aux favoris:', error);
-      throw error;
+      console.error('Erreur lors de la synchronisation des favoris:', error);
+    }
+  }, [isAuthenticated, favoris, chargerFavoris]);
+
+  // Charger les favoris locaux au démarrage
+  useEffect(() => {
+    chargerFavorisLocaux();
+  }, [chargerFavorisLocaux]);
+
+  // Synchroniser quand l'utilisateur se connecte
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      synchroniserFavoris();
+      chargerFavoris();
+    }
+  }, [isAuthenticated, user, synchroniserFavoris, chargerFavoris]);
+
+  // Nettoyer quand l'utilisateur se déconnecte
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // On garde les favoris locaux pour les invités
+      // Mais on vide les détails qui nécessitent une connexion
+    }
+  }, [isAuthenticated]);
+
+  const ajouterFavori = async (produitId: number) => {
+    // Toujours ajouter localement (même sans être connecté)
+    ajouterFavoriLocal(produitId);
+
+    // Si connecté, ajouter au serveur
+    if (isAuthenticated) {
+      try {
+        await favorisService.ajouterFavori(produitId);
+        // Recharger les détails pour avoir les infos du produit
+        await chargerFavoris();
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout aux favoris (serveur):', error);
+        // On continue quand même, car le favori a été ajouté localement
+      }
     }
   };
 
   const supprimerFavori = async (produitId: number) => {
-    try {
-      await favorisService.supprimerFavori(produitId);
-      setFavoris(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(produitId);
-        return newSet;
-      });
-      
-      setFavorisDetails(prev => prev.filter(f => f.produitId !== produitId));
-    } catch (error) {
-      console.error('Erreur lors de la suppression des favoris:', error);
-      throw error;
+    // Toujours supprimer localement (même sans être connecté)
+    supprimerFavoriLocal(produitId);
+    
+    // Supprimer des détails si on a les détails en mémoire
+    setFavorisDetails(prev => prev.filter(f => f.produitId !== produitId));
+
+    // Si connecté, supprimer du serveur
+    if (isAuthenticated) {
+      try {
+        await favorisService.supprimerFavori(produitId);
+      } catch (error) {
+        console.error('Erreur lors de la suppression des favoris (serveur):', error);
+        // On continue quand même, car le favori a été supprimé localement
+      }
     }
   };
 
   const toggleFavori = async (produitId: number): Promise<boolean> => {
-    try {
-      const estFavori = favoris.has(produitId);
-      
-      if (estFavori) {
-        await supprimerFavori(produitId);
-        return false;
-      } else {
-        await ajouterFavori(produitId);
-        return true;
-      }
-    } catch (error) {
-      console.error('Erreur lors du toggle favori:', error);
-      throw error;
+    const estFavori = favoris.has(produitId);
+    
+    if (estFavori) {
+      await supprimerFavori(produitId);
+      return false;
+    } else {
+      await ajouterFavori(produitId);
+      return true;
     }
   };
 
@@ -125,6 +215,7 @@ export const FavorisProvider: React.FC<FavorisProviderProps> = ({ children }) =>
     estFavori,
     chargerFavoris,
     nombreFavoris,
+    synchroniserFavoris,
   };
 
   return (

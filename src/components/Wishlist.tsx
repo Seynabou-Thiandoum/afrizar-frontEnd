@@ -11,10 +11,13 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react';
-import favorisService, { Favori } from '../services/favorisService';
+import { Favori } from '../services/favorisService';
 import { useAuth } from '../contexts/AuthContext';
+import { useFavoris } from '../contexts/FavorisContext';
 import { getImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
+import favorisService from '../services/favorisService';
+import publicProduitService from '../services/publicProduitService';
 
 interface WishlistProps {
   onBack: () => void;
@@ -22,30 +25,53 @@ interface WishlistProps {
 }
 
 const Wishlist = ({ onBack, onNavigate }: WishlistProps) => {
-  const { user } = useAuth();
-  const [wishlistItems, setWishlistItems] = useState<Favori[]>([]);
+  const { user, isAuthenticated } = useAuth();
+  const { favoris: favorisIds, supprimerFavori } = useFavoris();
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadFavoris();
-  }, []);
+  }, [favorisIds]);
 
   const loadFavoris = async () => {
-    if (!user) {
-      setError('Veuillez vous connecter pour accéder à vos favoris');
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
-      setError(null);
-      const favoris = await favorisService.obtenirFavoris();
-      setWishlistItems(favoris);
+      
+      // Si l'utilisateur est connecté, charger les détails depuis le serveur
+      if (isAuthenticated && user) {
+        try {
+          const favoris = await favorisService.obtenirFavoris();
+          setWishlistItems(favoris);
+          return;
+        } catch (err) {
+          console.error('Erreur chargement favoris depuis serveur:', err);
+        }
+      }
+      
+      // Sinon, charger depuis les IDs locaux (localStorage)
+      const favorisLocaux: any[] = [];
+      for (const produitId of Array.from(favorisIds)) {
+        try {
+          const produit = await publicProduitService.getPublishedProduit(produitId);
+          if (produit) {
+            favorisLocaux.push({
+              id: produitId,
+              produitId: produitId,
+              produitNom: produit.nom,
+              produitPrix: produit.prix,
+              produitImageUrl: produit.imageUrl,
+              vendeurNom: produit.vendeur?.nomBoutique || 'Afrizar',
+              dateAjout: new Date().toISOString()
+            });
+          }
+        } catch (err) {
+          console.error(`Erreur chargement produit ${produitId}:`, err);
+        }
+      }
+      
+      setWishlistItems(favorisLocaux);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des favoris';
-      setError(errorMessage);
       console.error('Erreur chargement favoris:', err);
     } finally {
       setLoading(false);
@@ -55,11 +81,16 @@ const Wishlist = ({ onBack, onNavigate }: WishlistProps) => {
   const removeFromWishlist = async (favoriId: number) => {
     try {
       // Trouver le produitId correspondant au favoriId
-      const favori = wishlistItems.find(item => item.id === favoriId);
+      const favori = wishlistItems.find(item => item.id === favoriId || item.produitId === favoriId);
       if (!favori) return;
       
-      await favorisService.supprimerFavori(favori.produitId);
-      setWishlistItems(items => items.filter(item => item.id !== favoriId));
+      const produitId = favori.produitId || favoriId;
+      
+      // Utiliser le contexte pour supprimer (fonctionne avec localStorage et serveur)
+      await supprimerFavori(produitId);
+      
+      // Mettre à jour l'état local
+      setWishlistItems(items => items.filter(item => (item.id !== favoriId && item.produitId !== produitId)));
       
       Swal.fire({
         icon: 'success',
@@ -106,57 +137,6 @@ const Wishlist = ({ onBack, onNavigate }: WishlistProps) => {
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-orange-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Chargement de vos favoris...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onBack}
-                className="p-3 hover:bg-gray-100 rounded-2xl transition-colors"
-              >
-                <ArrowLeft className="h-6 w-6" />
-              </button>
-              <div>
-                <h1 className="text-4xl font-black text-gray-900">Mes Favoris</h1>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-20">
-            <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <AlertCircle className="h-16 w-16 text-red-400" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {error === 'Veuillez vous connecter pour accéder à vos favoris' 
-                ? 'Connexion requise' 
-                : 'Erreur de chargement'}
-            </h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">{error}</p>
-            {error === 'Veuillez vous connecter pour accéder à vos favoris' ? (
-              <button
-                onClick={() => onNavigate('auth')}
-                className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 shadow-xl hover:shadow-orange-500/25 transform hover:scale-105"
-              >
-                Se connecter
-              </button>
-            ) : (
-              <button
-                onClick={loadFavoris}
-                className="bg-orange-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-orange-700 transition-all duration-300 shadow-xl hover:shadow-orange-500/25 transform hover:scale-105"
-              >
-                Réessayer
-              </button>
-            )}
-          </div>
         </div>
       </div>
     );
