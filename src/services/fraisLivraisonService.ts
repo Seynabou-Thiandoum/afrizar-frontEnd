@@ -4,7 +4,7 @@ export interface FraisLivraison {
   id: number;
   nom: string;
   description: string;
-  type: 'EXPRESS' | 'STANDARD';
+  type: 'RETRAIT_MAGASIN' | 'STANDARD' | 'EXPRESS' | 'URGENT';
   typeNom: string;
   typeDescription: string;
   frais: number;

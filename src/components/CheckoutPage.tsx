@@ -557,19 +557,29 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
                     />
                     <div>
                       <h4 className="font-semibold text-gray-900 flex items-center">
-                        {frais.typeNom}
-                        {frais.typeNom === 'EXPRESS' && <Sparkles className="h-4 w-4 ml-2 text-[#F99834]" />}
+                        {frais.typeNom || frais.type === 'RETRAIT_MAGASIN' ? 'Retrait en magasin' : frais.type}
+                        {frais.type === 'EXPRESS' && <Sparkles className="h-4 w-4 ml-2 text-[#F99834]" />}
+                        {frais.type === 'URGENT' && <Sparkles className="h-4 w-4 ml-2 text-red-500" />}
                       </h4>
                       <p className="text-sm text-gray-600">{frais.description}</p>
-                      <p className="text-sm text-gray-500">
-                        {frais.delaiMinJours} à {frais.delaiMaxJours} jours ouvrables
-                      </p>
+                      {frais.type !== 'RETRAIT_MAGASIN' && (
+                        <p className="text-sm text-gray-500">
+                          {frais.delaiMinJours} à {frais.delaiMaxJours} jours ouvrables
+                        </p>
+                      )}
+                      {frais.type === 'RETRAIT_MAGASIN' && (
+                        <p className="text-sm text-green-600">Disponible immédiatement</p>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-[#F99834]">
-                      {frais.frais.toLocaleString()} FCFA
-                    </p>
+                    {frais.type === 'RETRAIT_MAGASIN' || frais.frais === 0 ? (
+                      <p className="text-lg font-bold text-green-600">Gratuit</p>
+                    ) : (
+                      <p className="text-lg font-bold text-[#F99834]">
+                        {frais.frais.toLocaleString()} FCFA
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -680,9 +690,20 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
             <span>{panier?.montantTotal.toLocaleString()} FCFA</span>
           </div>
           <div className="flex justify-between text-gray-700">
-            <span>Frais de livraison</span>
+            <span>
+              Frais de livraison
+              {fraisLivraisonSelectionne && (
+                <span className="text-xs text-gray-500 ml-2">
+                  ({fraisLivraisonSelectionne.typeNom || fraisLivraisonSelectionne.type})
+                </span>
+              )}
+            </span>
             <span className="text-green-600 font-semibold">
-              {fraisLivraisonSelectionne ? `${fraisLivraisonSelectionne.frais.toLocaleString()} FCFA` : 'À sélectionner'}
+              {fraisLivraisonSelectionne 
+                ? (fraisLivraisonSelectionne.type === 'RETRAIT_MAGASIN' || fraisLivraisonSelectionne.frais === 0)
+                  ? 'Gratuit'
+                  : `${fraisLivraisonSelectionne.frais.toLocaleString()} FCFA`
+                : 'À sélectionner'}
             </span>
           </div>
           {modePaiement && calculateFraisPaiement() > 0 && (

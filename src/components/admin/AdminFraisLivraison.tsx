@@ -27,14 +27,14 @@ const AdminFraisLivraison = () => {
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
-    type: 'EXPRESS' as 'EXPRESS' | 'STANDARD',
+    type: 'EXPRESS' as 'RETRAIT_MAGASIN' | 'STANDARD' | 'EXPRESS' | 'URGENT',
     frais: 0,
     delaiMinJours: 0,
     delaiMaxJours: 0,
     actif: true,
     poidsMin: 0,
     poidsMax: 0,
-    zone: 'DAKAR'
+    zone: ''
   });
 
   useEffect(() => {
@@ -65,8 +65,13 @@ const AdminFraisLivraison = () => {
     try {
       setLoading(true);
       
+      // Si c'est retrait en magasin, forcer les frais à 0
+      const dataToSubmit = formData.type === 'RETRAIT_MAGASIN' 
+        ? { ...formData, frais: 0, delaiMinJours: 0, delaiMaxJours: 0 }
+        : formData;
+      
       if (editingFrais) {
-        await fraisLivraisonService.mettreAJourFraisLivraison(editingFrais.id, formData);
+        await fraisLivraisonService.mettreAJourFraisLivraison(editingFrais.id, dataToSubmit);
         Swal.fire({
           icon: 'success',
           title: 'Succès',
@@ -75,7 +80,7 @@ const AdminFraisLivraison = () => {
           showConfirmButton: false
         });
       } else {
-        await fraisLivraisonService.creerFraisLivraison(formData);
+        await fraisLivraisonService.creerFraisLivraison(dataToSubmit);
         Swal.fire({
           icon: 'success',
           title: 'Succès',
@@ -115,7 +120,7 @@ const AdminFraisLivraison = () => {
       actif: frais.actif,
       poidsMin: frais.poidsMin || 0,
       poidsMax: frais.poidsMax || 0,
-      zone: frais.zone || 'DAKAR'
+      zone: frais.zone || ''
     });
     setShowModal(true);
   };
@@ -185,14 +190,14 @@ const AdminFraisLivraison = () => {
     setFormData({
       nom: '',
       description: '',
-      type: 'EXPRESS',
+      type: 'STANDARD',
       frais: 0,
       delaiMinJours: 0,
       delaiMaxJours: 0,
       actif: true,
       poidsMin: 0,
       poidsMax: 0,
-      zone: 'DAKAR'
+      zone: ''
     });
   };
 
@@ -255,8 +260,10 @@ const AdminFraisLivraison = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               <option value="all">Tous les types</option>
-              <option value="EXPRESS">Express</option>
+              <option value="RETRAIT_MAGASIN">Retrait en magasin</option>
               <option value="STANDARD">Standard</option>
+              <option value="EXPRESS">Express</option>
+              <option value="URGENT">Urgent</option>
             </select>
           </div>
           
@@ -339,11 +346,15 @@ const AdminFraisLivraison = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        frais.type === 'EXPRESS' 
+                        frais.type === 'RETRAIT_MAGASIN' 
+                          ? 'bg-green-100 text-green-800' 
+                          : frais.type === 'EXPRESS' 
                           ? 'bg-red-100 text-red-800' 
+                          : frais.type === 'URGENT'
+                          ? 'bg-orange-100 text-orange-800'
                           : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {frais.type}
+                        {frais.typeNom || frais.type}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -442,12 +453,20 @@ const AdminFraisLivraison = () => {
                     <select
                       required
                       value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value as 'EXPRESS' | 'STANDARD' })}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value as 'RETRAIT_MAGASIN' | 'STANDARD' | 'EXPRESS' | 'URGENT' })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="EXPRESS">Express</option>
+                      <option value="RETRAIT_MAGASIN">Retrait en magasin</option>
                       <option value="STANDARD">Standard</option>
+                      <option value="EXPRESS">Express</option>
+                      <option value="URGENT">Urgent</option>
                     </select>
+                    {formData.type === 'RETRAIT_MAGASIN' && (
+                      <p className="mt-2 text-sm text-green-600 flex items-center">
+                        <span className="mr-2">ℹ️</span>
+                        Le retrait en magasin est toujours gratuit et immédiat
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -460,7 +479,9 @@ const AdminFraisLivraison = () => {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     rows={3}
-                    placeholder="Description des frais de livraison..."
+                    placeholder={formData.type === 'RETRAIT_MAGASIN' 
+                      ? "Ex: Retrait à notre magasin principal, 123 Avenue... À votre convenance, horaires d'ouverture..." 
+                      : "Description des frais de livraison..."}
                   />
                 </div>
 
@@ -468,42 +489,54 @@ const AdminFraisLivraison = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Frais (FCFA) *
+                      {formData.type === 'RETRAIT_MAGASIN' && (
+                        <span className="text-xs text-gray-500 ml-2">(Gratuit)</span>
+                      )}
                     </label>
                     <input
                       type="number"
                       required
                       min="0"
-                      value={formData.frais}
+                      disabled={formData.type === 'RETRAIT_MAGASIN'}
+                      value={formData.type === 'RETRAIT_MAGASIN' ? 0 : formData.frais}
                       onChange={(e) => setFormData({ ...formData, frais: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Délai min (jours) *
+                      {formData.type === 'RETRAIT_MAGASIN' && (
+                        <span className="text-xs text-gray-500 ml-2">(Immédiat)</span>
+                      )}
                     </label>
                     <input
                       type="number"
                       required
                       min="1"
-                      value={formData.delaiMinJours}
+                      disabled={formData.type === 'RETRAIT_MAGASIN'}
+                      value={formData.type === 'RETRAIT_MAGASIN' ? 0 : formData.delaiMinJours}
                       onChange={(e) => setFormData({ ...formData, delaiMinJours: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Délai max (jours) *
+                      {formData.type === 'RETRAIT_MAGASIN' && (
+                        <span className="text-xs text-gray-500 ml-2">(Immédiat)</span>
+                      )}
                     </label>
                     <input
                       type="number"
                       required
                       min="1"
-                      value={formData.delaiMaxJours}
+                      disabled={formData.type === 'RETRAIT_MAGASIN'}
+                      value={formData.type === 'RETRAIT_MAGASIN' ? 0 : formData.delaiMaxJours}
                       onChange={(e) => setFormData({ ...formData, delaiMaxJours: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -518,10 +551,21 @@ const AdminFraisLivraison = () => {
                       onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
+                      <option value="">Toutes zones</option>
                       <option value="DAKAR">Dakar</option>
-                      <option value="AUTRES_VILLES">Autres villes</option>
+                      <option value="BANLIEUE">Banlieue</option>
+                      <option value="REGION">Régions du Sénégal</option>
+                      <option value="AFRIQUE_OUEST">Afrique de l'Ouest</option>
+                      <option value="AFRIQUE">Afrique</option>
+                      <option value="FRANCE">France</option>
+                      <option value="EUROPE">Europe</option>
+                      <option value="AMERIQUE">Amérique</option>
+                      <option value="ASIE">Asie</option>
                       <option value="INTERNATIONAL">International</option>
                     </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {formData.zone === '' ? 'Applicable partout' : `Uniquement pour ${formData.zone}`}
+                    </p>
                   </div>
 
                   <div>
