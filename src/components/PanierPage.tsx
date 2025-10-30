@@ -358,6 +358,7 @@ const PanierPage: React.FC<PanierPageProps> = ({ onNavigate }) => {
                   <strong>💡 Information :</strong> Les frais de livraison seront calculés en fonction de votre adresse
                 </p>
               </div>
+              
 
               {/* Bouton commander */}
               <button

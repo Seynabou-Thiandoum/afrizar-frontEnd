@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, Loader, CheckCircle, Package } from 'lucide-react';
+import { ArrowLeft, Truck, MapPin, Phone, Mail, Loader, CheckCircle, Package, Gift, Sparkles } from 'lucide-react';
 import { usePanier } from '../contexts/PanierContext';
 import { useAuth } from '../contexts/AuthContext';
 import commandeService, { CreateCommandeDto } from '../services/commandeService';
 import fraisLivraisonService, { FraisLivraison } from '../services/fraisLivraisonService';
 import SelecteurModePaiement from './SelecteurModePaiement';
 import { ModePaiement } from '../services/modePaiementService';
-import { getImageUrl as getFullImageUrl } from '../config/api';
+import { getImageUrl as getFullImageUrl, API_CONFIG } from '../config/api';
 import Swal from 'sweetalert2';
 
 interface CheckoutPageProps {
@@ -24,6 +24,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
   const [fraisLivraisonSelectionne, setFraisLivraisonSelectionne] = useState<FraisLivraison | null>(null);
   const [modePaiement, setModePaiement] = useState<ModePaiement | null>(null);
   const [hasVerifiedAuth, setHasVerifiedAuth] = useState(false);
+  const [pointsFidelite, setPointsFidelite] = useState<number>(0);
+  const [pointsUtilises, setPointsUtilises] = useState<number>(0);
+  const [calculatingShipping, setCalculatingShipping] = useState(false);
 
   const [formData, setFormData] = useState<CreateCommandeDto>({
     type: 'IMMEDIATE',
@@ -36,9 +39,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
   });
 
   const [infosLivraison, setInfosLivraison] = useState({
-    nom: user?.nom || '',
-    prenom: user?.prenom || '',
-    telephone: user?.telephone || '',
+    nom: user?.lastName || '',
+    prenom: user?.firstName || '',
+    telephone: '',
     email: user?.email || '',
   });
 
@@ -100,6 +103,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
       await synchroniserAvecBackend();
       await rafraichirPanier();
       
+      // Charger les points de fidélité
+      await chargerPointsFidelite();
+      
       // Charger les frais de livraison
       await chargerFraisLivraison();
     };
@@ -107,18 +113,145 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
     verifierAuthentification();
   }, [isAuthenticated, user, hasVerifiedAuth]);
 
-  const chargerFraisLivraison = async () => {
+  const chargerPointsFidelite = async () => {
+    if (!user?.id) return;
+    
     try {
-      const fraisData = await fraisLivraisonService.obtenirOptionsLivraison();
-      setFraisLivraison(fraisData);
+      const token = localStorage.getItem('afrizar_token');
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/clients/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // Sélectionner le premier frais par défaut
-      if (fraisData.length > 0) {
-        setFraisLivraisonSelectionne(fraisData[0]);
+      if (response.ok) {
+        const clientData = await response.json();
+        setPointsFidelite(clientData.pointsFidelite || 0);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des points de fidélité:', error);
+    }
+  };
+
+  // Calculer le poids total du panier (estimation: 0.5kg par produit par défaut)
+  const calculerPoidsTotal = (): number => {
+    if (!panier || panier.items.length === 0) return 0.5;
+    // Estimation: 0.5kg par produit (pourrait être amélioré avec poids réel depuis backend)
+    return panier.items.length * 0.5;
+  };
+
+  // Mapper le nom du pays vers le code pays pour l'API
+  const mapperPaysVersCode = (pays: string): string => {
+    const mapping: { [key: string]: string } = {
+      'Sénégal': 'SENEGAL',
+      'France': 'FRANCE',
+      'Mali': 'MALI',
+      'Côte d\'Ivoire': 'COTE_DIVOIRE',
+      'Guinée': 'GUINEE'
+    };
+    return mapping[pays] || 'SENEGAL';
+  };
+
+  const chargerFraisLivraison = async (pays?: string, poids?: number) => {
+    try {
+      setCalculatingShipping(true);
+      const paysSelectionne = pays || formData.pays;
+      const poidsCalcule = poids || calculerPoidsTotal();
+      const codePays = mapperPaysVersCode(paysSelectionne || 'Sénégal');
+      
+      // Charger uniquement les types de livraison actifs configurés par l'admin
+      try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/public/frais-livraison/actifs`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const fraisConfigures = await response.json();
+          
+          // Convertir directement les frais configurés (sans filtrage strict)
+          const optionsLivraison: FraisLivraison[] = fraisConfigures
+            .map((frais: any) => {
+              // Convertir le type FraisLivraison.TypeLivraison vers le format attendu
+              const typeStr = frais.type || frais.typeNom || 'STANDARD';
+              
+              return {
+                id: frais.id,
+                nom: frais.nom || `Livraison ${typeStr}`,
+                description: frais.description || `Livraison ${typeStr.toLowerCase()} vers ${paysSelectionne}`,
+                type: typeStr === 'EXPRESS' ? 'EXPRESS' : typeStr === 'URGENT' ? 'EXPRESS' : 'STANDARD',
+                typeNom: typeStr,
+                typeDescription: frais.description || `Livraison ${typeStr.toLowerCase()}`,
+                frais: typeof frais.frais === 'number' ? frais.frais : parseFloat(frais.frais.toString()),
+                delaiMinJours: frais.delaiMinJours || 3,
+                delaiMaxJours: frais.delaiMaxJours || 7,
+                actif: frais.actif !== false,
+                dateCreation: frais.dateCreation || new Date().toISOString(),
+                zone: frais.zone || codePays
+              };
+            });
+          
+          setFraisLivraison(optionsLivraison);
+          
+          // Sélectionner le premier frais par défaut ou réinitialiser si aucun
+          if (optionsLivraison.length > 0) {
+            setFraisLivraisonSelectionne(optionsLivraison[0]);
+          } else {
+            setFraisLivraisonSelectionne(null);
+          }
+        } else {
+          // Fallback sur la méthode précédente si l'endpoint n'est pas disponible
+          console.warn('Endpoint public/frais-livraison/actifs non disponible, utilisation du fallback');
+          chargerFraisLivraisonFallback(paysSelectionne || 'Sénégal', poidsCalcule, codePays);
+        }
+      } catch (error) {
+        console.error('Erreur chargement types depuis backend:', error);
+        chargerFraisLivraisonFallback(paysSelectionne || 'Sénégal', poidsCalcule, codePays);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des frais de livraison:', error);
+    } finally {
+      setCalculatingShipping(false);
     }
+  };
+
+  const chargerFraisLivraisonFallback = async (_pays: string, poids: number, codePays: string) => {
+    // Méthode de fallback avec types hardcodés (pour compatibilité)
+    const typesLivraison = ['EXPRESS', 'STANDARD', 'ECONOMIQUE'];
+    const optionsLivraison: FraisLivraison[] = [];
+    
+    for (const type of typesLivraison) {
+      try {
+        const frais = await fraisLivraisonService.calculerFraisLivraison(type, poids, codePays);
+        optionsLivraison.push(frais);
+      } catch (error) {
+        console.error(`Erreur chargement ${type}:`, error);
+      }
+    }
+    
+    setFraisLivraison(optionsLivraison);
+    
+    if (optionsLivraison.length > 0) {
+      setFraisLivraisonSelectionne(optionsLivraison[0]);
+    } else {
+      setFraisLivraisonSelectionne(null);
+    }
+  };
+
+  // Recharger les frais de livraison quand le pays change
+  useEffect(() => {
+    if (hasVerifiedAuth && formData.pays && panier && panier.items.length > 0) {
+      chargerFraisLivraison(formData.pays, calculerPoidsTotal());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.pays, hasVerifiedAuth]);
+
+  // Calculer la réduction avec les points de fidélité (1 point = 1 FCFA)
+  const calculerReductionPoints = (): number => {
+    return Math.min(pointsUtilises, pointsFidelite);
   };
 
   // Calculer le montant avec frais de livraison
@@ -133,10 +266,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
     if (!modePaiement) return 0;
     
     const montantAvecLivraison = calculateMontantAvecLivraison();
+    const reductionPoints = calculerReductionPoints();
+    const montantAvantFraisPaiement = montantAvecLivraison - reductionPoints;
+    
     let frais = modePaiement.fraisFixe || 0;
     
     if (modePaiement.fraisPourcentage) {
-      frais += (montantAvecLivraison * modePaiement.fraisPourcentage) / 100;
+      frais += (montantAvantFraisPaiement * modePaiement.fraisPourcentage) / 100;
     }
     
     return frais;
@@ -144,7 +280,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
 
   // Calculer le montant total final
   const calculateMontantTotalFinal = (): number => {
-    return calculateMontantAvecLivraison() + calculateFraisPaiement();
+    const montantAvecLivraison = calculateMontantAvecLivraison();
+    const fraisPaiement = calculateFraisPaiement();
+    const reductionPoints = calculerReductionPoints();
+    return montantAvecLivraison + fraisPaiement - reductionPoints;
   };
 
   // Helper pour obtenir l'URL complète de l'image
@@ -170,7 +309,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
     try {
       console.log('📦 Soumission de la commande:', formData);
       
-      const commande = await commandeService.creerCommandeDepuisPanier(formData);
+      // Inclure les points de fidélité utilisés dans le formData
+      const commandeData = {
+        ...formData,
+        pointsFideliteUtilises: pointsUtilises
+      };
+      
+      const commande = await commandeService.creerCommandeDepuisPanier(commandeData);
       
       setCommandeCreee(commande);
       setEtapeActuelle(4); // Aller à l'étape confirmation
@@ -316,21 +461,89 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
   // Étape 2 : Frais de livraison et modes de paiement
   const renderEtape2 = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Livraison et Paiement</h2>
+      <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+        <Truck className="h-6 w-6 mr-2 text-[#F99834]" />
+        Livraison et Paiement
+      </h2>
+      
+      {/* Points de fidélité */}
+      {pointsFidelite > 0 && (
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-[#F99834] rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-[#F99834] rounded-full flex items-center justify-center">
+                <Gift className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Points de fidélité disponibles</h3>
+                <p className="text-sm text-gray-600">
+                  Vous avez <span className="font-bold text-[#F99834]">{pointsFidelite.toLocaleString()}</span> points
+                  <span className="text-xs text-gray-500 ml-2">(1 point = 1 FCFA)</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <input
+              type="number"
+              min="0"
+              max={Math.min(pointsFidelite, Math.floor(calculateMontantAvecLivraison()))}
+              value={pointsUtilises}
+              onChange={(e) => {
+                const valeur = parseInt(e.target.value) || 0;
+                const maxUtilisable = Math.min(pointsFidelite, Math.floor(calculateMontantAvecLivraison()));
+                setPointsUtilises(Math.max(0, Math.min(valeur, maxUtilisable)));
+              }}
+              className="flex-1 px-4 py-2 border-2 border-[#F99834] rounded-lg focus:ring-2 focus:ring-[#F99834] focus:border-transparent text-lg font-semibold"
+              placeholder="0"
+            />
+            <button
+              onClick={() => {
+                const maxUtilisable = Math.min(pointsFidelite, Math.floor(calculateMontantAvecLivraison()));
+                setPointsUtilises(maxUtilisable);
+              }}
+              className="px-4 py-2 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors font-semibold"
+            >
+              Utiliser tout
+            </button>
+            <button
+              onClick={() => setPointsUtilises(0)}
+              className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Réinitialiser
+            </button>
+          </div>
+          
+          {pointsUtilises > 0 && (
+            <div className="mt-4 p-3 bg-white rounded-lg border border-green-200">
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold text-green-600">Réduction appliquée :</span>{' '}
+                <span className="text-lg font-bold text-green-600">-{pointsUtilises.toLocaleString()} FCFA</span>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Frais de livraison */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Options de livraison</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Options de livraison</h3>
+          {calculatingShipping && (
+            <Loader className="h-5 w-5 animate-spin text-[#F99834]" />
+          )}
+        </div>
         
         {fraisLivraison.length > 0 ? (
           <div className="space-y-3">
             {fraisLivraison.map((frais) => (
               <div
                 key={frais.id}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                   fraisLivraisonSelectionne?.id === frais.id
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-300 hover:border-gray-400'
+                    ? 'border-[#F99834] bg-orange-50 shadow-md'
+                    : 'border-gray-300 hover:border-[#F99834] hover:bg-orange-50/50'
                 }`}
                 onClick={() => setFraisLivraisonSelectionne(frais)}
               >
@@ -340,10 +553,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
                       type="radio"
                       checked={fraisLivraisonSelectionne?.id === frais.id}
                       onChange={() => setFraisLivraisonSelectionne(frais)}
-                      className="text-purple-600"
+                      className="text-[#F99834] w-5 h-5"
                     />
                     <div>
-                      <h4 className="font-semibold text-gray-900">{frais.nom}</h4>
+                      <h4 className="font-semibold text-gray-900 flex items-center">
+                        {frais.typeNom}
+                        {frais.typeNom === 'EXPRESS' && <Sparkles className="h-4 w-4 ml-2 text-[#F99834]" />}
+                      </h4>
                       <p className="text-sm text-gray-600">{frais.description}</p>
                       <p className="text-sm text-gray-500">
                         {frais.delaiMinJours} à {frais.delaiMaxJours} jours ouvrables
@@ -351,7 +567,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-purple-600">
+                    <p className="text-lg font-bold text-[#F99834]">
                       {frais.frais.toLocaleString()} FCFA
                     </p>
                   </div>
@@ -359,14 +575,19 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
               </div>
             ))}
           </div>
+        ) : calculatingShipping ? (
+          <div className="text-center py-8">
+            <Loader className="h-8 w-8 animate-spin text-[#F99834] mx-auto mb-2" />
+            <p className="text-gray-500">Calcul des frais de livraison...</p>
+          </div>
         ) : (
-          <p className="text-gray-500">Chargement des options de livraison...</p>
+          <p className="text-gray-500">Aucune option de livraison disponible pour cette destination</p>
         )}
       </div>
 
       {/* Modes de paiement - Système dynamique configuré par l'admin */}
       <SelecteurModePaiement
-        montantTotal={calculateMontantAvecLivraison()}
+        montantTotal={calculateMontantAvecLivraison() - calculerReductionPoints()}
         onSelectMode={setModePaiement}
         modeSelectionne={modePaiement}
       />
@@ -381,10 +602,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
         </button>
         <button
           onClick={() => setEtapeActuelle(3)}
-          disabled={!fraisLivraisonSelectionne || !modePaiement}
-          className="px-6 py-3 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!fraisLivraisonSelectionne || !modePaiement || calculatingShipping}
+          className="px-6 py-3 bg-[#F99834] text-white rounded-lg hover:bg-[#E5861A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
         >
-          Continuer
+          {calculatingShipping ? (
+            <>
+              <Loader className="h-5 w-5 mr-2 animate-spin" />
+              Calcul en cours...
+            </>
+          ) : (
+            'Continuer'
+          )}
         </button>
       </div>
     </div>
@@ -462,6 +690,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
               <span>Frais de paiement ({modePaiement.nom})</span>
               <span className="text-blue-600 font-semibold">
                 {calculateFraisPaiement().toLocaleString()} FCFA
+              </span>
+            </div>
+          )}
+          {pointsUtilises > 0 && (
+            <div className="flex justify-between text-gray-700">
+              <span className="flex items-center">
+                <Gift className="h-4 w-4 mr-1 text-[#F99834]" />
+                Réduction (points de fidélité)
+              </span>
+              <span className="text-green-600 font-semibold">
+                -{pointsUtilises.toLocaleString()} FCFA
               </span>
             </div>
           )}
@@ -671,6 +910,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onShowAuth }) =
                       <span className="text-sm">Frais paiement</span>
                       <span className="text-sm">
                         {calculateFraisPaiement().toLocaleString()} FCFA
+                      </span>
+                    </div>
+                  )}
+                  {pointsUtilises > 0 && (
+                    <div className="flex justify-between text-gray-700">
+                      <span className="text-sm flex items-center">
+                        <Gift className="h-3 w-3 mr-1 text-[#F99834]" />
+                        Réduction
+                      </span>
+                      <span className="text-sm text-green-600 font-semibold">
+                        -{pointsUtilises.toLocaleString()} FCFA
                       </span>
                     </div>
                   )}
