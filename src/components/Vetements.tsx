@@ -27,12 +27,6 @@ const VetementsPage = ({ onNavigate }) => {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
-  
-  // États pour la pagination
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(12); // 12 produits par page
 
   // Numéro WhatsApp (remplace par le vrai numéro)
   const whatsappNumber = "221770450099"; // Format international sans le +
@@ -40,7 +34,7 @@ const VetementsPage = ({ onNavigate }) => {
   // Charger les données depuis l'API
   useEffect(() => {
     chargerDonnees();
-  }, [currentPage, selectedCategory, selectedType, selectedSize, priceRange, sortBy, searchTerm]);
+  }, []);
 
   const chargerDonnees = async () => {
     try {
@@ -49,7 +43,7 @@ const VetementsPage = ({ onNavigate }) => {
       // Récupérer les catégories et produits en parallèle
       const [categoriesData, produitsData] = await Promise.all([
         categorieService.getAllCategories(),
-        produitService.getAllProduits(currentPage, pageSize)
+        produitService.getAllProduits(0, 1000)
       ]);
 
       // Filtrer seulement les catégories de vêtements
@@ -64,48 +58,19 @@ const VetementsPage = ({ onNavigate }) => {
 
       setCategories(categoriesVetements);
       setProducts(produitsVetements);
-      setTotalPages(produitsData.totalPages || 0);
-      setTotalElements(produitsData.totalElements || produitsVetements.length);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       // En cas d'erreur, utiliser des données par défaut
       setCategories([]);
       setProducts([]);
-      setTotalPages(0);
-      setTotalElements(0);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fonctions de pagination
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleFilterChange = (filterType: string, value: string) => {
-    setCurrentPage(0); // Reset à la première page lors du changement de filtre
-    switch (filterType) {
-      case 'category':
-        setSelectedCategory(value);
-        break;
-      case 'type':
-        setSelectedType(value);
-        break;
-      case 'size':
-        setSelectedSize(value);
-        break;
-      case 'price':
-        setPriceRange(value);
-        break;
-      case 'sort':
-        setSortBy(value);
-        break;
-      case 'search':
-        setSearchTerm(value);
-        break;
-    }
+  // Fonction pour obtenir l'URL complète de l'image
+  const getImageUrl = (imageUrl?: string | string[]) => {
+    return getFullImageUrl(imageUrl);
   };
 
   // Transformer les produits de l'API pour le format d'affichage
@@ -263,16 +228,6 @@ const VetementsPage = ({ onNavigate }) => {
 
   const handleWishlistClick = async (e, productId) => {
     e.stopPropagation();
-    
-    if (!isAuthenticated) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Connexion requise',
-        text: 'Veuillez vous connecter pour ajouter des produits aux favoris',
-        confirmButtonText: 'OK'
-      });
-      return;
-    }
 
     try {
       if (estFavori(productId)) {
@@ -527,68 +482,32 @@ const VetementsPage = ({ onNavigate }) => {
                   </button>
                 </div>
               </div>
-            {sortedClothes.length === 0 && (
-              <div className="text-center py-16 bg-white rounded-xl">
-                <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun vêtement trouvé</h3>
-                <p className="text-gray-600">Essayez de modifier vos critères de recherche</p>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center space-x-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 0}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Précédent
-                </button>
-                
-                <div className="flex space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const page = i;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-3 py-2 rounded-lg ${
-                          currentPage === page
-                            ? 'bg-[#F99834] text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages - 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Suivant
-                </button>
-              </div>
-            )}
-
-            {/* Informations de pagination */}
-            {totalElements > 0 && (
-              <div className="mt-4 text-center text-sm text-gray-600">
-                Affichage de {currentPage * pageSize + 1} à {Math.min((currentPage + 1) * pageSize, totalElements)} sur {totalElements} vêtements
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
-export default VetementsPage;
+  // Si un produit est sélectionné, afficher ses détails
+  if (selectedProduct) {
+    return <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            <span className="ml-3 text-gray-600">Chargement des vêtements...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         

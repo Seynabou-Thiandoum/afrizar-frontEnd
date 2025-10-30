@@ -448,9 +448,11 @@ import { useI18n } from '../contexts/InternationalizationContext';
 import { usePanier } from '../contexts/PanierContext';
 import LanguageSelector from './LanguageSelector';
 import favorisService from '../services/favorisService';
+import { useFavoris } from '../contexts/FavorisContext';
 
 const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { nombreFavoris } = useFavoris();
   const { t, switchLanguage, language } = useI18n();
   const { nombreArticles } = usePanier();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -460,20 +462,20 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
 
   useEffect(() => {
     loadWishlistCount();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, nombreFavoris]);
 
   const loadWishlistCount = async () => {
     if (isAuthenticated && user) {
       try {
         const count = await favorisService.compterFavoris();
         setWishlistCount(count);
+        return;
       } catch (error) {
         console.error('Erreur lors du chargement du nombre de favoris:', error);
-        setWishlistCount(0);
       }
-    } else {
-      setWishlistCount(0);
     }
+    // Fallback: utiliser le compteur local (invité)
+    setWishlistCount(nombreFavoris);
   };
 
   const handleSearch = (e) => {
@@ -488,11 +490,8 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
   };
 
   const handleWishlistClick = () => {
-    if (isAuthenticated) {
-      onNavigate('wishlist');
-    } else {
-      onOpenAuth('login');
-    }
+    // Toujours autoriser l'accès à la page wishlist (fonctionne hors connexion)
+    onNavigate('wishlist');
   };
 
   const handleNavigation = (page) => {
