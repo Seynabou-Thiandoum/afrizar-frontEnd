@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   CreditCard, 
@@ -16,8 +16,11 @@ import InternationalShipping from './InternationalShipping';
 import SelecteurModePaiement from './SelecteurModePaiement';
 import { ModePaiement } from '../services/modePaiementService';
 import { useI18n } from '../contexts/InternationalizationContext';
+import { useAuth } from '../contexts/AuthContext';
+import Swal from 'sweetalert2';
 
 const Checkout = ({ onBack }) => {
+  const { isAuthenticated } = useAuth();
   const { formatPrice, country, getShippingZone } = useI18n();
   const [step, setStep] = useState(1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
@@ -75,6 +78,25 @@ const Checkout = ({ onBack }) => {
   ]);
 
   const cartTotal = 69000; // Example total from cart
+
+  // Vérifier l'authentification au chargement
+  useEffect(() => {
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Connexion requise',
+        text: 'Vous devez être connecté pour passer une commande',
+        confirmButtonText: 'Retour au panier',
+        showCancelButton: true,
+        cancelButtonText: 'Annuler'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          onBack(); // Retour au panier
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));

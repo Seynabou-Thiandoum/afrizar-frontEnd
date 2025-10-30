@@ -462,7 +462,8 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
 
   useEffect(() => {
     loadWishlistCount();
-  }, [isAuthenticated, nombreFavoris]);
+    // do not depend on nombreFavoris to avoid API spam; fallback uses it internally
+  }, [isAuthenticated, user]);
 
   const loadWishlistCount = async () => {
     if (isAuthenticated && user) {
@@ -626,7 +627,7 @@ const Header = ({ onNavigate, onOpenAuth, onSearch }) => {
               </button>
 
               <button 
-                onClick={() => onNavigate('panier')}
+                onClick={() => onNavigate('cart')}
                 className="relative text-gray-700 hover:text-orange-600 transition-colors"
               >
                 <ShoppingBag className="h-6 w-6" />

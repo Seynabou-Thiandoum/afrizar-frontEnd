@@ -138,6 +138,13 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
   // Transformer tous les produits avec calcul des prix
   const [allAccessories, setAllAccessories] = useState<any[]>([]);
   
+  // Helper pour construire l'URL complète de l'image
+  const getImageUrl = (photoUrl: string | null | undefined): string | undefined => {
+    if (!photoUrl) return undefined;
+    if (photoUrl.startsWith('http')) return photoUrl;
+    return getFullImageUrl(photoUrl);
+  };
+
   useEffect(() => {
     const transformerProduitsAvecPrix = async () => {
       const produitsTransformes = await Promise.all(
@@ -191,6 +198,7 @@ const AccessoiresPage = ({ onNavigate }: { onNavigate?: any }) => {
     if (products.length > 0) {
       transformerProduitsAvecPrix();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products, categories]);
 
   // Créer les catégories dynamiquement

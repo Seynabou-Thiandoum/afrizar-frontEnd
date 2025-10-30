@@ -9,8 +9,7 @@ import FeaturedProducts from './components/FeaturedProducts';
 import Categories from './components/Categories';
 import Catalog from './components/Catalog';
 import CategoryPage from './components/CategoryPage';
-import Cart from './components/Cart';
-import Checkout from './components/Checkout';
+import CheckoutPage from './components/CheckoutPage';
 import SurMesure from './components/SurMesure';
 import VendorDashboard from './components/VendorDashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -32,6 +31,7 @@ import VendorProfilePage from './components/VendorProfilePage';
 import TendancesPage from './components/TendancesPage';
 import AdminDashboardNew from './components/AdminDashboardNew';
 import ClientDashboardNew from './components/ClientDashboardNew';
+import PanierPage from './components/PanierPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -86,11 +86,11 @@ function App() {
       case 'sur-mesure':
         return <SurMesure onBack={() => setCurrentPage('home')} />;
       case 'cart':
-        return <Cart onClose={() => setCurrentPage('home')} onNavigate={setCurrentPage} />;
+        return <PanierPage onNavigate={setCurrentPage} />;
       case 'checkout':
-        return <Checkout onBack={() => setCurrentPage('cart')} />;
+        return <CheckoutPage onNavigate={setCurrentPage} onShowAuth={openAuth} />;
       case 'payment':
-        return <Checkout onBack={() => setCurrentPage('cart')} />;
+        return <CheckoutPage onNavigate={setCurrentPage} onShowAuth={openAuth} />;
       case 'vendor-dashboard':
         return <VendorDashboard />;
       case 'admin-dashboard':

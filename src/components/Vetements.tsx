@@ -107,6 +107,8 @@ const VetementsPage = ({ onNavigate }) => {
 
   // Transformer tous les produits avec calcul des prix
   const [allVetements, setAllVetements] = useState<any[]>([]);
+
+ 
   
   useEffect(() => {
     const transformerProduitsAvecPrix = async () => {
@@ -136,10 +138,14 @@ const VetementsPage = ({ onNavigate }) => {
           
           return {
             id: produit.id,
+            nom: produit.nom,
             name: produit.nom,
+            prix: prixFinal,
             price: `${new Intl.NumberFormat('fr-FR').format(prixFinal)} FCFA`,
             originalPrice: produit.prixPromo ? `${new Intl.NumberFormat('fr-FR').format(produit.prixPromo)} FCFA` : null,
+            prixPromotion: produit.prixPromo,
             image: getImageUrl(mainPhoto),
+            images: produit.photos || [],
             category: categorie?.nom || 'Vêtement',
             subcategory: categorie?.genre?.toLowerCase() || 'homme',
             rating: 4.5, // Note par défaut
@@ -147,8 +153,12 @@ const VetementsPage = ({ onNavigate }) => {
             isNew: Math.random() > 0.7, // 30% de chance d'être nouveau
             discount: produit.prixPromo ? `-${Math.round((1 - produit.prix / produit.prixPromo) * 100)}%` : null,
             sizes: produit.taille ? [produit.taille] : ['S', 'M', 'L', 'XL'],
+            taille: produit.taille || 'M',
             colors: produit.couleur ? [produit.couleur] : ['Blanc', 'Noir', 'Bleu'],
+            couleur: produit.couleur || 'Blanc',
             description: produit.description || 'Produit artisanal de qualité supérieure.',
+            categorieId: produit.categorieId,
+            vendeurId: produit.vendeurId,
             gallery: produit.photos && produit.photos.length > 0
               ? produit.photos.map((photo: any) => getImageUrl(photo))
               : [getImageUrl(mainPhoto)]
@@ -271,8 +281,8 @@ const VetementsPage = ({ onNavigate }) => {
       await ajouterAuPanier(
         item,
         1,
-        item.sizes?.[0], // Prendre la première taille disponible
-        item.colors?.[0] // Prendre la première couleur disponible
+        item.taille || item.sizes?.[0], // Prendre la taille
+        item.couleur || item.colors?.[0] // Prendre la couleur
       );
       
       Swal.fire({

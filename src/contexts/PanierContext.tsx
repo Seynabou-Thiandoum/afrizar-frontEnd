@@ -171,7 +171,7 @@ export const PanierProvider: React.FC<PanierProviderProps> = ({ children }) => {
           produitId: produit.id,
           produitNom: produit.name || produit.nom,
           produitDescription: produit.description,
-          produitPhotos: produit.photos || [],
+          produitPhotos: produit.images || produit.photos || [],
           prixUnitaire: typeof produit.price === 'string' 
             ? parseFloat(produit.price.replace(/[^\d]/g, '')) 
             : produit.prix,

@@ -142,7 +142,8 @@ export const FavorisProvider: React.FC<FavorisProviderProps> = ({ children }) =>
       synchroniserFavoris();
       chargerFavoris();
     }
-  }, [isAuthenticated, user, synchroniserFavoris, chargerFavoris]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user]);
 
   // Nettoyer quand l'utilisateur se déconnecte
   useEffect(() => {

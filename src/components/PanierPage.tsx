@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft, ShoppingBag, AlertCircle, Loader } from 'lucide-react';
+import { Plus, Minus, Trash2, ArrowLeft, ShoppingBag, AlertCircle, Loader } from 'lucide-react';
 import { usePanier } from '../contexts/PanierContext';
-import { useAuth } from '../contexts/AuthContext';
 import { getImageUrl as getFullImageUrl } from '../config/api';
 import Swal from 'sweetalert2';
 
@@ -11,16 +10,17 @@ interface PanierPageProps {
 
 const PanierPage: React.FC<PanierPageProps> = ({ onNavigate }) => {
   const { panier, loading, modifierQuantite, retirerDuPanier, viderPanier, rafraichirPanier } = usePanier();
-  const { user, isAuthenticated } = useAuth();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<{ [key: number]: number }>({});
 
   useEffect(() => {
     rafraichirPanier();
   }, []);
 
-  // Helper pour obtenir l'URL complète de l'image
-  const getImageUrl = (photos?: string[]) => {
-    return getFullImageUrl(photos);
+  // Transformer les photos en gallery (URLs complètes)
+  const getGallery = (photos?: string[]) => {
+    if (!photos || photos.length === 0) return [getFullImageUrl(null)];
+    return photos.map(photo => getFullImageUrl(photo));
   };
 
   const handleModifierQuantite = async (itemIndex: number, nouvelleQuantite: number) => {
@@ -191,12 +191,33 @@ const PanierPage: React.FC<PanierPageProps> = ({ onNavigate }) => {
                 <div className="flex items-start space-x-4">
                   
                   {/* Image du produit */}
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 relative group">
                     <img
-                      src={getImageUrl(item.photos)}
+                      src={getGallery(item.produitPhotos)[selectedImageIndex[index] || 0]}
                       alt={item.produitNom}
                       className="w-24 h-24 object-cover rounded-lg"
                     />
+                    {/* Miniatures si plusieurs images */}
+                    {getGallery(item.produitPhotos).length > 1 && (
+                      <div className="absolute bottom-0 left-0 right-0 flex space-x-1 p-1 bg-black bg-opacity-50 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        {getGallery(item.produitPhotos).slice(0, 3).map((img, imgIndex) => (
+                          <button
+                            key={imgIndex}
+                            onClick={() => setSelectedImageIndex({ ...selectedImageIndex, [index]: imgIndex })}
+                            className={`flex-1 h-8 rounded overflow-hidden ${
+                              (selectedImageIndex[index] || 0) === imgIndex ? 'ring-2 ring-white' : ''
+                            }`}
+                          >
+                            <img src={img} alt="" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                        {getGallery(item.produitPhotos).length > 3 && (
+                          <div className="flex items-center justify-center w-8 h-8 text-white text-xs font-bold">
+                            +{getGallery(item.produitPhotos).length - 3}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Informations du produit */}
@@ -221,7 +242,7 @@ const PanierPage: React.FC<PanierPageProps> = ({ onNavigate }) => {
                         </div>
 
                         {/* Stock disponible */}
-                        {item.stockDisponible < 5 && (
+                        {item.stockDisponible && item.stockDisponible < 5 && (
                           <div className="flex items-center text-orange-600 text-sm">
                             <AlertCircle className="h-4 w-4 mr-1" />
                             <span>Seulement {item.stockDisponible} en stock</span>
@@ -254,7 +275,7 @@ const PanierPage: React.FC<PanierPageProps> = ({ onNavigate }) => {
                         
                         <button
                           onClick={() => handleModifierQuantite(index, item.quantite + 1)}
-                          disabled={actionLoading === `quantity-${index}` || (item.stockDisponible && item.quantite >= item.stockDisponible)}
+                          disabled={actionLoading === `quantity-${index}` || (!!item.stockDisponible && item.quantite >= item.stockDisponible)}
                           className="p-1 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Plus className="h-4 w-4 text-gray-600" />
